@@ -2,19 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { builders, resolveText } from "@openclaw/alpha-agents-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { AgentCard } from "../../../components/agent-card";
 import { getCurrentLocale } from "../../../lib/locale";
 import { getBuilderPageData } from "../../../lib/server/repository";
+import { getReadCatalog } from "../../../lib/server/repositories";
 
 export async function generateStaticParams() {
-  return builders.map((builder) => ({ handle: builder.handle }));
+  return (await getReadCatalog()).builders.map((builder) => ({ handle: builder.handle }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }): Promise<Metadata> {
   const { handle } = await params;
-  const builder = builders.find((entry) => entry.handle === handle);
+  const builder = (await getReadCatalog()).builders.find((entry) => entry.handle === handle);
   return builder ? { title: builder.name, description: builder.bio.en } : {};
 }
 
@@ -62,9 +63,11 @@ export default async function BuilderDetailPage({ params }: { params: Promise<{ 
               <div className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Shortlists" : "短名单入围"}</div>
               <div className="mt-2 text-4xl font-semibold text-ink-950">{builder.shortlistCount}</div>
             </div>
-            <Link href={builder.githubUrl} className="rounded-full bg-ink-950 px-5 py-3 text-center text-sm font-semibold text-parchment">
-              {locale === "en" ? "View GitHub" : "查看 GitHub"}
-            </Link>
+            {builder.githubUrl ? (
+              <Link href={builder.githubUrl} className="rounded-full bg-ink-950 px-5 py-3 text-center text-sm font-semibold text-parchment">
+                {locale === "en" ? "View GitHub" : "查看 GitHub"}
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>

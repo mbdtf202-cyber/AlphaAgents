@@ -24,6 +24,21 @@ export type PermissionRiskLevel = "low" | "medium" | "high";
 export type BenchmarkTrack = "coding" | "research" | "support-ops" | "workflow-automation";
 export type ModerationStatus = "pending" | "changes-requested" | "approved" | "rejected";
 
+export type RepoSize = "small" | "medium" | "large";
+export type DataSensitivity = "low" | "medium" | "high" | "restricted";
+export type ApprovalModel = "single-owner" | "team-review" | "change-advisory-board";
+export type SupervisionLevel = "light" | "medium" | "high";
+
+export type ScoreDimension =
+  | "taskSuccess"
+  | "reliability"
+  | "costEfficiency"
+  | "latency"
+  | "safetyFootprint"
+  | "setupFriction"
+  | "operatorBurden"
+  | "domainFit";
+
 export interface ScoreBreakdown {
   taskSuccess: number;
   reliability: number;
@@ -35,21 +50,48 @@ export interface ScoreBreakdown {
   domainFit: number;
 }
 
+export type ScoreWeightProfile = Partial<Record<ScoreDimension, number>>;
+
+export interface EnvironmentConstraintProfile {
+  repoSize: RepoSize;
+  dataSensitivity: DataSensitivity;
+  approvalModel: ApprovalModel;
+  allowShell: boolean;
+  allowNetwork: boolean;
+  allowAutoCommit: boolean;
+}
+
+export interface ReviewContext {
+  teamSize?: string;
+  taskFrequency?: string;
+  deploymentEnvironment?: string;
+  supervisionLevel?: SupervisionLevel;
+  failureModes?: string[];
+  alternativeTools?: string[];
+}
+
+export interface VersionRegressionSummary {
+  improvedMetrics: ScoreDimension[];
+  regressedMetrics: ScoreDimension[];
+  rerunRequired: boolean;
+  permissionDelta: LocalizedText;
+}
+
 export interface BuilderProfile {
   id: string;
   handle: string;
   name: string;
   type: BuilderType;
-  location: string;
+  location?: string;
   headline: LocalizedText;
   bio: LocalizedText;
   specialties: string[];
-  organizationsWorkedWith: string[];
+  organizationsWorkedWith?: string[];
   publishedAgentSlugs: string[];
   benchmarkWins: number;
   shortlistCount: number;
   verifiedReviewCount: number;
-  githubUrl: string;
+  githubUrl?: string;
   provenance?: ProvenanceInfo;
 }
 
@@ -130,6 +172,7 @@ export interface AgentVersionRecord {
   benchmarkRuns: BenchmarkRun[];
   reviewAverage: number;
   reviewCount: number;
+  regressionSummary?: VersionRegressionSummary;
   provenance?: ProvenanceInfo;
 }
 
@@ -145,6 +188,7 @@ export interface VerifiedReview {
   body: LocalizedText;
   rating: number;
   dimensions: ScoreBreakdown;
+  context?: ReviewContext;
   createdAt: string;
   ownerUserId?: string;
   ownerOrganizationId?: string;
@@ -172,6 +216,9 @@ export interface ShortlistRecord {
   createdByUserId: string;
   agentSlugs: string[];
   buyerType: "individual" | "team" | "enterprise";
+  constraints?: EnvironmentConstraintProfile;
+  scoreWeights?: ScoreWeightProfile;
+  internalNotes?: string;
   provenance?: ProvenanceInfo;
 }
 
@@ -186,6 +233,9 @@ export interface DecisionMemo {
   recommendationState: DecisionState;
   rolloutRecommendation: LocalizedText;
   tradeoffs: LocalizedText[];
+  evidenceSummary?: LocalizedText;
+  riskSummary?: LocalizedText;
+  scoreWeights?: ScoreWeightProfile;
   createdAt: string;
   updatedAt: string;
   provenance?: ProvenanceInfo;
@@ -272,7 +322,7 @@ export interface BenchmarkRequestRecord {
   ownerUserId?: string;
   ownerOrganizationId?: string;
   createdByUserId: string;
-  agentId: string;
+  agentSlug: string;
   versionId: string;
   suiteSlug: string;
   objective?: string;

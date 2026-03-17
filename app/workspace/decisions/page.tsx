@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { DecisionMemoForm } from "../../../components/decision-memo-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
@@ -31,6 +33,9 @@ export default async function WorkspaceDecisionsPage() {
                 </div>
                 <h2 className="mt-3 text-2xl font-semibold text-ink-950">{locale === "en" ? memo.title.en : memo.title["zh-CN"]}</h2>
                 <p className="mt-3 text-base leading-8 text-ink-700">{locale === "en" ? memo.summary.en : memo.summary["zh-CN"]}</p>
+                <Link href={`/workspace/decisions/${memo.id}`} className="mt-4 inline-flex text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                  {locale === "en" ? "Open deliverable" : "打开交付物"}
+                </Link>
               </article>
             ))}
           </div>

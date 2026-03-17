@@ -18,11 +18,11 @@ export interface AgentRepository {
   listBuilderAgents(actor: SessionActor): Promise<AgentRecord[]>;
   listSubmissionsForActor(actor: SessionActor): Promise<AgentSubmissionRecord[]>;
   createSubmission(input: AgentSubmissionRecord): Promise<AgentSubmissionRecord>;
-  publishVersion(actor: SessionActor, agentId: string, versionId: string, note?: string): Promise<void>;
+  publishVersion(actor: SessionActor, agentSlug: string, versionId: string, note?: string): Promise<void>;
 }
 
 export interface VersionRepository {
-  assertBuilderOwnsVersion(actor: SessionActor, agentId: string, versionId: string): Promise<void>;
+  assertBuilderOwnsVersion(actor: SessionActor, agentSlug: string, versionId: string): Promise<void>;
   getLatestPublicVersionId(agentSlug: string): Promise<string | undefined>;
 }
 
@@ -47,6 +47,10 @@ export interface ShortlistRepository {
 export interface ModerationRepository {
   listModerationCases(actor: SessionActor): Promise<ModerationCase[]>;
   recordDecision(actor: SessionActor, caseId: string, nextStatus: ModerationCase["status"], note: string): Promise<ModerationCase>;
+  upsertCase(
+    actor: SessionActor,
+    input: Omit<ModerationCase, "id" | "updatedAt"> & { id?: string; updatedAt?: string },
+  ): Promise<ModerationCase>;
 }
 
 export interface BenchmarkRepository {

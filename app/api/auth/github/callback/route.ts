@@ -85,6 +85,6 @@ export async function GET(request: Request) {
     response.headers.append("Set-Cookie", buildSessionCookie(rawSessionToken, new Date(Date.now() + 1000 * 60 * 60 * 24 * 14)));
     return response;
   } catch (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error instanceof Error ? error.message : "github_login_failed")}`, request.url));
+    return NextResponse.redirect(new URL("/login?error=github_login_failed", request.url));
   }
 }

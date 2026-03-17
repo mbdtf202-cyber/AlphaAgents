@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { compareInputSchema, compareAgents } from "@openclaw/alpha-agents-core";
+import { compareInputSchema } from "@openclaw/alpha-agents-core";
+
+import { getComparePageData } from "../../../lib/server/repository";
 
 export async function POST(request: Request) {
   const json = await request.json();
@@ -11,6 +13,6 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({
-    agents: compareAgents(parsed.data.slugs),
+    agents: await getComparePageData(parsed.data.slugs),
   });
 }

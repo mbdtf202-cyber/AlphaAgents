@@ -25,7 +25,7 @@ export function getDatabaseUrl(): string {
 }
 
 export function getAppUrl(): string {
-  return process.env.ALPHA_AGENTS_APP_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
+  return process.env.ALPHA_AGENTS_APP_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3100";
 }
 
 export function getAuthSecret(): string {

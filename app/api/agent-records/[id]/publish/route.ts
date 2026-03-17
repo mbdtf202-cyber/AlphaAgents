@@ -11,22 +11,35 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
     assertRole(actor, ["builder", "admin"]);
-    const { id } = await params;
+    const { id: agentSlug } = await params;
     const parsed = await parseRequestWithSchema(request, publishInputSchema);
     const bundle = await getRepositoryBundle();
-    await bundle.versionRepository.assertBuilderOwnsVersion(actor, id, parsed.versionId);
-    await bundle.agentRepository.publishVersion(actor, id, parsed.versionId, parsed.publishNote);
+    await bundle.versionRepository.assertBuilderOwnsVersion(actor, agentSlug, parsed.versionId);
+    await bundle.agentRepository.publishVersion(actor, agentSlug, parsed.versionId, parsed.publishNote);
+    const moderationCase = await bundle.moderationRepository.upsertCase(actor, {
+      entityType: "version",
+      entityId: parsed.versionId,
+      title: `${agentSlug} version publish review`,
+      status: "pending",
+      reason: {
+        en: parsed.publishNote || "Version publish requested and awaiting moderation review.",
+        "zh-CN": parsed.publishNote || "版本发布请求已提交，等待审核。",
+      },
+      assignedTo: "trust-team",
+      ownerUserId: actor.userId,
+      ownerOrganizationId: actor.activeOrganizationId,
+    });
     await bundle.auditRepository.append({
       actor,
       eventType: "version.publish_requested",
       entityType: "agent-version",
       entityId: parsed.versionId,
-      metadata: { note: parsed.publishNote, agentId: id },
+      metadata: { note: parsed.publishNote, agentSlug, moderationCaseId: moderationCase.id },
     });
     return NextResponse.json({
-      message: `Agent ${id} queued for publish moderation.`,
+      message: `Agent ${agentSlug} queued for publish moderation.`,
       queued: true,
-      agentId: id,
+      agentSlug,
       versionId: parsed.versionId,
     });
   } catch (error) {

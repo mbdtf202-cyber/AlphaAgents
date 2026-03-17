@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, Trophy, Users } from "lucide-react";
 
 import { resolveText } from "@openclaw/alpha-agents-core";
 
@@ -7,12 +6,10 @@ import HomeIntroEn from "../content/home-intro.en.mdx";
 import HomeIntroZh from "../content/home-intro.zh-CN.mdx";
 import { AgentCard } from "../components/agent-card";
 import { BuilderCard } from "../components/builder-card";
-import { ProvenanceBadge } from "../components/provenance-badge";
+import { HomeHero } from "../components/home-hero";
 import { SectionHeading } from "../components/section-heading";
-import { ScoreBars } from "../components/score-bars";
 import { getCurrentLocale } from "../lib/locale";
 import { getHomepageData } from "../lib/server/repository";
-import { siteTagline, siteTaglineZh } from "../lib/site";
 
 export default async function HomePage() {
   const locale = await getCurrentLocale();
@@ -24,119 +21,15 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="mx-auto grid max-w-[1440px] gap-10 px-5 py-14 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-copper-700">
-              {locale === "en" ? "OpenClaw Agent Network" : "OpenClaw Agent 网络"}
-            </p>
-            {publicDataMode === "sample" ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <ProvenanceBadge
-                  locale={locale}
-                  provenance={{ dataMode: "sample", sourceType: "internal-seed", label: { en: "Public demo content", "zh-CN": "公开演示内容" } }}
-                />
-                <span className="text-sm text-ink-600">
-                  {locale === "en"
-                    ? "Catalog reputation is still sample-labeled until live event streams fully replace seeded content."
-                    : "在 live 事件流完全替代种子内容前，目录信誉信号都会明确标注为 sample。"}
-                </span>
-              </div>
-            ) : null}
-            <h1 className="max-w-[12ch] font-display text-6xl leading-[0.9] text-balance text-ink-950 md:text-8xl">
-              {locale === "en" ? "Hireable agents, not shallow listings." : "把 Agent 做成可招聘对象，而不是浅卡片。"}
-            </h1>
-            <p className="max-w-[68ch] text-xl leading-9 text-ink-700">{locale === "en" ? siteTagline : siteTaglineZh}</p>
-          </div>
-          <div className="prose-ledger">
-            <Narrative />
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/agents" className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
-              {locale === "en" ? "Browse agents" : "浏览 Agent"}
-            </Link>
-            <Link href="/workspace/submissions" className="rounded-full border border-ink-950/12 bg-white px-5 py-3 text-sm font-semibold text-ink-950">
-              {locale === "en" ? "Submit your agent" : "提交你的 Agent"}
-            </Link>
-            <Link href="/for-teams" className="rounded-full border border-transparent px-5 py-3 text-sm font-semibold text-ink-700">
-              {locale === "en" ? "How teams buy" : "团队如何采购"}
-            </Link>
-          </div>
-        </div>
-        <div className="grid gap-5">
-          <div className="rounded-[2.25rem] border border-ink-950/8 bg-white/85 p-6 shadow-[0_35px_120px_-60px_rgba(9,16,26,0.55)]">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.5rem] bg-ink-950 p-5 text-parchment">
-                <p className="text-xs uppercase tracking-[0.22em] text-parchment/70">{locale === "en" ? "Live rank" : "实时排名"}</p>
-                <p className="mt-3 text-4xl font-semibold">#1</p>
-                <p className="mt-3 text-sm leading-7 text-parchment/80 anywhere">{liveCoding?.agentName ?? (locale === "en" ? "Sample leaderboard" : "样例榜单")}</p>
-              </div>
-              <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Live reviews" : "实时评价"}</p>
-                <p className="mt-3 text-4xl font-semibold text-ink-950">{metrics.liveReviewCount}</p>
-                <p className="mt-3 text-sm leading-7 text-ink-700 anywhere">
-                  {locale === "en" ? "Only persisted, authenticated review events count here." : "这里只有已持久化且带身份的评价事件才会计数。"}
-                </p>
-              </div>
-              <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Verified installs" : "已验证安装"}</p>
-                <p className="mt-3 text-4xl font-semibold text-ink-950">{metrics.liveInstallCount}</p>
-                <p className="mt-3 text-sm leading-7 text-ink-700">
-                  {locale === "en" ? "Public sample counts are gone; only live install proofs are shown here." : "这里不再展示虚构规模数字，只展示真实安装证明数量。"}
-                </p>
-              </div>
-            </div>
-            {leadAgent ? (
-              <div className="mt-6 rounded-[1.75rem] border border-ink-950/8 bg-parchment p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Current spotlight" : "当前精选"}</p>
-                    <h2 className="mt-2 font-display text-3xl text-ink-950">{leadAgent.name}</h2>
-                  </div>
-                  <ProvenanceBadge locale={locale} provenance={leadAgent.provenance} />
-                  <Link href={`/agents/${leadAgent.slug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-ink-700">
-                    {locale === "en" ? "Open dossier" : "查看档案"}
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-                <p className="mt-4 text-base leading-8 text-ink-700">{resolveText(leadAgent.summary, locale)}</p>
-                <div className="mt-5">
-                  <ScoreBars scorecard={leadAgent.versions[0].benchmarkRuns[0].scorecard} />
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[1.75rem] border border-ink-950/8 bg-white/75 p-5">
-              <ShieldCheck className="h-6 w-6 text-copper-700" />
-              <p className="mt-4 text-lg font-semibold text-ink-950">{locale === "en" ? "Trustable permissions" : "可信权限边界"}</p>
-              <p className="mt-2 text-sm leading-7 text-ink-700">
-                {locale === "en"
-                  ? "Every public profile declares skills, network surfaces, file scope, secrets, and shell exposure."
-                  : "每个公开档案都明确声明 skills、网络面、文件范围、密钥和 shell 暴露。"}
-              </p>
-            </div>
-            <div className="rounded-[1.75rem] border border-ink-950/8 bg-white/75 p-5">
-              <Trophy className="h-6 w-6 text-copper-700" />
-              <p className="mt-4 text-lg font-semibold text-ink-950">{locale === "en" ? "Structured scorecards" : "结构化评分卡"}</p>
-              <p className="mt-2 text-sm leading-7 text-ink-700">
-                {locale === "en"
-                  ? "Success, reliability, cost, latency, safety, setup friction, operator burden, and domain fit are scored independently."
-                  : "成功率、稳定性、成本、时延、安全、配置摩擦、监督负担和领域契合度分别独立评分。"}
-              </p>
-            </div>
-            <div className="rounded-[1.75rem] border border-ink-950/8 bg-white/75 p-5">
-              <Users className="h-6 w-6 text-copper-700" />
-              <p className="mt-4 text-lg font-semibold text-ink-950">{locale === "en" ? "Buyer shortlists" : "买方短名单"}</p>
-              <p className="mt-2 text-sm leading-7 text-ink-700">
-                {locale === "en"
-                  ? "Build shortlists, request bakeoffs, and review version changes before widening rollout."
-                  : "先建立短名单、申请 bakeoff、审阅版本变化，再决定是否扩大部署。"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeHero
+        locale={locale}
+        narrative={<Narrative />}
+        publicDataMode={publicDataMode}
+        metrics={metrics}
+        liveCodingName={liveCoding?.agentName}
+        liveResearchName={liveResearch?.agentName}
+        leadAgent={leadAgent}
+      />
 
       <section className="mx-auto max-w-[1440px] px-5 py-10 md:px-8">
         <SectionHeading
@@ -152,8 +45,12 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto grid max-w-[1440px] gap-6 px-5 py-4 md:px-8 lg:grid-cols-3">
-        {featureSlots.map((slot) => (
-          <article key={slot.id} className="rounded-[2rem] border border-ink-950/8 bg-white/78 p-6">
+        {featureSlots.map((slot, index) => (
+          <article
+            key={slot.id}
+            className="reveal-card rounded-[2rem] border border-ink-950/8 bg-white/78 p-6"
+            style={{ ["--enter-delay" as string]: `${index * 90}ms` }}
+          >
             <p className="text-xs uppercase tracking-[0.25em] text-copper-700">{resolveText(slot.title, locale)}</p>
             <p className="mt-3 text-lg leading-8 text-ink-700">{resolveText(slot.description, locale)}</p>
           </article>
@@ -172,8 +69,10 @@ export default async function HomePage() {
           }
         />
         <div className="mt-10 grid gap-6 xl:grid-cols-3">
-          {featuredAgents.map((agent) => (
-            <AgentCard key={agent.slug} agent={agent} locale={locale} />
+          {featuredAgents.map((agent, index) => (
+            <div key={agent.slug} className="reveal-card" style={{ ["--enter-delay" as string]: `${index * 90}ms` }}>
+              <AgentCard agent={agent} locale={locale} />
+            </div>
           ))}
         </div>
       </section>
@@ -190,10 +89,14 @@ export default async function HomePage() {
           }
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
-          {suites.map((suite) => {
+          {suites.map((suite, index) => {
             const entries = leaderboards[suite.slug] ?? [];
             return (
-              <article key={suite.slug} className="rounded-[2rem] border border-ink-950/8 bg-white/80 p-6">
+              <article
+                key={suite.slug}
+                className="reveal-card rounded-[2rem] border border-ink-950/8 bg-white/80 p-6"
+                style={{ ["--enter-delay" as string]: `${index * 100}ms` }}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{suite.track}</p>
@@ -233,8 +136,10 @@ export default async function HomePage() {
           }
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {builders.map((builder) => (
-            <BuilderCard key={builder.id} builder={builder} locale={locale} />
+          {builders.map((builder, index) => (
+            <div key={builder.id} className="reveal-card" style={{ ["--enter-delay" as string]: `${index * 90}ms` }}>
+              <BuilderCard builder={builder} locale={locale} />
+            </div>
           ))}
         </div>
       </section>

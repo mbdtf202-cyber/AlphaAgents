@@ -34,7 +34,9 @@ export function AgentCard({ agent, locale }: { agent: AgentRecord; locale: Local
         </div>
         <div className="surface-muted rounded-2xl p-4">
           <div className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Cost / success" : "成功成本"}</div>
-          <div className="mt-2 text-3xl font-semibold text-ink-950">${primaryRun?.costPerSuccessfulRun.toFixed(2) ?? "--"}</div>
+          <div className="mt-2 text-3xl font-semibold text-ink-950">
+            {primaryRun ? `$${primaryRun.costPerSuccessfulRun.toFixed(2)}` : "--"}
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">

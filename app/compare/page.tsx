@@ -1,11 +1,9 @@
-import { listAgents } from "@openclaw/alpha-agents-core";
-
 import { CompareSelectorForm } from "../../components/compare-selector-form";
 import { CompareTable } from "../../components/compare-table";
 import { SectionHeading } from "../../components/section-heading";
 import { ShortlistForm } from "../../components/shortlist-form";
 import { getCurrentLocale } from "../../lib/locale";
-import { getComparePageData } from "../../lib/server/repository";
+import { getCompareCandidates, getComparePageData } from "../../lib/server/repository";
 
 export default async function ComparePage({
   searchParams,
@@ -15,20 +13,20 @@ export default async function ComparePage({
   const locale = await getCurrentLocale();
   const params = await searchParams;
   const queryValue = Array.isArray(params.agents) ? params.agents.join(",") : params.agents ?? "";
-  const slugs = queryValue ? queryValue.split(",").filter(Boolean) : ["swe-copilot-forge", "research-brief-operator", "workflow-orchestrator"];
+  const slugs = queryValue ? queryValue.split(",").filter(Boolean) : ["swe-copilot-forge", "research-brief-operator"];
   const compared = await getComparePageData(slugs);
-  const allAgents = listAgents();
+  const allAgents = await getCompareCandidates();
 
   return (
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">
       <SectionHeading
         locale={locale}
-        eyebrow={locale === "en" ? "Compare" : "比较"}
-        title={locale === "en" ? "Put up to four agents on the same review table." : "把最多四个 Agent 放到同一张评审桌上。"}
+        eyebrow={locale === "en" ? "Procurement console" : "采购评审台"}
+        title={locale === "en" ? "Compare coding and research agents with buyer-side constraints." : "带着买方约束比较 coding 与 research agents。"}
         description={
           locale === "en"
-            ? "The comparison surface is built for buyer judgment: benchmark strength, cost, latency, permission risk, maintenance signal, and fit boundaries are visible in one place."
-            : "这个比较界面是为买方判断设计的：benchmark 强度、成本、时延、权限风险、维护信号和适用边界都在同一处可见。"
+            ? "This surface is no longer just a table. Use it to define operating constraints, compare evidence, and save procurement-ready shortlist drafts."
+            : "这不再只是并排表格，而是一个采购评审台：先定义运行约束，再比较证据，并保存采购短名单草案。"
         }
       />
       <div className="mt-10">

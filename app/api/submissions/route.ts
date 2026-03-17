@@ -44,6 +44,19 @@ export async function POST(request: Request) {
       entityId: submission.id,
       newState: submission,
     });
+    await bundle.moderationRepository.upsertCase(actor, {
+      entityType: "submission",
+      entityId: submission.id,
+      title: `${submission.agentName} submission review`,
+      status: "pending",
+      reason: {
+        en: "New builder submission requires moderation before public publication.",
+        "zh-CN": "新的 Builder 投稿需要在公开发布前完成审核。",
+      },
+      assignedTo: "marketplace-ops",
+      ownerUserId: submission.ownerUserId,
+      ownerOrganizationId: submission.ownerOrganizationId,
+    });
     return NextResponse.json(
       {
         message: "Submission persisted and queued for moderation.",

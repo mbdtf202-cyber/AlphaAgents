@@ -1,11 +1,102 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { Locale } from "@openclaw/alpha-agents-core";
 
 export function SubmissionForm({ locale }: { locale: Locale }) {
   const [status, setStatus] = useState<string>("");
+  const [importStatus, setImportStatus] = useState<string>("");
+  const [recommendedBenchmarks, setRecommendedBenchmarks] = useState<string[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  async function handleImport(formData: FormData) {
+    setImportStatus("");
+    setRecommendedBenchmarks([]);
+
+    const response = await fetch("/api/submissions/import", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        sourceKind: String(formData.get("sourceKind") ?? "github"),
+        sourceUrl: String(formData.get("sourceUrl") ?? ""),
+        builderHandle: String(formData.get("builderHandle") ?? ""),
+      }),
+    });
+
+    const json = await response.json();
+    if (!response.ok) {
+      setImportStatus(json.error ?? "Import failed.");
+      return;
+    }
+
+    const form = formRef.current;
+    if (!form) {
+      return;
+    }
+
+    const imported = json.imported as {
+      agentName: string;
+      agentSlug: string;
+      builderHandle: string;
+      sourceKind: string;
+      sourceUrl: string;
+      installCommand: string;
+      summary: { en: string; "zh-CN": string };
+      permissionManifest: {
+        summary: { en: string; "zh-CN": string };
+        skills: string[];
+        secrets: string[];
+        networkAccess: string[];
+        fileAccess: string[];
+        shellAccess: boolean;
+        automationHooks: boolean;
+        riskLevel: string;
+      };
+      dependencies: string[];
+      knownLimits: Array<{ en: string; "zh-CN": string }>;
+      supportedEnvironments: string[];
+      recommendedBenchmarks: string[];
+    };
+
+    const assign = (name: string, value: string) => {
+      const element = form.elements.namedItem(name);
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
+        element.value = value;
+      }
+    };
+
+    assign("agentName", imported.agentName);
+    assign("agentSlug", imported.agentSlug);
+    assign("builderHandle", imported.builderHandle);
+    assign("sourceKind", imported.sourceKind);
+    assign("sourceUrl", imported.sourceUrl);
+    assign("installCommand", imported.installCommand);
+    assign("summaryEn", imported.summary.en);
+    assign("summaryZh", imported.summary["zh-CN"]);
+    assign("skills", imported.permissionManifest.skills.join(", "));
+    assign("permissionSummaryEn", imported.permissionManifest.summary.en);
+    assign("permissionSummaryZh", imported.permissionManifest.summary["zh-CN"]);
+    assign("secrets", imported.permissionManifest.secrets.join(", "));
+    assign("riskLevel", imported.permissionManifest.riskLevel);
+    assign("networkAccess", imported.permissionManifest.networkAccess.join(", "));
+    assign("fileAccess", imported.permissionManifest.fileAccess.join(", "));
+    assign("dependencies", imported.dependencies.join(", "));
+    assign("supportedEnvironments", imported.supportedEnvironments.join(", "));
+    assign("knownLimits", imported.knownLimits.map((item) => item.en).join("\n"));
+
+    const shellAccess = form.elements.namedItem("shellAccess");
+    if (shellAccess instanceof HTMLInputElement) {
+      shellAccess.checked = imported.permissionManifest.shellAccess;
+    }
+    const automationHooks = form.elements.namedItem("automationHooks");
+    if (automationHooks instanceof HTMLInputElement) {
+      automationHooks.checked = imported.permissionManifest.automationHooks;
+    }
+
+    setRecommendedBenchmarks(imported.recommendedBenchmarks);
+    setImportStatus(json.message ?? "Import complete.");
+  }
 
   async function handleSubmit(formData: FormData) {
     const payload = {
@@ -70,10 +161,48 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <form
-      className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6"
-      action={handleSubmit}
-    >
+    <div className="grid gap-6">
+      <form action={handleImport} className="surface-panel grid gap-4 rounded-[2rem] p-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{locale === "en" ? "Import source" : "导入来源"}</p>
+          <h2 className="mt-3 font-display text-3xl text-ink-950">{locale === "en" ? "Bootstrap a builder draft from source metadata" : "从 source metadata 生成 Builder 草稿"}</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <label className="grid gap-2 text-sm text-ink-700">
+            {locale === "en" ? "Source kind" : "来源类型"}
+            <select name="sourceKind" defaultValue="github" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3">
+              <option value="github">GitHub</option>
+              <option value="clawhub">ClawHub</option>
+              <option value="agent-pack">Agent pack</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm text-ink-700 md:col-span-2">
+            {locale === "en" ? "Source URL" : "来源 URL"}
+            <input name="sourceUrl" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="https://github.com/org/repo" />
+          </label>
+          <label className="grid gap-2 text-sm text-ink-700">
+            {locale === "en" ? "Builder handle override" : "Builder 标识覆盖"}
+            <input name="builderHandle" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="northframe" />
+          </label>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button type="submit" className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
+            {locale === "en" ? "Import draft" : "导入草稿"}
+          </button>
+          {importStatus ? <p className="text-sm text-ink-600">{importStatus}</p> : null}
+        </div>
+        {recommendedBenchmarks.length > 0 ? (
+          <p className="text-sm text-ink-700">
+            {locale === "en" ? "Recommended benchmark tracks:" : "推荐 benchmark 轨道："} {recommendedBenchmarks.join(", ")}
+          </p>
+        ) : null}
+      </form>
+
+      <form
+        ref={formRef}
+        className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6"
+        action={handleSubmit}
+      >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm text-ink-700">
           {locale === "en" ? "Agent name" : "Agent 名称"}
@@ -184,6 +313,7 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
         </button>
         {status ? <p className="text-sm text-ink-600">{status}</p> : null}
       </div>
-    </form>
+      </form>
+    </div>
   );
 }

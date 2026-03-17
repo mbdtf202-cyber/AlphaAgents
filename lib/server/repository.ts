@@ -1,71 +1,34 @@
 import {
   benchmarkSuites,
-  builders as sampleBuilders,
   decisionMemos as sampleDecisionMemos,
   featureSlots,
-  getLeaderboards,
-  agents as sampleAgents,
-  getVerifiedReviews,
   moderationCases as sampleModerationCases,
   resolveText,
   shortlists as sampleShortlists,
   type AgentRecord,
   type BuilderProfile,
+  type LeaderboardEntry,
   type Locale,
   type SessionActor,
 } from "@openclaw/alpha-agents-core";
 
+import { buildLeaderboardsFromAgents, filterAgents } from "./catalog";
 import { getReadCatalog, getRepositoryBundle } from "./repositories";
 import { sampleProvenance } from "./provenance";
 
-function filterReviewsToVersion(agent: AgentRecord, versionId?: string): AgentRecord {
-  const selectedVersionId = versionId ?? agent.versions[0]?.id;
-  return {
-    ...agent,
-    reviews: agent.reviews.filter((review) => review.versionId === selectedVersionId),
-  };
-}
-
-function hydrateSampleAgent(agent: AgentRecord, versionId?: string): AgentRecord {
-  const reviews = getVerifiedReviews().filter((review) => review.agentSlug === agent.slug);
-  const merged = {
-    ...agent,
-    provenance: agent.provenance ?? sampleProvenance,
-    reviews: reviews.map((review) => ({
-      ...review,
-      provenance: review.provenance ?? sampleProvenance,
-    })),
-    versions: agent.versions.map((version) => ({
-      ...version,
-      provenance: version.provenance ?? sampleProvenance,
-      benchmarkRuns: version.benchmarkRuns.map((run) => ({
-        ...run,
-        provenance: run.provenance ?? sampleProvenance,
-      })),
-    })),
-  };
-  return filterReviewsToVersion(merged, versionId);
-}
-
-function sampleBuilder(builder: BuilderProfile): BuilderProfile {
-  return {
-    ...builder,
-    provenance: builder.provenance ?? sampleProvenance,
-  };
-}
-
-function sampleAgentList(): AgentRecord[] {
-  return sampleAgents.map((agent) => hydrateSampleAgent(agent));
-}
+const buildLeaderboards = (agents: AgentRecord[]): Record<string, LeaderboardEntry[]> =>
+  buildLeaderboardsFromAgents(agents);
 
 export async function getHomepageData() {
   const catalog = await getReadCatalog();
+  const leaderboards = buildLeaderboards(catalog.agents);
+
   return {
     featuredAgents: featureSlots
       .map((slot) => catalog.agents.find((agent) => agent.slug === slot.agentSlug))
       .filter((agent): agent is AgentRecord => Boolean(agent)),
     builders: catalog.builders.slice(0, 3),
-    leaderboards: getLeaderboards(),
+    leaderboards,
     featureSlots: featureSlots.map((slot) => ({ ...slot, provenance: slot.provenance ?? sampleProvenance })),
     suites: benchmarkSuites.map((suite) => ({ ...suite, provenance: suite.provenance ?? sampleProvenance })),
     metrics: catalog.metrics,
@@ -73,68 +36,54 @@ export async function getHomepageData() {
   };
 }
 
-export async function getFilteredAgentsPageData({
-  query,
-  category,
-  status,
-}: {
+export async function getFilteredAgentsPageData(filters: {
   query?: string;
   category?: string;
   status?: string;
 }) {
-  const catalog = await getReadCatalog();
-  return catalog.agents
-    .filter((agent) => {
-      if (query) {
-        const haystack = [agent.name, agent.slug, agent.summary.en, agent.summary["zh-CN"], ...agent.categories].join(" ").toLowerCase();
-        if (!haystack.includes(query.toLowerCase())) {
-          return false;
-        }
-      }
-      if (category && category !== "all" && !agent.categories.includes(category)) {
-        return false;
-      }
-      if (status && status !== "all" && agent.verificationStatus !== status) {
-        return false;
-      }
-      return true;
-    })
-    .map((agent) => hydrateSampleAgent(agent));
+  return filterAgents((await getReadCatalog()).agents, filters);
 }
 
 export async function getAgentPageData(slug: string, versionId?: string) {
-  const catalog = await getReadCatalog();
-  const agent = catalog.agents.find((entry) => entry.slug === slug);
-  return agent ? hydrateSampleAgent(agent, versionId) : undefined;
+  const agent = (await getReadCatalog()).agents.find((entry) => entry.slug === slug);
+  if (!agent) {
+    return undefined;
+  }
+  if (!versionId) {
+    return agent;
+  }
+  return {
+    ...agent,
+    versions: agent.versions.filter((version) => version.id === versionId),
+    reviews: agent.reviews.filter((review) => review.versionId === versionId),
+  };
 }
 
 export async function getBuilderPageData(handle: string) {
-  const builder = sampleBuilders.find((entry) => entry.handle === handle);
+  const catalog = await getReadCatalog();
+  const builder = catalog.builders.find((entry) => entry.handle === handle);
   if (!builder) {
     return undefined;
   }
 
-  const catalog = await getReadCatalog();
-  const publishedAgents = builder.publishedAgentSlugs
-    .map((slug) => catalog.agents.find((entry) => entry.slug === slug))
-    .filter((agent): agent is AgentRecord => Boolean(agent))
-    .map((agent) => hydrateSampleAgent(agent));
+  const publishedAgents = catalog.agents.filter((agent) => agent.builderHandle === handle);
+  const reviews = publishedAgents.flatMap((agent) => agent.reviews);
 
   return {
-    builder: sampleBuilder(builder),
+    builder,
     publishedAgents,
-    reviews: getVerifiedReviews().filter((review) => review.builderHandle === handle).map((review) => ({ ...review, provenance: review.provenance ?? sampleProvenance })),
+    reviews,
   };
 }
 
 export async function getBenchmarksPageData() {
+  const catalog = await getReadCatalog();
+  const leaderboards = buildLeaderboards(catalog.agents);
+
   return benchmarkSuites.map((suite) => ({
     ...suite,
     provenance: suite.provenance ?? sampleProvenance,
-    entries: Object.values(getLeaderboards())
-      .flat()
-      .filter((entry) => entry.suiteSlug === suite.slug)
-      .slice(0, 5),
+    entries: (leaderboards[suite.slug] ?? []).slice(0, 5),
   }));
 }
 
@@ -147,10 +96,11 @@ export async function getBenchmarkDetailPageData(slug: string) {
   const catalog = await getReadCatalog();
   const runs = catalog.agents
     .flatMap((agent) =>
-      agent.versions
-        .flatMap((version) => version.benchmarkRuns)
-        .filter((run) => run.suiteSlug === slug)
-        .map((run) => ({ agent: hydrateSampleAgent(agent, run.id), run })),
+      agent.versions.flatMap((version) =>
+        version.benchmarkRuns
+          .filter((run) => run.suiteSlug === slug)
+          .map((run) => ({ agent: { ...agent, versions: [version] }, run })),
+      ),
     )
     .sort((left, right) => left.run.publicRank - right.run.publicRank);
 
@@ -165,22 +115,31 @@ export async function getComparePageData(slugs: string[]) {
   return slugs
     .map((slug) => catalog.agents.find((entry) => entry.slug === slug))
     .filter((agent): agent is AgentRecord => Boolean(agent))
-    .slice(0, 4)
-    .map((agent) => hydrateSampleAgent(agent));
+    .slice(0, 4);
+}
+
+export async function getCompareCandidates() {
+  return (await getReadCatalog()).agents;
+}
+
+export async function getLeaderboardsPageData() {
+  const catalog = await getReadCatalog();
+  return buildLeaderboards(catalog.agents);
 }
 
 export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
   const bundle = await getRepositoryBundle();
-  const [submissions, builderAgents, installs, reviews, shortlists, decisionMemos, benchmarkRequests, moderationCases] = await Promise.all([
-    bundle.agentRepository.listSubmissionsForActor(actor),
-    bundle.agentRepository.listBuilderAgents(actor),
-    bundle.installRepository.listInstallsForActor(actor),
-    bundle.reviewRepository.listReviewsForActor(actor),
-    bundle.shortlistRepository.listShortlistsForActor(actor),
-    bundle.shortlistRepository.listDecisionMemosForActor(actor),
-    bundle.benchmarkRepository.listRequestsForActor(actor),
-    bundle.moderationRepository.listModerationCases(actor),
-  ]);
+  const [submissions, builderAgents, installs, reviews, shortlists, decisionMemos, benchmarkRequests, moderationCases] =
+    await Promise.all([
+      bundle.agentRepository.listSubmissionsForActor(actor),
+      bundle.agentRepository.listBuilderAgents(actor),
+      bundle.installRepository.listInstallsForActor(actor),
+      bundle.reviewRepository.listReviewsForActor(actor),
+      bundle.shortlistRepository.listShortlistsForActor(actor),
+      bundle.shortlistRepository.listDecisionMemosForActor(actor),
+      bundle.benchmarkRepository.listRequestsForActor(actor),
+      bundle.moderationRepository.listModerationCases(actor),
+    ]);
 
   return {
     actor,
@@ -201,14 +160,15 @@ export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
 
 export async function getAdminData(actor: SessionActor) {
   const bundle = await getRepositoryBundle();
+  const catalog = await getReadCatalog();
   return {
     moderationCases: await bundle.moderationRepository.listModerationCases(actor),
-    flaggedAgents: sampleAgentList().filter((agent) => agent.verificationStatus !== "verified"),
+    flaggedAgents: catalog.agents.filter((agent) => agent.verificationStatus !== "verified"),
   };
 }
 
-export async function getBuildersDirectory() {
-  return sampleBuilders.map(sampleBuilder);
+export async function getBuildersDirectory(): Promise<BuilderProfile[]> {
+  return (await getReadCatalog()).builders;
 }
 
 export function getSampleBuyerArtifacts() {

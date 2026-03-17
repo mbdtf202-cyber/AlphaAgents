@@ -2,20 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { agents, resolveText } from "@openclaw/alpha-agents-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { ProvenanceBadge } from "../../../components/provenance-badge";
 import { ScoreBars } from "../../../components/score-bars";
 import { getCurrentLocale } from "../../../lib/locale";
 import { getAgentPageData } from "../../../lib/server/repository";
+import { getReadCatalog } from "../../../lib/server/repositories";
 
 export async function generateStaticParams() {
-  return agents.map((agent) => ({ slug: agent.slug }));
+  return (await getReadCatalog()).agents.map((agent) => ({ slug: agent.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const agent = agents.find((entry) => entry.slug === slug);
+  const agent = (await getReadCatalog()).agents.find((entry) => entry.slug === slug);
   if (!agent) {
     return {};
   }

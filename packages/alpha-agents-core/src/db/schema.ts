@@ -331,6 +331,7 @@ export const verifiedReviewsTable = pgTable("alpha_agents_verified_reviews", {
   body: jsonb("body").default(sql`'{}'::jsonb`).notNull(),
   rating: integer("rating").notNull(),
   dimensions: jsonb("dimensions").default(sql`'{}'::jsonb`).notNull(),
+  context: jsonb("context").default(sql`'{}'::jsonb`).notNull(),
   ...timestamps,
 });
 
@@ -344,6 +345,9 @@ export const shortlistsTable = pgTable("alpha_agents_shortlists", {
   name: jsonb("name").default(sql`'{}'::jsonb`).notNull(),
   buyerType: varchar("buyer_type", { length: 32 }).notNull(),
   agentSlugs: jsonb("agent_slugs").default(sql`'[]'::jsonb`).notNull(),
+  constraints: jsonb("constraints"),
+  scoreWeights: jsonb("score_weights"),
+  internalNotes: text("internal_notes"),
   ...timestamps,
 });
 
@@ -362,6 +366,9 @@ export const decisionMemosTable = pgTable("alpha_agents_decision_memos", {
   recommendationState: varchar("recommendation_state", { length: 24 }).notNull(),
   rolloutRecommendation: jsonb("rollout_recommendation").default(sql`'{}'::jsonb`).notNull(),
   tradeoffs: jsonb("tradeoffs").default(sql`'[]'::jsonb`).notNull(),
+  evidenceSummary: jsonb("evidence_summary"),
+  riskSummary: jsonb("risk_summary"),
+  scoreWeights: jsonb("score_weights"),
   ...timestamps,
 });
 

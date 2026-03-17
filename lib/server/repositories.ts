@@ -3,10 +3,12 @@ import { randomUUID } from "node:crypto";
 import {
   agents as sampleAgents,
   benchmarkSuites,
+  type BenchmarkRun,
   builders as sampleBuilders,
   type AgentRecord,
   type AgentRepository,
   type AgentSubmissionRecord,
+  type AgentVersionRecord,
   type AuditLogRecord,
   type AuditRepository,
   type BenchmarkRepository,
@@ -37,6 +39,7 @@ import {
   benchmarkArtifactsTable,
   benchmarkRequestsTable,
   benchmarkRunsTable,
+  benchmarkScorecards,
   benchmarkSuitesTable,
   builderProfiles,
   decisionMemosTable,
@@ -54,6 +57,17 @@ import {
 import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 
 import { hashToken } from "./auth";
+import {
+  booleanFromStorage,
+  buildLeaderboardsFromAgents,
+  filterAgents,
+  localizedTextArrayFromUnknown,
+  localizedTextFromUnknown,
+  mergeAgentsBySlug,
+  mergeBuildersByHandle,
+  stringArrayFromUnknown,
+  withRegressionSummaries,
+} from "./catalog";
 import { getDb } from "./db";
 import { getStorageMode } from "./env";
 import { ConfigurationError, ForbiddenError, NotFoundError } from "./errors";
@@ -72,7 +86,7 @@ export interface AuthRepository {
   getSessionByTokenHash(tokenHash: string): Promise<SessionActor | null>;
   destroySessionByTokenHash(tokenHash: string): Promise<void>;
   createMagicLink(input: { email: string; role: SessionActor["role"]; redirectTo: string; tokenHash: string; rawToken: string }): Promise<MagicLinkRecord>;
-  consumeMagicLink(tokenHash: string): Promise<{ actor: SessionActor; rawSessionToken: string }>;
+  consumeMagicLink(tokenHash: string): Promise<{ actor: SessionActor; rawSessionToken: string; redirectTo: string }>;
   upsertGitHubAccount(input: {
     providerAccountId: string;
     email: string;
@@ -94,6 +108,12 @@ export interface RepositoryBundle {
   auditRepository: AuditRepository;
 }
 
+interface PublicCatalog {
+  agents: AgentRecord[];
+  builders: BuilderProfile[];
+  metrics: PublicMetricsSummary;
+}
+
 function ownableMatch(actor: SessionActor, ownerUserId?: string, ownerOrganizationId?: string): boolean {
   if (ownerUserId && ownerUserId === actor.userId) {
     return true;
@@ -109,25 +129,78 @@ function sampleBuilderList(): BuilderProfile[] {
 }
 
 function sampleAgentList(): AgentRecord[] {
-  return sampleAgents.map((agent) => ({
-    ...agent,
-    provenance: sampleProvenance,
-    versions: agent.versions.map((version) => ({
-      ...version,
+  return sampleAgents.map((agent) =>
+    withRegressionSummaries({
+      ...agent,
       provenance: sampleProvenance,
-      benchmarkRuns: version.benchmarkRuns.map((run) => ({ ...run, provenance: sampleProvenance })),
-    })),
-  }));
+      versions: agent.versions.map((version) => ({
+        ...version,
+        provenance: sampleProvenance,
+        benchmarkRuns: version.benchmarkRuns.map((run) => ({ ...run, provenance: sampleProvenance })),
+      })),
+    }),
+  );
 }
 
-function liveMetricsFromMemory(): PublicMetricsSummary {
-  const state = getMemoryState();
+function buildSampleCatalog(): PublicCatalog {
   return {
-    liveAgentCount: 0,
-    liveInstallCount: state.installs.filter((item) => item.provenance?.dataMode === "live").length,
-    liveReviewCount: state.reviews.filter((item) => item.provenance?.dataMode === "live").length,
-    liveBenchmarkRunCount: state.benchmarkRequests.filter((item) => item.status === "completed").length,
-    sampleAgentCount: sampleAgents.length,
+    agents: sampleAgentList(),
+    builders: sampleBuilderList(),
+    metrics: {
+      liveAgentCount: 0,
+      liveInstallCount: 0,
+      liveReviewCount: 0,
+      liveBenchmarkRunCount: 0,
+      sampleAgentCount: sampleAgents.length,
+    },
+  };
+}
+
+function buildMemoryPublicCatalog(state = getMemoryState()): PublicCatalog {
+  const agents = state.agents.map((agent) =>
+    withRegressionSummaries({
+      ...agent,
+      reviews: state.reviews.filter((review) => review.agentSlug === agent.slug),
+      versions: agent.versions.map((version) => ({
+        ...version,
+        benchmarkRuns: version.benchmarkRuns.slice().sort((left, right) => left.publicRank - right.publicRank),
+      })),
+    }),
+  );
+
+  const builders = state.builders.map((builder) => {
+    const publishedAgentSlugs = agents
+      .filter((agent) => agent.builderHandle === builder.handle)
+      .map((agent) => agent.slug);
+    const builderReviews = state.reviews.filter((review) => review.builderHandle === builder.handle);
+    const shortlistCount = state.shortlists.filter((shortlist) =>
+      shortlist.agentSlugs.some((slug) => publishedAgentSlugs.includes(slug)),
+    ).length;
+    const benchmarkWins = agents
+      .filter((agent) => agent.builderHandle === builder.handle)
+      .flatMap((agent) => agent.versions)
+      .flatMap((version) => version.benchmarkRuns)
+      .filter((run) => run.publicRank === 1).length;
+
+    return {
+      ...builder,
+      publishedAgentSlugs,
+      shortlistCount,
+      benchmarkWins,
+      verifiedReviewCount: builderReviews.length,
+    };
+  });
+
+  return {
+    agents,
+    builders,
+    metrics: {
+      liveAgentCount: agents.filter((item) => item.provenance?.dataMode === "live").length,
+      liveInstallCount: state.installs.filter((item) => item.provenance?.dataMode === "live").length,
+      liveReviewCount: state.reviews.filter((item) => item.provenance?.dataMode === "live").length,
+      liveBenchmarkRunCount: state.benchmarkRequests.filter((item) => item.status === "completed").length,
+      sampleAgentCount: sampleAgents.length,
+    },
   };
 }
 
@@ -155,7 +228,7 @@ function createMemoryBundle(): RepositoryBundle {
   const authRepository: AuthRepository = {
     async getSessionByTokenHash(tokenHash) {
       const session = state.sessions.find((entry) => entry.tokenHash === tokenHash);
-      if (!session) {
+      if (!session || new Date(session.expiresAt).getTime() < Date.now()) {
         return null;
       }
       const user = state.users.find((entry) => entry.id === session.userId);
@@ -196,7 +269,7 @@ function createMemoryBundle(): RepositoryBundle {
     },
     async consumeMagicLink(tokenHash) {
       const challenge = state.magicLinks.find((entry) => entry.tokenHash === tokenHash && !entry.consumedAt);
-      if (!challenge) {
+      if (!challenge || new Date(challenge.expiresAt).getTime() < Date.now()) {
         throw new NotFoundError("Magic link has expired or was already consumed.");
       }
       challenge.consumedAt = new Date().toISOString();
@@ -215,7 +288,7 @@ function createMemoryBundle(): RepositoryBundle {
       if (!actor) {
         throw new NotFoundError("Session could not be created.");
       }
-      return { actor, rawSessionToken };
+      return { actor, rawSessionToken, redirectTo: challenge.redirectTo };
     },
     async upsertGitHubAccount(input) {
       let user = state.users.find((entry) => entry.githubHandle === input.githubHandle || entry.email === input.email);
@@ -242,25 +315,10 @@ function createMemoryBundle(): RepositoryBundle {
 
   const agentRepository: AgentRepository = {
     async listPublicAgents(filters) {
-      const all = sampleAgentList();
-      return all.filter((agent) => {
-        if (filters?.query) {
-          const haystack = [agent.name, agent.slug, agent.summary.en, agent.summary["zh-CN"], ...agent.categories].join(" ").toLowerCase();
-          if (!haystack.includes(filters.query.toLowerCase())) {
-            return false;
-          }
-        }
-        if (filters?.category && filters.category !== "all" && !agent.categories.includes(filters.category)) {
-          return false;
-        }
-        if (filters?.status && filters.status !== "all" && agent.verificationStatus !== filters.status) {
-          return false;
-        }
-        return true;
-      });
+      return filterAgents(buildMemoryPublicCatalog(state).agents, filters);
     },
     async getPublicAgentBySlug(slug, versionId) {
-      const agent = sampleAgentList().find((entry) => entry.slug === slug);
+      const agent = buildMemoryPublicCatalog(state).agents.find((entry) => entry.slug === slug);
       if (!agent) {
         return undefined;
       }
@@ -283,8 +341,8 @@ function createMemoryBundle(): RepositoryBundle {
       state.submissions.push(input);
       return input;
     },
-    async publishVersion(actor, agentId, versionId) {
-      const agent = state.agents.find((entry) => entry.id === agentId || entry.slug === agentId);
+    async publishVersion(actor, agentSlug, versionId) {
+      const agent = state.agents.find((entry) => entry.slug === agentSlug);
       if (!agent) {
         throw new NotFoundError("Agent not found.");
       }
@@ -300,8 +358,8 @@ function createMemoryBundle(): RepositoryBundle {
   };
 
   const versionRepository: VersionRepository = {
-    async assertBuilderOwnsVersion(actor, agentId, versionId) {
-      const agent = state.agents.find((entry) => entry.id === agentId || entry.slug === agentId);
+    async assertBuilderOwnsVersion(actor, agentSlug, versionId) {
+      const agent = state.agents.find((entry) => entry.slug === agentSlug);
       if (!agent) {
         throw new NotFoundError("Agent not found.");
       }
@@ -345,9 +403,15 @@ function createMemoryBundle(): RepositoryBundle {
       if (install.versionId !== input.versionId || install.agentSlug !== input.agentSlug) {
         throw new ForbiddenError("Review must match the owned install version and agent.");
       }
-      const review = { ...input, ownerUserId: actor.userId, ownerOrganizationId: actor.activeOrganizationId, provenance: liveProvenance };
+      const agent = state.agents.find((entry) => entry.slug === input.agentSlug);
+      const review = {
+        ...input,
+        builderHandle: agent?.builderHandle ?? input.builderHandle,
+        ownerUserId: actor.userId,
+        ownerOrganizationId: actor.activeOrganizationId,
+        provenance: liveProvenance,
+      };
       state.reviews.push(review);
-      const agent = state.agents.find((entry) => entry.slug === review.agentSlug);
       if (agent) {
         agent.reviews = agent.reviews.filter((entry) => entry.versionId !== review.versionId).concat(review);
       }
@@ -383,6 +447,38 @@ function createMemoryBundle(): RepositoryBundle {
         return state.moderationCases;
       }
       return state.moderationCases.filter((entry) => ownableMatch(actor, entry.ownerUserId, entry.ownerOrganizationId));
+    },
+    async upsertCase(actor, input) {
+      const existing = state.moderationCases.find(
+        (entry) => entry.entityType === input.entityType && entry.entityId === input.entityId,
+      );
+      if (existing) {
+        existing.title = input.title;
+        existing.status = input.status;
+        existing.reason = input.reason;
+        existing.assignedTo = input.assignedTo;
+        existing.ownerUserId = input.ownerUserId;
+        existing.ownerOrganizationId = input.ownerOrganizationId;
+        existing.updatedAt = new Date().toISOString();
+        existing.provenance = liveProvenance;
+        return existing;
+      }
+
+      const created: ModerationCase = {
+        id: input.id ?? randomUUID(),
+        entityType: input.entityType,
+        entityId: input.entityId,
+        title: input.title,
+        status: input.status,
+        reason: input.reason,
+        assignedTo: input.assignedTo,
+        updatedAt: input.updatedAt ?? new Date().toISOString(),
+        ownerUserId: input.ownerUserId,
+        ownerOrganizationId: input.ownerOrganizationId,
+        provenance: liveProvenance,
+      };
+      state.moderationCases.push(created);
+      return created;
     },
     async recordDecision(actor, caseId, nextStatus) {
       if (actor.role !== "admin") {
@@ -434,13 +530,13 @@ function createMemoryBundle(): RepositoryBundle {
 
   const catalogRepository: CatalogRepository = {
     async listBuilders() {
-      return sampleBuilderList();
+      return buildMemoryPublicCatalog(state).builders;
     },
     async getBuilderByHandle(handle) {
-      return sampleBuilderList().find((builder) => builder.handle === handle);
+      return buildMemoryPublicCatalog(state).builders.find((builder) => builder.handle === handle);
     },
     async getPublicMetricsSummary() {
-      return liveMetricsFromMemory();
+      return buildMemoryPublicCatalog(state).metrics;
     },
   };
 
@@ -490,6 +586,310 @@ async function buildActorFromDb(
       ...membership,
       role: membership.role as MembershipRole,
     })),
+  };
+}
+
+async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
+  const db = getDb();
+  const sampleCatalog = buildSampleCatalog();
+  const sampleAgentsBySlug = new Map(sampleCatalog.agents.map((agent) => [agent.slug, agent]));
+  const sampleBuildersByHandle = new Map(sampleCatalog.builders.map((builder) => [builder.handle, builder]));
+
+  const [
+    agentRows,
+    sourceRows,
+    permissionRows,
+    versionRows,
+    runRows,
+    reviewRows,
+    builderRows,
+    shortlistRows,
+    metricsRows,
+  ] = await Promise.all([
+    db.select().from(agentRecords),
+    db.select().from(agentSources),
+    db.select().from(permissionManifests),
+    db.select().from(agentVersions),
+    db
+      .select({
+        id: benchmarkRunsTable.id,
+        agentVersionId: benchmarkRunsTable.agentVersionId,
+        suiteSlug: benchmarkSuitesTable.slug,
+        createdAt: benchmarkRunsTable.createdAt,
+        publicRank: benchmarkRunsTable.publicRank,
+        peerGroupSize: benchmarkRunsTable.peerGroupSize,
+        bundleHash: benchmarkRunsTable.bundleHash,
+        costPerSuccessfulRun: benchmarkRunsTable.costPerSuccessfulRun,
+        medianLatencySeconds: benchmarkRunsTable.medianLatencySeconds,
+        stability: benchmarkRunsTable.stability,
+        freshnessDays: benchmarkRunsTable.freshnessDays,
+        transcriptUrl: benchmarkRunsTable.transcriptUrl,
+        toolTraceUrl: benchmarkRunsTable.toolTraceUrl,
+        notes: benchmarkRunsTable.notes,
+        overall: benchmarkScorecards.overall,
+        taskSuccess: benchmarkScorecards.taskSuccess,
+        reliability: benchmarkScorecards.reliability,
+        costEfficiency: benchmarkScorecards.costEfficiency,
+        latency: benchmarkScorecards.latency,
+        safetyFootprint: benchmarkScorecards.safetyFootprint,
+        setupFriction: benchmarkScorecards.setupFriction,
+        operatorBurden: benchmarkScorecards.operatorBurden,
+        domainFit: benchmarkScorecards.domainFit,
+      })
+      .from(benchmarkRunsTable)
+      .innerJoin(benchmarkSuitesTable, eq(benchmarkSuitesTable.id, benchmarkRunsTable.suiteId))
+      .leftJoin(benchmarkScorecards, eq(benchmarkScorecards.benchmarkRunId, benchmarkRunsTable.id)),
+    db
+      .select({
+        id: verifiedReviewsTable.id,
+        agentId: verifiedReviewsTable.agentId,
+        agentSlug: agentRecords.slug,
+        versionId: verifiedReviewsTable.agentVersionId,
+        builderHandle: builderProfiles.handle,
+        installId: verifiedReviewsTable.installId,
+        company: verifiedReviewsTable.company,
+        role: verifiedReviewsTable.role,
+        headline: verifiedReviewsTable.headline,
+        body: verifiedReviewsTable.body,
+        rating: verifiedReviewsTable.rating,
+        dimensions: verifiedReviewsTable.dimensions,
+        context: verifiedReviewsTable.context,
+        createdAt: verifiedReviewsTable.createdAt,
+        ownerUserId: verifiedReviewsTable.ownerUserId,
+        ownerOrganizationId: verifiedReviewsTable.ownerOrganizationId,
+      })
+      .from(verifiedReviewsTable)
+      .innerJoin(agentRecords, eq(agentRecords.id, verifiedReviewsTable.agentId))
+      .leftJoin(builderProfiles, eq(builderProfiles.id, agentRecords.builderProfileId)),
+    db
+      .select({
+        id: builderProfiles.id,
+        userId: builderProfiles.userId,
+        organizationId: builderProfiles.organizationId,
+        handle: builderProfiles.handle,
+        name: builderProfiles.name,
+        kind: builderProfiles.kind,
+        headline: builderProfiles.headline,
+        bio: builderProfiles.bio,
+        specialties: builderProfiles.specialties,
+        githubHandle: users.githubHandle,
+      })
+      .from(builderProfiles)
+      .leftJoin(users, eq(users.id, builderProfiles.userId)),
+    db.select().from(shortlistsTable),
+    Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(agentRecords).where(eq(agentRecords.status, "verified")),
+      db.select({ count: sql<number>`count(*)` }).from(verifiedInstallsTable),
+      db.select({ count: sql<number>`count(*)` }).from(verifiedReviewsTable),
+      db.select({ count: sql<number>`count(*)` }).from(benchmarkRunsTable),
+    ]),
+  ]);
+
+  const sourceByAgentId = new Map(sourceRows.map((row) => [row.agentId, row]));
+  const permissionByAgentId = new Map(permissionRows.map((row) => [row.agentId, row]));
+  const versionsByAgentId = new Map<string, typeof versionRows>();
+  const runsByVersionId = new Map<string, BenchmarkRun[]>();
+  const reviewsByAgentId = new Map<string, AgentRecord["reviews"]>();
+
+  for (const row of versionRows) {
+    const next = versionsByAgentId.get(row.agentId) ?? [];
+    next.push(row);
+    versionsByAgentId.set(row.agentId, next);
+  }
+
+  for (const row of runRows) {
+    const next = runsByVersionId.get(row.agentVersionId) ?? [];
+    next.push({
+      id: row.id,
+      suiteSlug: row.suiteSlug,
+      evaluatedAt: row.createdAt.toISOString(),
+      publicRank: row.publicRank,
+      peerGroupSize: row.peerGroupSize,
+      bundleHash: row.bundleHash,
+      costPerSuccessfulRun: Number(row.costPerSuccessfulRun ?? 0),
+      medianLatencySeconds: row.medianLatencySeconds,
+      stability: row.stability,
+      freshnessDays: row.freshnessDays,
+      transcriptUrl: row.transcriptUrl,
+      toolTraceUrl: row.toolTraceUrl,
+      scorecard: {
+        overall: row.overall ?? 0,
+        taskSuccess: row.taskSuccess ?? 0,
+        reliability: row.reliability ?? 0,
+        costEfficiency: row.costEfficiency ?? 0,
+        latency: row.latency ?? 0,
+        safetyFootprint: row.safetyFootprint ?? 0,
+        setupFriction: row.setupFriction ?? 0,
+        operatorBurden: row.operatorBurden ?? 0,
+        domainFit: row.domainFit ?? 0,
+      },
+      notes: localizedTextFromUnknown(row.notes),
+      provenance: liveProvenance,
+    });
+    runsByVersionId.set(row.agentVersionId, next);
+  }
+
+  for (const row of reviewRows) {
+    const next = reviewsByAgentId.get(row.agentId) ?? [];
+    next.push({
+      id: row.id,
+      agentSlug: row.agentSlug,
+      versionId: row.versionId,
+      builderHandle: row.builderHandle ?? sampleAgentsBySlug.get(row.agentSlug)?.builderHandle ?? "",
+      installId: row.installId,
+      company: row.company,
+      role: row.role,
+      headline: localizedTextFromUnknown(row.headline),
+      body: localizedTextFromUnknown(row.body),
+      rating: row.rating,
+      dimensions: row.dimensions as AgentRecord["reviews"][number]["dimensions"],
+      context: row.context as AgentRecord["reviews"][number]["context"],
+      createdAt: row.createdAt.toISOString(),
+      ownerUserId: row.ownerUserId ?? undefined,
+      ownerOrganizationId: row.ownerOrganizationId ?? undefined,
+      provenance: liveProvenance,
+    });
+    reviewsByAgentId.set(row.agentId, next);
+  }
+
+  const liveAgents = agentRows.map((row) => {
+    const sampleAgent = sampleAgentsBySlug.get(row.slug);
+    const source = sourceByAgentId.get(row.id);
+    const permission = permissionByAgentId.get(row.id);
+    const builder = builderRows.find((entry) => entry.id === row.builderProfileId);
+    const versions = (versionsByAgentId.get(row.id) ?? [])
+      .sort((left, right) => new Date(right.releasedAt).getTime() - new Date(left.releasedAt).getTime())
+      .map((version) => {
+        const sampleVersion =
+          sampleAgent?.versions.find((entry) => entry.id === version.id || entry.version === version.version);
+        return {
+          id: version.id,
+          version: version.version,
+          releasedAt: version.releasedAt.toISOString(),
+          status: version.status as AgentVersionRecord["status"],
+          bundleHash: version.bundleHash,
+          changelog: localizedTextArrayFromUnknown(version.changelog, sampleVersion?.changelog ?? []),
+          benchmarkRuns: runsByVersionId.get(version.id) ?? sampleVersion?.benchmarkRuns ?? [],
+          reviewAverage: Number(version.reviewAverage ?? 0),
+          reviewCount: version.reviewCount,
+          provenance: liveProvenance,
+        };
+      });
+
+    return {
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      builderHandle: builder?.handle ?? sampleAgent?.builderHandle ?? "builder",
+      tagline: localizedTextFromUnknown(row.tagline, sampleAgent?.tagline),
+      summary: localizedTextFromUnknown(row.summary, sampleAgent?.summary),
+      useCases: sampleAgent?.useCases ?? [],
+      notFor: sampleAgent?.notFor ?? [],
+      categories: stringArrayFromUnknown(row.categories, sampleAgent?.categories ?? []),
+      verificationStatus: row.status as AgentRecord["verificationStatus"],
+      source: source
+        ? {
+            id: source.id,
+            kind: source.kind as AgentRecord["source"]["kind"],
+            label: source.label,
+            url: source.url,
+            installCommand: source.installCommand,
+          }
+        : sampleAgent?.source ?? {
+            id: `source-${row.id}`,
+            kind: "github",
+            label: "Live source",
+            url: "#",
+            installCommand: "pending",
+          },
+      permissionManifest: permission
+        ? {
+            id: permission.id,
+            summary: localizedTextFromUnknown(permission.summary, sampleAgent?.permissionManifest.summary),
+            skills: stringArrayFromUnknown(permission.skills, sampleAgent?.permissionManifest.skills ?? []),
+            secrets: stringArrayFromUnknown(permission.secrets, sampleAgent?.permissionManifest.secrets ?? []),
+            networkAccess: stringArrayFromUnknown(permission.networkAccess, sampleAgent?.permissionManifest.networkAccess ?? []),
+            fileAccess: stringArrayFromUnknown(permission.fileAccess, sampleAgent?.permissionManifest.fileAccess ?? []),
+            shellAccess: booleanFromStorage(permission.shellAccess, sampleAgent?.permissionManifest.shellAccess ?? false),
+            automationHooks: booleanFromStorage(
+              permission.automationHooks,
+              sampleAgent?.permissionManifest.automationHooks ?? false,
+            ),
+            riskLevel: permission.riskLevel as AgentRecord["permissionManifest"]["riskLevel"],
+          }
+        : sampleAgent?.permissionManifest ?? {
+            id: `perm-${row.id}`,
+            summary: localizedTextFromUnknown(undefined),
+            skills: [],
+            secrets: [],
+            networkAccess: [],
+            fileAccess: [],
+            shellAccess: false,
+            automationHooks: false,
+            riskLevel: "low",
+          },
+      versions: versions.length > 0 ? versions : sampleAgent?.versions ?? [],
+      overview: sampleAgent?.overview ?? [],
+      capabilities: sampleAgent?.capabilities ?? [],
+      dependencies: sampleAgent?.dependencies ?? [],
+      demoRuns: sampleAgent?.demoRuns ?? [],
+      reviews: reviewsByAgentId.get(row.id) ?? sampleAgent?.reviews ?? [],
+      knownLimits: sampleAgent?.knownLimits ?? [],
+      provenance: liveProvenance,
+    } satisfies AgentRecord;
+  });
+
+  const mergedAgents = mergeAgentsBySlug(sampleCatalog.agents, liveAgents);
+  const liveBuilders = builderRows.map((row) => {
+    const sampleBuilder = sampleBuildersByHandle.get(row.handle);
+    const publishedAgentSlugs = mergedAgents
+      .filter((agent) => agent.builderHandle === row.handle)
+      .map((agent) => agent.slug);
+    const builderReviewCount = mergedAgents
+      .filter((agent) => agent.builderHandle === row.handle)
+      .flatMap((agent) => agent.reviews).length;
+    const shortlistCount = shortlistRows.filter((shortlist) =>
+      stringArrayFromUnknown(shortlist.agentSlugs).some((slug) => publishedAgentSlugs.includes(slug)),
+    ).length;
+    const benchmarkWins = mergedAgents
+      .filter((agent) => agent.builderHandle === row.handle)
+      .flatMap((agent) => agent.versions)
+      .flatMap((version) => version.benchmarkRuns)
+      .filter((run) => run.publicRank === 1).length;
+
+    return {
+      id: row.id,
+      handle: row.handle,
+      name: row.name,
+      type: row.kind as BuilderProfile["type"],
+      location: sampleBuilder?.location,
+      headline: localizedTextFromUnknown(row.headline, sampleBuilder?.headline),
+      bio: localizedTextFromUnknown(row.bio, sampleBuilder?.bio),
+      specialties: stringArrayFromUnknown(row.specialties, sampleBuilder?.specialties ?? []),
+      organizationsWorkedWith: sampleBuilder?.organizationsWorkedWith,
+      publishedAgentSlugs,
+      benchmarkWins,
+      shortlistCount,
+      verifiedReviewCount: builderReviewCount,
+      githubUrl: row.githubHandle ? `https://github.com/${row.githubHandle}` : sampleBuilder?.githubUrl,
+      provenance: liveProvenance,
+    } satisfies BuilderProfile;
+  });
+
+  const mergedBuilders = mergeBuildersByHandle(sampleCatalog.builders, liveBuilders).sort(
+    (left, right) => right.shortlistCount - left.shortlistCount,
+  );
+
+  return {
+    agents: mergedAgents,
+    builders: mergedBuilders,
+    metrics: {
+      liveAgentCount: Number(metricsRows[0][0]?.count ?? 0),
+      liveInstallCount: Number(metricsRows[1][0]?.count ?? 0),
+      liveReviewCount: Number(metricsRows[2][0]?.count ?? 0),
+      liveBenchmarkRunCount: Number(metricsRows[3][0]?.count ?? 0),
+      sampleAgentCount: sampleAgents.length,
+    },
   };
 }
 
@@ -571,7 +971,7 @@ function createPostgresBundle(): RepositoryBundle {
       if (!actor) {
         throw new NotFoundError("Session could not be created.");
       }
-      return { actor, rawSessionToken };
+      return { actor, rawSessionToken, redirectTo: challenge.redirectTo };
     },
     async upsertGitHubAccount(input) {
       let [account] = await db
@@ -628,24 +1028,10 @@ function createPostgresBundle(): RepositoryBundle {
 
   const agentRepository: AgentRepository = {
     async listPublicAgents(filters) {
-      return sampleAgentList().filter((agent) => {
-        if (filters?.query) {
-          const haystack = [agent.name, agent.slug, agent.summary.en, agent.summary["zh-CN"], ...agent.categories].join(" ").toLowerCase();
-          if (!haystack.includes(filters.query.toLowerCase())) {
-            return false;
-          }
-        }
-        if (filters?.category && filters.category !== "all" && !agent.categories.includes(filters.category)) {
-          return false;
-        }
-        if (filters?.status && filters.status !== "all" && agent.verificationStatus !== filters.status) {
-          return false;
-        }
-        return true;
-      });
+      return filterAgents((await buildPostgresPublicCatalog()).agents, filters);
     },
     async getPublicAgentBySlug(slug, versionId) {
-      const agent = sampleAgentList().find((entry) => entry.slug === slug);
+      const agent = (await buildPostgresPublicCatalog()).agents.find((entry) => entry.slug === slug);
       if (!agent) {
         return undefined;
       }
@@ -660,15 +1046,7 @@ function createPostgresBundle(): RepositoryBundle {
     },
     async listBuilderAgents(actor) {
       const rows = await db
-        .select({
-          id: agentRecords.id,
-          slug: agentRecords.slug,
-          name: agentRecords.name,
-          status: agentRecords.status,
-          summary: agentRecords.summary,
-          tagline: agentRecords.tagline,
-          categories: agentRecords.categories,
-        })
+        .select({ slug: agentRecords.slug })
         .from(agentRecords)
         .where(
           or(
@@ -676,44 +1054,9 @@ function createPostgresBundle(): RepositoryBundle {
             actor.activeOrganizationId ? eq(agentRecords.ownerOrganizationId, actor.activeOrganizationId) : sql`false`,
           ),
         );
-      return rows.map((row) => ({
-        id: row.id,
-        slug: row.slug,
-        name: row.name,
-        builderHandle: actor.githubHandle ?? "builder",
-        tagline: row.tagline as AgentRecord["tagline"],
-        summary: row.summary as AgentRecord["summary"],
-        useCases: [],
-        notFor: [],
-        categories: row.categories as string[],
-        verificationStatus: row.status as AgentRecord["verificationStatus"],
-        source: {
-          id: `source-${row.id}`,
-          kind: "github",
-          label: "Live submission",
-          url: "#",
-          installCommand: "pending",
-        },
-        permissionManifest: {
-          id: `perm-${row.id}`,
-          summary: { en: "Pending live manifest", "zh-CN": "待补全权限清单" },
-          skills: [],
-          secrets: [],
-          networkAccess: [],
-          fileAccess: [],
-          shellAccess: false,
-          automationHooks: false,
-          riskLevel: "low",
-        },
-        versions: [],
-        overview: [],
-        capabilities: [],
-        dependencies: [],
-        demoRuns: [],
-        reviews: [],
-        knownLimits: [],
-        provenance: liveProvenance,
-      }));
+      const catalog = await buildPostgresPublicCatalog();
+      const ownedSlugs = new Set(rows.map((row) => row.slug));
+      return catalog.agents.filter((agent) => ownedSlugs.has(agent.slug));
     },
     async listSubmissionsForActor(actor) {
       const rows = await db
@@ -767,7 +1110,7 @@ function createPostgresBundle(): RepositoryBundle {
         updatedAt: row!.updatedAt.toISOString(),
       };
     },
-    async publishVersion(actor, agentId, versionId) {
+    async publishVersion(actor, agentSlug, versionId) {
       const [version] = await db
         .select({
           id: agentVersions.id,
@@ -777,7 +1120,7 @@ function createPostgresBundle(): RepositoryBundle {
         })
         .from(agentVersions)
         .innerJoin(agentRecords, eq(agentRecords.id, agentVersions.agentId))
-        .where(and(eq(agentVersions.id, versionId), eq(agentVersions.agentId, agentId)))
+        .where(and(eq(agentVersions.id, versionId), eq(agentRecords.slug, agentSlug)))
         .limit(1);
       if (!version) {
         throw new NotFoundError("Version not found.");
@@ -790,7 +1133,7 @@ function createPostgresBundle(): RepositoryBundle {
   };
 
   const versionRepository: VersionRepository = {
-    async assertBuilderOwnsVersion(actor, agentId, versionId) {
+    async assertBuilderOwnsVersion(actor, agentSlug, versionId) {
       const [version] = await db
         .select({
           id: agentVersions.id,
@@ -799,7 +1142,7 @@ function createPostgresBundle(): RepositoryBundle {
         })
         .from(agentVersions)
         .innerJoin(agentRecords, eq(agentRecords.id, agentVersions.agentId))
-        .where(and(eq(agentVersions.id, versionId), eq(agentVersions.agentId, agentId)))
+        .where(and(eq(agentVersions.id, versionId), eq(agentRecords.slug, agentSlug)))
         .limit(1);
       if (!version) {
         throw new NotFoundError("Version not found.");
@@ -845,30 +1188,42 @@ function createPostgresBundle(): RepositoryBundle {
       };
     },
     async getOwnedInstall(actor, installId) {
-      const [row] = await db.select().from(verifiedInstallsTable).where(eq(verifiedInstallsTable.id, installId)).limit(1);
+      const [row] = await db
+        .select({
+          install: verifiedInstallsTable,
+          agentSlug: agentRecords.slug,
+        })
+        .from(verifiedInstallsTable)
+        .innerJoin(agentRecords, eq(agentRecords.id, verifiedInstallsTable.agentId))
+        .where(eq(verifiedInstallsTable.id, installId))
+        .limit(1);
       if (!row) {
         return undefined;
       }
-      if (!ownableMatch(actor, row.ownerUserId ?? undefined, row.ownerOrganizationId ?? undefined)) {
+      if (!ownableMatch(actor, row.install.ownerUserId ?? undefined, row.install.ownerOrganizationId ?? undefined)) {
         return undefined;
       }
       return {
-        id: row.id,
-        agentSlug: "",
-        versionId: row.agentVersionId,
-        verificationToken: row.verificationToken,
-        packageHash: row.packageHash,
-        anonymousRuntimeFingerprint: row.anonymousRuntimeFingerprint,
-        verifiedAt: row.verifiedAt.toISOString(),
-        ownerUserId: row.ownerUserId ?? undefined,
-        ownerOrganizationId: row.ownerOrganizationId ?? undefined,
+        id: row.install.id,
+        agentSlug: row.agentSlug,
+        versionId: row.install.agentVersionId,
+        verificationToken: row.install.verificationToken,
+        packageHash: row.install.packageHash,
+        anonymousRuntimeFingerprint: row.install.anonymousRuntimeFingerprint,
+        verifiedAt: row.install.verifiedAt.toISOString(),
+        ownerUserId: row.install.ownerUserId ?? undefined,
+        ownerOrganizationId: row.install.ownerOrganizationId ?? undefined,
         provenance: liveProvenance,
       };
     },
     async listInstallsForActor(actor) {
       const rows = await db
-        .select()
+        .select({
+          install: verifiedInstallsTable,
+          agentSlug: agentRecords.slug,
+        })
         .from(verifiedInstallsTable)
+        .innerJoin(agentRecords, eq(agentRecords.id, verifiedInstallsTable.agentId))
         .where(
           or(
             eq(verifiedInstallsTable.ownerUserId, actor.userId),
@@ -876,15 +1231,15 @@ function createPostgresBundle(): RepositoryBundle {
           ),
         );
       return rows.map((row) => ({
-        id: row.id,
-        agentSlug: "",
-        versionId: row.agentVersionId,
-        verificationToken: row.verificationToken,
-        packageHash: row.packageHash,
-        anonymousRuntimeFingerprint: row.anonymousRuntimeFingerprint,
-        verifiedAt: row.verifiedAt.toISOString(),
-        ownerUserId: row.ownerUserId ?? undefined,
-        ownerOrganizationId: row.ownerOrganizationId ?? undefined,
+        id: row.install.id,
+        agentSlug: row.agentSlug,
+        versionId: row.install.agentVersionId,
+        verificationToken: row.install.verificationToken,
+        packageHash: row.install.packageHash,
+        anonymousRuntimeFingerprint: row.install.anonymousRuntimeFingerprint,
+        verifiedAt: row.install.verifiedAt.toISOString(),
+        ownerUserId: row.install.ownerUserId ?? undefined,
+        ownerOrganizationId: row.install.ownerOrganizationId ?? undefined,
         provenance: liveProvenance,
       }));
     },
@@ -899,7 +1254,12 @@ function createPostgresBundle(): RepositoryBundle {
       if (install.agentVersionId !== input.versionId) {
         throw new ForbiddenError("Review must target the verified install version.");
       }
-      const [agent] = await db.select({ id: agentRecords.id }).from(agentRecords).where(eq(agentRecords.slug, input.agentSlug)).limit(1);
+      const [agent] = await db
+        .select({ id: agentRecords.id, builderHandle: builderProfiles.handle })
+        .from(agentRecords)
+        .leftJoin(builderProfiles, eq(builderProfiles.id, agentRecords.builderProfileId))
+        .where(eq(agentRecords.slug, input.agentSlug))
+        .limit(1);
       if (!agent || install.agentId !== agent.id) {
         throw new ForbiddenError("Review must match the verified install agent.");
       }
@@ -915,10 +1275,12 @@ function createPostgresBundle(): RepositoryBundle {
         body: input.body,
         rating: input.rating,
         dimensions: input.dimensions,
+        context: input.context ?? {},
       }).returning();
       return {
         ...input,
         id: row!.id,
+        builderHandle: agent.builderHandle ?? input.builderHandle,
         ownerUserId: actor.userId,
         ownerOrganizationId: actor.activeOrganizationId,
         createdAt: row!.createdAt.toISOString(),
@@ -926,30 +1288,37 @@ function createPostgresBundle(): RepositoryBundle {
       };
     },
     async listReviewsForActor(actor) {
-      const rows = await db
-        .select()
+      const joinedRows = await db
+        .select({
+          review: verifiedReviewsTable,
+          agentSlug: agentRecords.slug,
+          builderHandle: builderProfiles.handle,
+        })
         .from(verifiedReviewsTable)
+        .innerJoin(agentRecords, eq(agentRecords.id, verifiedReviewsTable.agentId))
+        .leftJoin(builderProfiles, eq(builderProfiles.id, agentRecords.builderProfileId))
         .where(
           or(
             eq(verifiedReviewsTable.ownerUserId, actor.userId),
             actor.activeOrganizationId ? eq(verifiedReviewsTable.ownerOrganizationId, actor.activeOrganizationId) : sql`false`,
           ),
         );
-      return rows.map((row) => ({
-        id: row.id,
-        agentSlug: "",
-        versionId: row.agentVersionId,
-        builderHandle: "",
-        installId: row.installId,
-        company: row.company,
-        role: row.role,
-        headline: row.headline as VerifiedReview["headline"],
-        body: row.body as VerifiedReview["body"],
-        rating: row.rating,
-        dimensions: row.dimensions as VerifiedReview["dimensions"],
-        createdAt: row.createdAt.toISOString(),
-        ownerUserId: row.ownerUserId ?? undefined,
-        ownerOrganizationId: row.ownerOrganizationId ?? undefined,
+      return joinedRows.map(({ review, agentSlug, builderHandle }) => ({
+        id: review.id,
+        agentSlug,
+        versionId: review.agentVersionId,
+        builderHandle: builderHandle ?? sampleAgents.find((agent) => agent.slug === agentSlug)?.builderHandle ?? "",
+        installId: review.installId,
+        company: review.company,
+        role: review.role,
+        headline: review.headline as VerifiedReview["headline"],
+        body: review.body as VerifiedReview["body"],
+        rating: review.rating,
+        dimensions: review.dimensions as VerifiedReview["dimensions"],
+        context: review.context as VerifiedReview["context"],
+        createdAt: review.createdAt.toISOString(),
+        ownerUserId: review.ownerUserId ?? undefined,
+        ownerOrganizationId: review.ownerOrganizationId ?? undefined,
         provenance: liveProvenance,
       }));
     },
@@ -964,6 +1333,9 @@ function createPostgresBundle(): RepositoryBundle {
         name: input.name,
         buyerType: input.buyerType,
         agentSlugs: input.agentSlugs,
+        constraints: input.constraints ?? null,
+        scoreWeights: input.scoreWeights ?? null,
+        internalNotes: input.internalNotes ?? null,
       }).returning();
       return {
         ...input,
@@ -987,6 +1359,9 @@ function createPostgresBundle(): RepositoryBundle {
         createdByUserId: row.createdByUserId,
         agentSlugs: row.agentSlugs as string[],
         buyerType: row.buyerType as ShortlistRecord["buyerType"],
+        constraints: row.constraints as ShortlistRecord["constraints"],
+        scoreWeights: row.scoreWeights as ShortlistRecord["scoreWeights"],
+        internalNotes: row.internalNotes ?? undefined,
         provenance: liveProvenance,
       }));
     },
@@ -1001,6 +1376,9 @@ function createPostgresBundle(): RepositoryBundle {
         recommendationState: input.recommendationState,
         rolloutRecommendation: input.rolloutRecommendation,
         tradeoffs: input.tradeoffs,
+        evidenceSummary: input.evidenceSummary ?? null,
+        riskSummary: input.riskSummary ?? null,
+        scoreWeights: input.scoreWeights ?? null,
       }).returning();
       return {
         ...input,
@@ -1029,6 +1407,9 @@ function createPostgresBundle(): RepositoryBundle {
         recommendationState: row.recommendationState as DecisionMemo["recommendationState"],
         rolloutRecommendation: row.rolloutRecommendation as DecisionMemo["rolloutRecommendation"],
         tradeoffs: row.tradeoffs as DecisionMemo["tradeoffs"],
+        evidenceSummary: row.evidenceSummary as DecisionMemo["evidenceSummary"],
+        riskSummary: row.riskSummary as DecisionMemo["riskSummary"],
+        scoreWeights: row.scoreWeights as DecisionMemo["scoreWeights"],
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
         provenance: liveProvenance,
@@ -1058,6 +1439,69 @@ function createPostgresBundle(): RepositoryBundle {
         ownerOrganizationId: row.ownerOrganizationId ?? undefined,
         provenance: liveProvenance,
       }));
+    },
+    async upsertCase(actor, input) {
+      const existing = await db
+        .select()
+        .from(moderationCasesTable)
+        .where(and(eq(moderationCasesTable.entityType, input.entityType), eq(moderationCasesTable.entityId, input.entityId)))
+        .limit(1);
+      if (existing[0]) {
+        const [row] = await db
+          .update(moderationCasesTable)
+          .set({
+            ownerUserId: input.ownerUserId,
+            ownerOrganizationId: input.ownerOrganizationId,
+            title: input.title,
+            status: input.status,
+            reason: input.reason,
+            assignedTo: input.assignedTo,
+            updatedAt: new Date(),
+          })
+          .where(eq(moderationCasesTable.id, existing[0].id))
+          .returning();
+        return {
+          id: row!.id,
+          entityType: row!.entityType as ModerationCase["entityType"],
+          entityId: row!.entityId,
+          title: row!.title,
+          status: row!.status as ModerationCase["status"],
+          reason: row!.reason as ModerationCase["reason"],
+          assignedTo: row!.assignedTo,
+          updatedAt: row!.updatedAt.toISOString(),
+          ownerUserId: row!.ownerUserId ?? undefined,
+          ownerOrganizationId: row!.ownerOrganizationId ?? undefined,
+          provenance: liveProvenance,
+        };
+      }
+
+      const [row] = await db
+        .insert(moderationCasesTable)
+        .values({
+          ownerUserId: input.ownerUserId,
+          ownerOrganizationId: input.ownerOrganizationId,
+          entityType: input.entityType,
+          entityId: input.entityId,
+          title: input.title,
+          status: input.status,
+          reason: input.reason,
+          assignedTo: input.assignedTo,
+        })
+        .returning();
+
+      return {
+        id: row!.id,
+        entityType: row!.entityType as ModerationCase["entityType"],
+        entityId: row!.entityId,
+        title: row!.title,
+        status: row!.status as ModerationCase["status"],
+        reason: row!.reason as ModerationCase["reason"],
+        assignedTo: row!.assignedTo,
+        updatedAt: row!.updatedAt.toISOString(),
+        ownerUserId: row!.ownerUserId ?? undefined,
+        ownerOrganizationId: row!.ownerOrganizationId ?? undefined,
+        provenance: liveProvenance,
+      };
     },
     async recordDecision(actor, caseId, nextStatus) {
       if (actor.role !== "admin") {
@@ -1089,13 +1533,17 @@ function createPostgresBundle(): RepositoryBundle {
       if (!suite) {
         throw new NotFoundError("Benchmark suite not found.");
       }
+      const [agent] = await db.select({ id: agentRecords.id }).from(agentRecords).where(eq(agentRecords.slug, input.agentSlug)).limit(1);
+      if (!agent) {
+        throw new NotFoundError("Agent not found.");
+      }
       const [row] = await db
         .insert(benchmarkRequestsTable)
         .values({
           ownerUserId: actor.userId,
           ownerOrganizationId: actor.activeOrganizationId,
           createdByUserId: actor.userId,
-          agentId: input.agentId,
+          agentId: agent.id,
           agentVersionId: input.versionId,
           suiteId: suite.id,
           objective: input.objective,
@@ -1115,20 +1563,22 @@ function createPostgresBundle(): RepositoryBundle {
       const rows = await db
         .select({
           request: benchmarkRequestsTable,
+          agentSlug: agentRecords.slug,
           suiteSlug: benchmarkSuitesTable.slug,
           artifact: benchmarkArtifactsTable,
         })
         .from(benchmarkRequestsTable)
+        .innerJoin(agentRecords, eq(agentRecords.id, benchmarkRequestsTable.agentId))
         .innerJoin(benchmarkSuitesTable, eq(benchmarkSuitesTable.id, benchmarkRequestsTable.suiteId))
         .leftJoin(benchmarkArtifactsTable, eq(benchmarkArtifactsTable.benchmarkRequestId, benchmarkRequestsTable.id))
         .where(or(eq(benchmarkRequestsTable.ownerUserId, actor.userId), actor.activeOrganizationId ? eq(benchmarkRequestsTable.ownerOrganizationId, actor.activeOrganizationId) : sql`false`))
         .orderBy(desc(benchmarkRequestsTable.queuedAt));
-      return rows.map(({ request, suiteSlug, artifact }) => ({
+      return rows.map(({ request, agentSlug, suiteSlug, artifact }) => ({
         id: request.id,
         ownerUserId: request.ownerUserId ?? undefined,
         ownerOrganizationId: request.ownerOrganizationId ?? undefined,
         createdByUserId: request.createdByUserId,
-        agentId: request.agentId,
+        agentSlug,
         versionId: request.agentVersionId,
         suiteSlug,
         objective: request.objective ?? undefined,
@@ -1153,18 +1603,20 @@ function createPostgresBundle(): RepositoryBundle {
       const rows = await db
         .select({
           request: benchmarkRequestsTable,
+          agentSlug: agentRecords.slug,
           suiteSlug: benchmarkSuitesTable.slug,
         })
         .from(benchmarkRequestsTable)
+        .innerJoin(agentRecords, eq(agentRecords.id, benchmarkRequestsTable.agentId))
         .innerJoin(benchmarkSuitesTable, eq(benchmarkSuitesTable.id, benchmarkRequestsTable.suiteId))
         .where(eq(benchmarkRequestsTable.status, "queued"))
         .orderBy(benchmarkRequestsTable.queuedAt);
-      return rows.map(({ request, suiteSlug }) => ({
+      return rows.map(({ request, agentSlug, suiteSlug }) => ({
         id: request.id,
         ownerUserId: request.ownerUserId ?? undefined,
         ownerOrganizationId: request.ownerOrganizationId ?? undefined,
         createdByUserId: request.createdByUserId,
-        agentId: request.agentId,
+        agentSlug,
         versionId: request.agentVersionId,
         suiteSlug,
         objective: request.objective ?? undefined,
@@ -1183,13 +1635,14 @@ function createPostgresBundle(): RepositoryBundle {
       if (!row) {
         return undefined;
       }
+      const [agent] = await db.select({ slug: agentRecords.slug }).from(agentRecords).where(eq(agentRecords.id, row.agentId)).limit(1);
       const [suite] = await db.select().from(benchmarkSuitesTable).where(eq(benchmarkSuitesTable.id, row.suiteId)).limit(1);
       return {
         id: row.id,
         ownerUserId: row.ownerUserId ?? undefined,
         ownerOrganizationId: row.ownerOrganizationId ?? undefined,
         createdByUserId: row.createdByUserId,
-        agentId: row.agentId,
+        agentSlug: agent?.slug ?? "",
         versionId: row.agentVersionId,
         suiteSlug: suite?.slug ?? "",
         objective: row.objective ?? undefined,
@@ -1218,12 +1671,45 @@ function createPostgresBundle(): RepositoryBundle {
         rubric: artifactBundle?.rubric ?? {},
       });
       const [suite] = await db.select().from(benchmarkSuitesTable).where(eq(benchmarkSuitesTable.id, request.suiteId)).limit(1);
+      const [agent] = await db.select().from(agentRecords).where(eq(agentRecords.id, request.agentId)).limit(1);
+      const [run] = await db
+        .insert(benchmarkRunsTable)
+        .values({
+          suiteId: request.suiteId,
+          agentVersionId: request.agentVersionId,
+          publicRank: Number(artifactBundle?.rubric?.publicRank ?? 0),
+          peerGroupSize: Number(artifactBundle?.rubric?.peerGroupSize ?? 0),
+          bundleHash: artifactBundle?.bundleHash ?? "",
+          costPerSuccessfulRun: String(Number(artifactBundle?.rubric?.costPerSuccessfulRun ?? 0)),
+          medianLatencySeconds: Number(artifactBundle?.rubric?.medianLatencySeconds ?? 0),
+          stability: Number(artifactBundle?.rubric?.stability ?? 0),
+          freshnessDays: Number(artifactBundle?.rubric?.freshnessDays ?? 0),
+          transcriptUrl: artifactBundle?.transcriptUrl ?? "",
+          toolTraceUrl: artifactBundle?.toolTraceUrl ?? "",
+          notes: {
+            en: String(artifactBundle?.rubric?.note ?? `Benchmark completed for ${agent?.slug ?? "agent"}.`),
+            "zh-CN": String(artifactBundle?.rubric?.noteZh ?? artifactBundle?.rubric?.note ?? `已完成 benchmark。`),
+          },
+        })
+        .returning();
+      await db.insert(benchmarkScorecards).values({
+        benchmarkRunId: run!.id,
+        overall: Number(artifactBundle?.rubric?.overall ?? 0),
+        taskSuccess: Number(artifactBundle?.rubric?.taskSuccess ?? 0),
+        reliability: Number(artifactBundle?.rubric?.reliability ?? 0),
+        costEfficiency: Number(artifactBundle?.rubric?.costEfficiency ?? 0),
+        latency: Number(artifactBundle?.rubric?.latency ?? 0),
+        safetyFootprint: Number(artifactBundle?.rubric?.safetyFootprint ?? 0),
+        setupFriction: Number(artifactBundle?.rubric?.setupFriction ?? 0),
+        operatorBurden: Number(artifactBundle?.rubric?.operatorBurden ?? 0),
+        domainFit: Number(artifactBundle?.rubric?.domainFit ?? 0),
+      });
       return {
         id: request.id,
         ownerUserId: request.ownerUserId ?? undefined,
         ownerOrganizationId: request.ownerOrganizationId ?? undefined,
         createdByUserId: request.createdByUserId,
-        agentId: request.agentId,
+        agentSlug: agent?.slug ?? "",
         versionId: request.agentVersionId,
         suiteSlug: suite?.slug ?? "",
         objective: request.objective ?? undefined,
@@ -1238,23 +1724,13 @@ function createPostgresBundle(): RepositoryBundle {
 
   const catalogRepository: CatalogRepository = {
     async listBuilders() {
-      return sampleBuilderList();
+      return (await buildPostgresPublicCatalog()).builders;
     },
     async getBuilderByHandle(handle) {
-      return sampleBuilderList().find((builder) => builder.handle === handle);
+      return (await buildPostgresPublicCatalog()).builders.find((builder) => builder.handle === handle);
     },
     async getPublicMetricsSummary() {
-      const [agentCountRow] = await db.select({ count: sql<number>`count(*)` }).from(agentRecords).where(eq(agentRecords.status, "verified"));
-      const [installCountRow] = await db.select({ count: sql<number>`count(*)` }).from(verifiedInstallsTable);
-      const [reviewCountRow] = await db.select({ count: sql<number>`count(*)` }).from(verifiedReviewsTable);
-      const [benchmarkCountRow] = await db.select({ count: sql<number>`count(*)` }).from(benchmarkRunsTable);
-      return {
-        liveAgentCount: Number(agentCountRow?.count ?? 0),
-        liveInstallCount: Number(installCountRow?.count ?? 0),
-        liveReviewCount: Number(reviewCountRow?.count ?? 0),
-        liveBenchmarkRunCount: Number(benchmarkCountRow?.count ?? 0),
-        sampleAgentCount: sampleAgents.length,
-      };
+      return (await buildPostgresPublicCatalog()).metrics;
     },
   };
 
@@ -1286,17 +1762,7 @@ export async function getRepositoryBundle(): Promise<RepositoryBundle> {
 export async function getReadCatalog() {
   const mode = getStorageMode();
   if (mode === "sample") {
-    return {
-      agents: sampleAgentList(),
-      builders: sampleBuilderList(),
-      metrics: {
-        liveAgentCount: 0,
-        liveInstallCount: 0,
-        liveReviewCount: 0,
-        liveBenchmarkRunCount: 0,
-        sampleAgentCount: sampleAgents.length,
-      } satisfies PublicMetricsSummary,
-    };
+    return buildSampleCatalog();
   }
   const bundle = await getRepositoryBundle();
   return {

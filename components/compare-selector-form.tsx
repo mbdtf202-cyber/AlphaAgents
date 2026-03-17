@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { AgentRecord, Locale } from "@openclaw/alpha-agents-core";
 
@@ -15,7 +15,6 @@ export function CompareSelectorForm({
 }) {
   const [selected, setSelected] = useState<string[]>(selectedSlugs);
   const reachedLimit = selected.length >= 4;
-  const visibleAgents = useMemo(() => agents.slice(0, 6), [agents]);
 
   return (
     <form className="surface-panel rounded-[2rem] p-6">
@@ -29,7 +28,7 @@ export function CompareSelectorForm({
         </button>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {visibleAgents.map((agent) => (
+        {agents.map((agent) => (
           <label key={agent.slug} className="flex items-start gap-3 rounded-[1.5rem] border border-ink-950/8 bg-parchment px-4 py-4 text-sm leading-7 text-ink-800">
             <input
               type="checkbox"
@@ -53,7 +52,7 @@ export function CompareSelectorForm({
         ))}
       </div>
       <p className="mt-4 text-sm text-ink-600">
-        {locale === "en" ? `${selected.length}/4 selected.` : `已选择 ${selected.length}/4。`}
+        {locale === "en" ? `${selected.length}/4 selected from ${agents.length} candidates.` : `已从 ${agents.length} 个候选项中选择 ${selected.length}/4。`}
       </p>
     </form>
   );

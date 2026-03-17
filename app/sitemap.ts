@@ -1,8 +1,11 @@
 import type { MetadataRoute } from "next";
 
-import { agents, benchmarkSuites, builders } from "@openclaw/alpha-agents-core";
+import { benchmarkSuites } from "@openclaw/alpha-agents-core";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+import { getReadCatalog } from "../lib/server/repositories";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const catalog = await getReadCatalog();
   const base = "https://alpha-agents.example.com";
   return [
     "",
@@ -12,8 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/compare",
     "/for-builders",
     "/for-teams",
-    ...agents.map((agent) => `/agents/${agent.slug}`),
-    ...builders.map((builder) => `/builders/${builder.handle}`),
+    ...catalog.agents.map((agent) => `/agents/${agent.slug}`),
+    ...catalog.builders.map((builder) => `/builders/${builder.handle}`),
     ...benchmarkSuites.map((suite) => `/benchmarks/${suite.slug}`),
   ].map((path) => ({
     url: `${base}${path}`,

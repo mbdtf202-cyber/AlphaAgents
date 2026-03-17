@@ -58,6 +58,16 @@ export const reviewInputSchema = z.object({
     operatorBurden: z.number().min(0).max(100),
     domainFit: z.number().min(0).max(100),
   }),
+  context: z
+    .object({
+      teamSize: z.string().min(1).max(120).optional(),
+      taskFrequency: z.string().min(1).max(120).optional(),
+      deploymentEnvironment: z.string().min(1).max(160).optional(),
+      supervisionLevel: z.enum(["light", "medium", "high"]).optional(),
+      failureModes: z.array(z.string().min(1)).default([]),
+      alternativeTools: z.array(z.string().min(1)).default([]),
+    })
+    .optional(),
 });
 
 export const installVerificationSchema = z.object({
@@ -75,6 +85,29 @@ export const shortlistInputSchema = z.object({
   name: localizedTextSchema,
   agentSlugs: z.array(z.string().min(1)).min(1).max(4),
   buyerType: z.enum(["individual", "team", "enterprise"]),
+  constraints: z
+    .object({
+      repoSize: z.enum(["small", "medium", "large"]),
+      dataSensitivity: z.enum(["low", "medium", "high", "restricted"]),
+      approvalModel: z.enum(["single-owner", "team-review", "change-advisory-board"]),
+      allowShell: z.boolean(),
+      allowNetwork: z.boolean(),
+      allowAutoCommit: z.boolean(),
+    })
+    .optional(),
+  scoreWeights: z
+    .object({
+      taskSuccess: z.number().min(0).max(100).optional(),
+      reliability: z.number().min(0).max(100).optional(),
+      costEfficiency: z.number().min(0).max(100).optional(),
+      latency: z.number().min(0).max(100).optional(),
+      safetyFootprint: z.number().min(0).max(100).optional(),
+      setupFriction: z.number().min(0).max(100).optional(),
+      operatorBurden: z.number().min(0).max(100).optional(),
+      domainFit: z.number().min(0).max(100).optional(),
+    })
+    .optional(),
+  internalNotes: z.string().max(2000).optional(),
 });
 
 export const moderationDecisionSchema = z.object({
@@ -95,4 +128,24 @@ export const decisionMemoInputSchema = z.object({
   recommendationState: z.enum(["hold", "pilot", "rollout", "reject"]),
   rolloutRecommendation: localizedTextSchema,
   tradeoffs: z.array(localizedTextSchema).min(1),
+  evidenceSummary: localizedTextSchema.optional(),
+  riskSummary: localizedTextSchema.optional(),
+  scoreWeights: z
+    .object({
+      taskSuccess: z.number().min(0).max(100).optional(),
+      reliability: z.number().min(0).max(100).optional(),
+      costEfficiency: z.number().min(0).max(100).optional(),
+      latency: z.number().min(0).max(100).optional(),
+      safetyFootprint: z.number().min(0).max(100).optional(),
+      setupFriction: z.number().min(0).max(100).optional(),
+      operatorBurden: z.number().min(0).max(100).optional(),
+      domainFit: z.number().min(0).max(100).optional(),
+    })
+    .optional(),
+});
+
+export const submissionImportSchema = z.object({
+  sourceKind: z.enum(["clawhub", "github", "agent-pack"]),
+  sourceUrl: z.url(),
+  builderHandle: z.string().min(2).max(80).optional(),
 });

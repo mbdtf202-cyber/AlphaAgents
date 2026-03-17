@@ -93,7 +93,6 @@ function withSampleBuilder(builder: BuilderProfile): BuilderProfile {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __agentLedgerMemoryState: MemoryState | undefined;
 }
 

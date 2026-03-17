@@ -18,7 +18,7 @@ async function processQueuedBenchmarks() {
     }
 
     const run = runDemoBenchmark({
-      agentSlug: claimed.agentId,
+      agentSlug: claimed.agentSlug,
       suiteSlug: claimed.suiteSlug,
       versionId: claimed.versionId,
       objective: claimed.objective,

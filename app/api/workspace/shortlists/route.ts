@@ -22,6 +22,9 @@ export async function POST(request: Request) {
       createdByUserId: actor.userId,
       agentSlugs: parsed.agentSlugs,
       buyerType: parsed.buyerType,
+      constraints: parsed.constraints,
+      scoreWeights: parsed.scoreWeights,
+      internalNotes: parsed.internalNotes,
     });
     await bundle.auditRepository.append({
       actor,

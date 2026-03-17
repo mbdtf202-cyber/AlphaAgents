@@ -105,3 +105,251 @@ textarea {
 .surface-muted {
   background: linear-gradient(180deg, rgba(239, 226, 206, 0.8), rgba(247, 240, 228, 0.72));
 }
+
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.3), transparent 34%),
+    linear-gradient(145deg, #11283e 0%, #1b3955 55%, #b56a36 100%);
+  box-shadow:
+    0 28px 64px -36px rgba(13, 24, 36, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  inset: -34%;
+  background: conic-gradient(from 180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+  animation: alpha-orbit 14s linear infinite;
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+}
+
+.brand-mark__svg {
+  position: relative;
+  z-index: 1;
+  height: 70%;
+  width: 70%;
+  filter: drop-shadow(0 10px 18px rgba(13, 24, 36, 0.18));
+}
+
+.hero-shell {
+  position: relative;
+  overflow: clip;
+  isolation: isolate;
+}
+
+.hero-shell::before,
+.hero-shell::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(18px);
+  pointer-events: none;
+  z-index: -2;
+}
+
+.hero-shell::before {
+  left: -8rem;
+  top: 1rem;
+  height: 26rem;
+  width: 26rem;
+  background: radial-gradient(circle, rgba(181, 106, 54, 0.18), transparent 70%);
+  animation: alpha-aurora 20s ease-in-out infinite alternate;
+}
+
+.hero-shell::after {
+  right: -6rem;
+  top: 5rem;
+  height: 24rem;
+  width: 24rem;
+  background: radial-gradient(circle, rgba(69, 101, 82, 0.18), transparent 72%);
+  animation: alpha-aurora 24s ease-in-out infinite alternate-reverse;
+}
+
+.hero-stage {
+  position: relative;
+  display: grid;
+  gap: 1.1rem;
+  align-content: start;
+}
+
+.hero-stage::before,
+.hero-stage::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero-stage::before {
+  right: 0.8rem;
+  top: 1.5rem;
+  height: 18rem;
+  width: 18rem;
+  border: 1px solid rgba(13, 24, 36, 0.1);
+  animation: alpha-orbit 22s linear infinite;
+}
+
+.hero-stage::after {
+  left: 0.5rem;
+  top: 6rem;
+  height: 13rem;
+  width: 13rem;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+  filter: blur(14px);
+  animation: alpha-pulse 9s ease-in-out infinite;
+}
+
+.hero-card-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(255, 255, 255, 0.76));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 35px 110px -65px rgba(9, 16, 26, 0.7);
+}
+
+.hero-card-surface::before {
+  content: "";
+  position: absolute;
+  inset: -40% 42% 52% -18%;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0));
+  transform: rotate(8deg);
+  animation: alpha-sweep 11s ease-in-out infinite;
+}
+
+.hero-status-dot {
+  display: inline-block;
+  height: 0.62rem;
+  width: 0.62rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, #bfe7d4 0%, #456552 72%);
+  box-shadow: 0 0 0 6px rgba(69, 101, 82, 0.12);
+  animation: alpha-pulse 3.6s ease-in-out infinite;
+}
+
+.reveal-card,
+.reveal-float-card {
+  --enter-delay: 0ms;
+  opacity: 0;
+}
+
+.reveal-card {
+  animation: alpha-rise 880ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--enter-delay);
+}
+
+.reveal-float-card {
+  animation:
+    alpha-rise 880ms cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    alpha-float 8.5s ease-in-out infinite;
+  animation-delay: var(--enter-delay), calc(var(--enter-delay) + 880ms);
+}
+
+@keyframes alpha-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes alpha-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes alpha-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes alpha-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes alpha-aurora {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.96);
+  }
+
+  to {
+    transform: translate3d(2rem, -1rem, 0) scale(1.08);
+  }
+}
+
+@keyframes alpha-sweep {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translate3d(-8%, 0, 0) rotate(8deg);
+  }
+
+  50% {
+    opacity: 0.34;
+    transform: translate3d(18%, 3%, 0) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .brand-mark::before,
+  .hero-shell::before,
+  .hero-shell::after,
+  .hero-stage::before,
+  .hero-stage::after,
+  .hero-card-surface::before,
+  .hero-status-dot,
+  .reveal-card,
+  .reveal-float-card {
+    animation: none !important;
+  }
+
+  .reveal-card,
+  .reveal-float-card {
+    opacity: 1;
+    transform: none !important;
+  }
+}

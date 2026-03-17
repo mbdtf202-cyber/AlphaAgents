@@ -39,6 +39,14 @@ export function clearTransientCookie(name: string) {
   return `${name}=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
 }
 
+export function normalizeRedirectPath(value: string | null | undefined): string {
+  const next = value?.trim() || "/workspace";
+  if (!next.startsWith("/") || next.startsWith("//")) {
+    return "/workspace";
+  }
+  return next;
+}
+
 function parseCookieHeader(headerValue: string | null): Record<string, string> {
   if (!headerValue) {
     return {};

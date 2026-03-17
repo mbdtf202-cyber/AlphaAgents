@@ -15,8 +15,8 @@ export default async function WorkspaceSubmissionsPage() {
             <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Submit a public dossier" : "提交公开档案"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "This draft submission flow collects the install source, bilingual summary, builder handle, and the first declared skill set. A real publication would continue into permission review, benchmark requests, and version evidence."
-                : "这个草稿提交流程会收集安装来源、双语摘要、Builder 标识和首批 skills。真实发布还会继续进入权限复核、benchmark 请求和版本证据阶段。"}
+                ? "Start from an importable source, let the platform draft metadata and permission posture, then review it before submission. Publication continues into moderation, benchmark requests, and version evidence."
+                : "先从可导入的 source 开始，让平台生成 metadata 与权限姿态初稿，再人工复核提交。后续发布会继续进入审核、benchmark 请求与版本证据阶段。"}
             </p>
           </div>
           <SubmissionForm locale={locale} />

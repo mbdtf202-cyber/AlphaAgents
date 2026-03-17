@@ -33,6 +33,20 @@ export function ReviewForm({ locale }: { locale: Locale }) {
         operatorBurden: Number(formData.get("operatorBurden") ?? 0),
         domainFit: Number(formData.get("domainFit") ?? 0),
       },
+      context: {
+        teamSize: String(formData.get("teamSize") ?? ""),
+        taskFrequency: String(formData.get("taskFrequency") ?? ""),
+        deploymentEnvironment: String(formData.get("deploymentEnvironment") ?? ""),
+        supervisionLevel: String(formData.get("supervisionLevel") ?? "medium"),
+        failureModes: String(formData.get("failureModes") ?? "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        alternativeTools: String(formData.get("alternativeTools") ?? "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      },
     };
 
     const response = await fetch("/api/reviews", {
@@ -95,6 +109,36 @@ export function ReviewForm({ locale }: { locale: Locale }) {
         <label className="grid gap-2 text-sm text-ink-700">
           {locale === "en" ? "Rating" : "评分"}
           <input name="rating" type="number" min="1" max="5" defaultValue="5" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
+        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Team size" : "团队规模"}
+          <input name="teamSize" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="10 engineers" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Task frequency" : "任务频率"}
+          <input name="taskFrequency" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="Daily triage" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Deployment environment" : "部署环境"}
+          <input name="deploymentEnvironment" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="GitHub + macOS dev machines" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Supervision level" : "监督强度"}
+          <select name="supervisionLevel" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3">
+            <option value="light">light</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Failure modes" : "失败模式"}
+          <input name="failureModes" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="hallucinated diff, long runtime" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Alternative tools" : "替代工具"}
+          <input name="alternativeTools" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="Cursor, Claude Code" />
         </label>
       </div>
       <div className="grid gap-4 md:grid-cols-4">

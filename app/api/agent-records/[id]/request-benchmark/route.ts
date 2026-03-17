@@ -13,18 +13,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
     assertRole(actor, ["buyer", "builder", "admin"]);
-    const { id } = await params;
+    const { id: agentSlug } = await params;
     const parsed = await parseRequestWithSchema(request, benchmarkRequestSchema);
     const bundle = await getRepositoryBundle();
     if (actor.role === "builder") {
-      await bundle.versionRepository.assertBuilderOwnsVersion(actor, id, parsed.versionId);
+      await bundle.versionRepository.assertBuilderOwnsVersion(actor, agentSlug, parsed.versionId);
     }
     const benchmarkRequest = await bundle.benchmarkRepository.queueRequest(actor, {
       id: crypto.randomUUID(),
       ownerUserId: actor.userId,
       ownerOrganizationId: actor.activeOrganizationId,
       createdByUserId: actor.userId,
-      agentId: id,
+      agentSlug,
       versionId: parsed.versionId,
       suiteSlug: parsed.suiteSlug,
       objective: parsed.objective,
@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       newState: benchmarkRequest,
     });
     return NextResponse.json({
-      message: `Benchmark request queued for ${id}.`,
+      message: `Benchmark request queued for ${agentSlug}.`,
       request: benchmarkRequest,
     });
   } catch (error) {

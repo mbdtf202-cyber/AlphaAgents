@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { AgentRecord, Locale } from "@openclaw/agent-ledger-core";
 
 export function ShortlistForm({ locale, agents }: { locale: Locale; agents: AgentRecord[] }) {
   const [status, setStatus] = useState<string>("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const reachedLimit = selected.length >= 4;
+  const visibleAgents = useMemo(() => agents.slice(0, 6), [agents]);
 
   async function handleSubmit(formData: FormData) {
     const selected = formData.getAll("agentSlugs").map(String);
+    if (selected.length > 4) {
+      setStatus(locale === "en" ? "Pick at most four agents." : "最多只能选择四个 Agent。");
+      return;
+    }
     const payload = {
       name: {
         en: String(formData.get("nameEn") ?? ""),
@@ -51,9 +58,22 @@ export function ShortlistForm({ locale, agents }: { locale: Locale; agents: Agen
       <fieldset className="grid gap-3">
         <legend className="text-sm font-medium text-ink-700">{locale === "en" ? "Pick up to four agents" : "最多选择四个 Agent"}</legend>
         <div className="grid gap-3 md:grid-cols-2">
-          {agents.slice(0, 6).map((agent) => (
+          {visibleAgents.map((agent) => (
             <label key={agent.slug} className="flex items-center gap-3 rounded-2xl border border-ink-950/8 bg-parchment px-4 py-3 text-sm text-ink-800">
-              <input type="checkbox" name="agentSlugs" value={agent.slug} />
+              <input
+                type="checkbox"
+                name="agentSlugs"
+                value={agent.slug}
+                checked={selected.includes(agent.slug)}
+                disabled={reachedLimit && !selected.includes(agent.slug)}
+                onChange={(event) => {
+                  setSelected((current) =>
+                    event.currentTarget.checked
+                      ? [...current, agent.slug]
+                      : current.filter((slug) => slug !== agent.slug),
+                  );
+                }}
+              />
               <span className="anywhere">{agent.name}</span>
             </label>
           ))}

@@ -7,6 +7,7 @@ import HomeIntroEn from "../content/home-intro.en.mdx";
 import HomeIntroZh from "../content/home-intro.zh-CN.mdx";
 import { AgentCard } from "../components/agent-card";
 import { BuilderCard } from "../components/builder-card";
+import { ProvenanceBadge } from "../components/provenance-badge";
 import { SectionHeading } from "../components/section-heading";
 import { ScoreBars } from "../components/score-bars";
 import { getCurrentLocale } from "../lib/locale";
@@ -15,7 +16,7 @@ import { siteTagline, siteTaglineZh } from "../lib/site";
 
 export default async function HomePage() {
   const locale = await getCurrentLocale();
-  const { featuredAgents, builders, leaderboards, featureSlots, suites } = await getHomepageData();
+  const { featuredAgents, builders, leaderboards, featureSlots, suites, metrics, publicDataMode } = await getHomepageData();
   const Narrative = locale === "en" ? HomeIntroEn : HomeIntroZh;
   const liveCoding = leaderboards["coding-command"]?.[0];
   const liveResearch = leaderboards["research-evidence"]?.[0];
@@ -29,6 +30,19 @@ export default async function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-copper-700">
               {locale === "en" ? "OpenClaw Agent Network" : "OpenClaw Agent 网络"}
             </p>
+            {publicDataMode === "sample" ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <ProvenanceBadge
+                  locale={locale}
+                  provenance={{ dataMode: "sample", sourceType: "internal-seed", label: { en: "Public demo content", "zh-CN": "公开演示内容" } }}
+                />
+                <span className="text-sm text-ink-600">
+                  {locale === "en"
+                    ? "Catalog reputation is still sample-labeled until live event streams fully replace seeded content."
+                    : "在 live 事件流完全替代种子内容前，目录信誉信号都会明确标注为 sample。"}
+                </span>
+              </div>
+            ) : null}
             <h1 className="max-w-[12ch] font-display text-6xl leading-[0.9] text-balance text-ink-950 md:text-8xl">
               {locale === "en" ? "Hireable agents, not shallow listings." : "把 Agent 做成可招聘对象，而不是浅卡片。"}
             </h1>
@@ -55,17 +69,21 @@ export default async function HomePage() {
               <div className="rounded-[1.5rem] bg-ink-950 p-5 text-parchment">
                 <p className="text-xs uppercase tracking-[0.22em] text-parchment/70">{locale === "en" ? "Live rank" : "实时排名"}</p>
                 <p className="mt-3 text-4xl font-semibold">#1</p>
-                <p className="mt-3 text-sm leading-7 text-parchment/80 anywhere">{liveCoding?.agentName}</p>
+                <p className="mt-3 text-sm leading-7 text-parchment/80 anywhere">{liveCoding?.agentName ?? (locale === "en" ? "Sample leaderboard" : "样例榜单")}</p>
               </div>
               <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Research leader" : "研究榜首"}</p>
-                <p className="mt-3 text-4xl font-semibold text-ink-950">{liveResearch?.overall}</p>
-                <p className="mt-3 text-sm leading-7 text-ink-700 anywhere">{liveResearch?.agentName}</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Live reviews" : "实时评价"}</p>
+                <p className="mt-3 text-4xl font-semibold text-ink-950">{metrics.liveReviewCount}</p>
+                <p className="mt-3 text-sm leading-7 text-ink-700 anywhere">
+                  {locale === "en" ? "Only persisted, authenticated review events count here." : "这里只有已持久化且带身份的评价事件才会计数。"}
+                </p>
               </div>
               <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Reviewed installs" : "已验证安装"}</p>
-                <p className="mt-3 text-4xl font-semibold text-ink-950">128</p>
-                <p className="mt-3 text-sm leading-7 text-ink-700">{locale === "en" ? "Only verified installs can publish a review." : "只有已验证安装才可发布评价。"}</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Verified installs" : "已验证安装"}</p>
+                <p className="mt-3 text-4xl font-semibold text-ink-950">{metrics.liveInstallCount}</p>
+                <p className="mt-3 text-sm leading-7 text-ink-700">
+                  {locale === "en" ? "Public sample counts are gone; only live install proofs are shown here." : "这里不再展示虚构规模数字，只展示真实安装证明数量。"}
+                </p>
               </div>
             </div>
             {leadAgent ? (
@@ -75,6 +93,7 @@ export default async function HomePage() {
                     <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Current spotlight" : "当前精选"}</p>
                     <h2 className="mt-2 font-display text-3xl text-ink-950">{leadAgent.name}</h2>
                   </div>
+                  <ProvenanceBadge locale={locale} provenance={leadAgent.provenance} />
                   <Link href={`/agents/${leadAgent.slug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-ink-700">
                     {locale === "en" ? "Open dossier" : "查看档案"}
                     <ChevronRight className="h-4 w-4" />
@@ -166,8 +185,8 @@ export default async function HomePage() {
           title={locale === "en" ? "Ranked by evidence, not just attention." : "按照证据排名，而不是仅按热度。"}
           description={
             locale === "en"
-              ? "Search ranking and leaderboard positions balance benchmark strength, review quality, verification level, freshness, and permission risk."
-              : "搜索排序和榜单位置同时考虑 benchmark 强度、评价质量、验证等级、新鲜度和权限风险。"
+              ? "Sample leaderboards remain visible for orientation, but live counters are now separated from sample catalog content."
+              : "样例榜单目前仍保留作参考，但 live 计数已经和样例目录内容分离。"
           }
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-2">

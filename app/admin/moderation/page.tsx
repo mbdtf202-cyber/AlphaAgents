@@ -1,10 +1,12 @@
 import { ModerationDecisionForm } from "../../../components/moderation-decision-form";
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 import { getAdminData } from "../../../lib/server/repository";
 
 export default async function AdminModerationPage() {
   const locale = await getCurrentLocale();
-  const admin = await getAdminData();
+  const actor = await requirePageSession(["admin"]);
+  const admin = await getAdminData(actor);
 
   return (
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">

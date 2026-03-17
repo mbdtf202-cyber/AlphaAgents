@@ -1,13 +1,13 @@
 import Link from "next/link";
 
-import type { Locale } from "@openclaw/agent-ledger-core";
+import type { Locale, SessionActor } from "@openclaw/agent-ledger-core";
 
 import { resolveText } from "@openclaw/agent-ledger-core";
 
 import { LanguageToggle } from "./language-toggle";
 import { publicNavigation, siteName, siteTagline, siteTaglineZh } from "../lib/site";
 
-export function SiteHeader({ locale }: { locale: Locale }) {
+export function SiteHeader({ locale, session }: { locale: Locale; session: SessionActor | null }) {
   return (
     <header className="sticky top-0 z-30 border-b border-ink-950/8 bg-parchment/90 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-[1440px] items-center gap-4 px-5 py-4 md:px-8">
@@ -28,12 +28,31 @@ export function SiteHeader({ locale }: { locale: Locale }) {
               {resolveText(item.label, locale)}
             </Link>
           ))}
-          <Link
-            href="/workspace"
-            className="rounded-full border border-ink-950/10 bg-white px-4 py-2 text-sm font-semibold text-ink-950 shadow-sm transition hover:border-copper-500"
-          >
-            {locale === "en" ? "Open workspace" : "进入工作台"}
-          </Link>
+          {session ? (
+            <div className="flex items-center gap-3">
+              <div className="rounded-full border border-ink-950/10 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
+                {session.githubHandle ? `@${session.githubHandle}` : session.email}
+              </div>
+              <Link
+                href="/workspace"
+                className="rounded-full border border-ink-950/10 bg-white px-4 py-2 text-sm font-semibold text-ink-950 shadow-sm transition hover:border-copper-500"
+              >
+                {locale === "en" ? "Open workspace" : "进入工作台"}
+              </Link>
+              <form action="/api/auth/logout" method="post">
+                <button type="submit" className="rounded-full px-4 py-2 text-sm font-semibold text-ink-700">
+                  {locale === "en" ? "Sign out" : "退出"}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full border border-ink-950/10 bg-white px-4 py-2 text-sm font-semibold text-ink-950 shadow-sm transition hover:border-copper-500"
+            >
+              {locale === "en" ? "Sign in" : "登录"}
+            </Link>
+          )}
         </nav>
         <LanguageToggle locale={locale} />
       </div>

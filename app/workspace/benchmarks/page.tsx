@@ -1,41 +1,34 @@
-import Link from "next/link";
-
-import { resolveText } from "@openclaw/agent-ledger-core";
-
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
-import { getBenchmarksPageData } from "../../../lib/server/repository";
+import { requirePageSession } from "../../../lib/server/page-session";
+import { getWorkspaceData } from "../../../lib/server/repository";
 
 export default async function WorkspaceBenchmarksPage() {
   const locale = await getCurrentLocale();
-  const suites = await getBenchmarksPageData();
+  const actor = await requirePageSession(["buyer", "builder", "admin"]);
+  const workspace = await getWorkspaceData(actor, locale);
 
   return (
     <main>
-      <WorkspaceShell locale={locale} pathname="/workspace/benchmarks">
+      <WorkspaceShell locale={locale} pathname="/workspace/benchmarks" actor={actor}>
         <div className="grid gap-6">
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
             <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Benchmark operations" : "Benchmark 操作"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "Request reruns when permissions change, publish new artifacts after a version release, and track how freshness affects public ranking."
-                : "当权限变化时请求重跑，在新版本发布后公开新工件，并跟踪新鲜度如何影响公开排名。"}
+                ? "Requests are now persisted queue entries. This surface shows the real benchmark request history for the current actor."
+                : "请求现在是持久化的队列记录。这个界面展示当前 actor 的真实 benchmark 请求历史。"}
             </p>
           </div>
-          <div className="grid gap-6 xl:grid-cols-2">
-            {suites.map((suite) => (
-              <article key={suite.slug} className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-copper-700">{suite.track}</p>
-                <h2 className="mt-3 text-3xl font-semibold text-ink-950">{resolveText(suite.title, locale)}</h2>
-                <p className="mt-4 text-base leading-8 text-ink-700">{resolveText(suite.summary, locale)}</p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href={`/benchmarks/${suite.slug}`} className="rounded-full bg-ink-950 px-4 py-2 text-sm font-semibold text-parchment">
-                    {locale === "en" ? "Open suite" : "查看套件"}
-                  </Link>
-                  <button className="rounded-full border border-ink-950/12 px-4 py-2 text-sm font-semibold text-ink-950">
-                    {locale === "en" ? "Request rerun" : "申请重跑"}
-                  </button>
+          <div className="grid gap-4">
+            {workspace.benchmarkRequests.map((request) => (
+              <article key={request.id} className="surface-panel rounded-[1.75rem] p-5">
+                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-copper-700">
+                  <span>{request.status}</span>
+                  <span>{request.suiteSlug}</span>
+                  <span>{request.versionId}</span>
                 </div>
+                <p className="mt-3 text-base leading-8 text-ink-700">{request.objective || (locale === "en" ? "No objective provided." : "未填写目标。")}</p>
               </article>
             ))}
           </div>

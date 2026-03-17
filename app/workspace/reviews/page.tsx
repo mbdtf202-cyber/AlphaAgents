@@ -1,15 +1,17 @@
 import { ReviewForm } from "../../../components/review-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 import { getWorkspaceData } from "../../../lib/server/repository";
 
 export default async function WorkspaceReviewsPage() {
   const locale = await getCurrentLocale();
-  const workspace = await getWorkspaceData(locale);
+  const actor = await requirePageSession(["buyer", "builder", "admin"]);
+  const workspace = await getWorkspaceData(actor, locale);
 
   return (
     <main>
-      <WorkspaceShell locale={locale} pathname="/workspace/reviews">
+      <WorkspaceShell locale={locale} pathname="/workspace/reviews" actor={actor}>
         <div className="grid gap-6">
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
             <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Verified reviews" : "已验证评价"}</h1>

@@ -19,7 +19,41 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
         en: String(formData.get("summaryEn") ?? ""),
         "zh-CN": String(formData.get("summaryZh") ?? ""),
       },
-      skills: String(formData.get("skills") ?? "")
+      permissionManifest: {
+        summary: {
+          en: String(formData.get("permissionSummaryEn") ?? ""),
+          "zh-CN": String(formData.get("permissionSummaryZh") ?? ""),
+        },
+        skills: String(formData.get("skills") ?? "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        secrets: String(formData.get("secrets") ?? "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        networkAccess: String(formData.get("networkAccess") ?? "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        fileAccess: String(formData.get("fileAccess") ?? "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        shellAccess: formData.get("shellAccess") === "on",
+        automationHooks: formData.get("automationHooks") === "on",
+        riskLevel: String(formData.get("riskLevel") ?? "low"),
+      },
+      dependencies: String(formData.get("dependencies") ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
+      knownLimits: String(formData.get("knownLimits") ?? "")
+        .split("\n")
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .map((value) => ({ en: value, "zh-CN": value })),
+      supportedEnvironments: String(formData.get("supportedEnvironments") ?? "")
         .split(",")
         .map((value) => value.trim())
         .filter(Boolean),
@@ -86,6 +120,64 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
         {locale === "en" ? "Skills (comma separated)" : "Skills（逗号分隔）"}
         <input name="skills" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="software-architecture, playwright" />
       </label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Permission summary (EN)" : "权限摘要（英文）"}
+          <textarea name="permissionSummaryEn" rows={4} className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Permission summary (ZH)" : "权限摘要（中文）"}
+          <textarea name="permissionSummaryZh" rows={4} className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
+        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Secrets (comma separated)" : "Secrets（逗号分隔）"}
+          <input name="secrets" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="OPENAI_API_KEY, HELPDESK_API_TOKEN" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Risk level" : "风险等级"}
+          <select name="riskLevel" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3">
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </select>
+        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Network access" : "网络访问"}
+          <input name="networkAccess" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="docs.openclaw.ai, api.openai.com" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "File access" : "文件范围"}
+          <input name="fileAccess" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="workspace read/write, logs read" />
+        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Dependencies" : "依赖"}
+          <input name="dependencies" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="OpenClaw, ClawHub, GitHub repository access" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Supported environments" : "支持环境"}
+          <input name="supportedEnvironments" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="macOS, Linux, CI runner" />
+        </label>
+      </div>
+      <label className="grid gap-2 text-sm text-ink-700">
+        {locale === "en" ? "Known limits (one per line)" : "已知限制（每行一条）"}
+        <textarea name="knownLimits" rows={4} className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
+      </label>
+      <div className="flex flex-wrap gap-6">
+        <label className="flex items-center gap-3 text-sm text-ink-700">
+          <input name="shellAccess" type="checkbox" />
+          {locale === "en" ? "Shell access required" : "需要 shell 权限"}
+        </label>
+        <label className="flex items-center gap-3 text-sm text-ink-700">
+          <input name="automationHooks" type="checkbox" />
+          {locale === "en" ? "Uses automation hooks" : "使用 automation hooks"}
+        </label>
+      </div>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
           {locale === "en" ? "Submit draft" : "提交草稿"}

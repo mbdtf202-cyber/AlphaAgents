@@ -2,18 +2,32 @@ import { NextResponse } from "next/server";
 
 import { moderationDecisionSchema } from "@openclaw/agent-ledger-core";
 
+import { assertRole, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../../../lib/server/auth";
+import { errorResponse, parseRequestWithSchema } from "../../../../../../lib/server/http";
+import { getRepositoryBundle } from "../../../../../../lib/server/repositories";
+
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const json = await request.json();
-  const parsed = moderationDecisionSchema.safeParse(json);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  try {
+    requireConfiguredAuthForWrite();
+    const actor = await requireSessionFromRequest(request);
+    assertRole(actor, ["admin"]);
+    const { id } = await params;
+    const parsed = await parseRequestWithSchema(request, moderationDecisionSchema);
+    const bundle = await getRepositoryBundle();
+    const moderationCase = await bundle.moderationRepository.recordDecision(actor, id, parsed.status, parsed.note);
+    await bundle.auditRepository.append({
+      actor,
+      eventType: "moderation.decision",
+      entityType: "moderation-case",
+      entityId: id,
+      newState: moderationCase,
+      metadata: { note: parsed.note },
+    });
+    return NextResponse.json({
+      message: `Moderation decision recorded for ${id}.`,
+      moderationCase,
+    });
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  return NextResponse.json({
-    message: `Moderation decision recorded for ${id}.`,
-    entityId: id,
-    payload: parsed.data,
-  });
 }

@@ -1,12 +1,14 @@
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 
 export default async function WorkspaceSettingsPage() {
   const locale = await getCurrentLocale();
+  const actor = await requirePageSession(["buyer", "builder", "admin"]);
 
   return (
     <main>
-      <WorkspaceShell locale={locale} pathname="/workspace/settings">
+      <WorkspaceShell locale={locale} pathname="/workspace/settings" actor={actor}>
         <div className="grid gap-6">
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
             <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Workspace settings" : "工作台设置"}</h1>

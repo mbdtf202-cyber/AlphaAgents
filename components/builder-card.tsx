@@ -4,6 +4,8 @@ import type { BuilderProfile, Locale } from "@openclaw/agent-ledger-core";
 
 import { resolveText } from "@openclaw/agent-ledger-core";
 
+import { ProvenanceBadge } from "./provenance-badge";
+
 export function BuilderCard({ builder, locale }: { builder: BuilderProfile; locale: Locale }) {
   return (
     <article className="surface-panel rounded-[2rem] p-6">
@@ -15,6 +17,7 @@ export function BuilderCard({ builder, locale }: { builder: BuilderProfile; loca
           <h3 className="truncate text-xl font-semibold text-ink-950">{builder.name}</h3>
           <p className="text-sm text-ink-500">@{builder.handle}</p>
         </div>
+        <ProvenanceBadge locale={locale} provenance={builder.provenance} />
       </div>
       <p className="mt-5 text-base leading-8 text-ink-700">{resolveText(builder.headline, locale)}</p>
       <div className="mt-6 grid minmax-0 grid-cols-3 gap-3">

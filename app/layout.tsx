@@ -4,6 +4,7 @@ import { Fraunces, Noto_Sans_SC, Noto_Serif_SC, Plus_Jakarta_Sans } from "next/f
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 import { getCurrentLocale } from "../lib/locale";
+import { getServerSession } from "../lib/server/auth";
 import { siteName, siteTagline } from "../lib/site";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getCurrentLocale();
+  const session = await getServerSession();
 
   return (
     <html
@@ -50,7 +52,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`${fraunces.variable} ${plusJakartaSans.variable} ${notoSansSc.variable} ${notoSerifSc.variable}`}
     >
       <body>
-        <SiteHeader locale={locale} />
+        <SiteHeader locale={locale} session={session} />
         {children}
         <SiteFooter locale={locale} />
       </body>

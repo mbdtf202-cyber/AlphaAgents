@@ -5,6 +5,7 @@ export const verifiedInstalls: VerifiedInstall[] = [
     id: "install-swe-1",
     agentSlug: "swe-copilot-forge",
     versionId: "ver-swe-copilot-forge-1-4-2",
+    ownerUserId: "user-sample-buyer",
     verificationToken: "verify_swe_demo_1",
     packageHash: "sha256:agledger-swe-142",
     anonymousRuntimeFingerprint: "fp_workspace_91a0",
@@ -14,6 +15,7 @@ export const verifiedInstalls: VerifiedInstall[] = [
     id: "install-rbo-1",
     agentSlug: "research-brief-operator",
     versionId: "ver-research-brief-operator-0-9-8",
+    ownerUserId: "user-sample-buyer",
     verificationToken: "verify_rbo_demo_1",
     packageHash: "sha256:agledger-rbo-098",
     anonymousRuntimeFingerprint: "fp_workspace_55be",
@@ -28,6 +30,7 @@ export const verifiedReviews: VerifiedReview[] = [
     versionId: "ver-swe-copilot-forge-1-4-2",
     builderHandle: "northframe",
     installId: "install-swe-1",
+    ownerUserId: "user-sample-buyer",
     company: "Helix Cloud",
     role: "Engineering Manager",
     headline: {
@@ -57,6 +60,7 @@ export const verifiedReviews: VerifiedReview[] = [
     versionId: "ver-research-brief-operator-0-9-8",
     builderHandle: "evidentlabs",
     installId: "install-rbo-1",
+    ownerUserId: "user-sample-buyer",
     company: "Signal Atlas",
     role: "Strategy Director",
     headline: {

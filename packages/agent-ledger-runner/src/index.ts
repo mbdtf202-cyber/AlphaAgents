@@ -20,8 +20,21 @@ export interface BenchmarkArtifactBundle {
   screenshotPath: string;
 }
 
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, nested]) => `${JSON.stringify(key)}:${stableStringify(nested)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 export function computeBundleHash(input: Record<string, unknown>): string {
-  return `sha256:${crypto.createHash("sha256").update(JSON.stringify(input)).digest("hex").slice(0, 24)}`;
+  return `sha256:${crypto.createHash("sha256").update(stableStringify(input)).digest("hex").slice(0, 24)}`;
 }
 
 export function runDemoBenchmark(jobInput: BenchmarkJob) {
@@ -33,7 +46,10 @@ export function runDemoBenchmark(jobInput: BenchmarkJob) {
     throw new Error("Unknown agent or benchmark suite.");
   }
 
-  const version = latestVersion(agent);
+  const version = agent.versions.find((entry) => entry.id === job.versionId) ?? latestVersion(agent);
+  if (!version || version.id !== job.versionId) {
+    throw new Error(`Unknown agent version: ${job.versionId}`);
+  }
   const baseline = version.benchmarkRuns.find((run) => run.suiteSlug === suite.slug);
   const bundleHash = computeBundleHash({
     agentSlug: agent.slug,

@@ -1,8 +1,10 @@
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 import { getBenchmarksPageData } from "../../../lib/server/repository";
 
 export default async function AdminBenchmarksPage() {
   const locale = await getCurrentLocale();
+  await requirePageSession(["admin"]);
   const suites = await getBenchmarksPageData();
 
   return (

@@ -1,10 +1,12 @@
 import { resolveText } from "@openclaw/agent-ledger-core";
 
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 import { getHomepageData } from "../../../lib/server/repository";
 
 export default async function AdminFeaturedPage() {
   const locale = await getCurrentLocale();
+  await requirePageSession(["admin"]);
   const { featureSlots } = await getHomepageData();
 
   return (

@@ -1,13 +1,15 @@
 import { SubmissionForm } from "../../../components/submission-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 
 export default async function WorkspaceSubmissionsPage() {
   const locale = await getCurrentLocale();
+  const actor = await requirePageSession(["builder", "admin"]);
 
   return (
     <main>
-      <WorkspaceShell locale={locale} pathname="/workspace/submissions">
+      <WorkspaceShell locale={locale} pathname="/workspace/submissions" actor={actor}>
         <div className="grid gap-6">
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
             <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Submit a public dossier" : "提交公开档案"}</h1>

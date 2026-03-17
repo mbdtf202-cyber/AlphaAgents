@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  --ink-950: #0d1824;
+  --ink-900: #142537;
+  --ink-700: #425468;
+  --ink-500: #69798c;
+  --parchment: #f8f2e8;
+  --parchment-deep: #efe2ce;
+  --white: #fffdf8;
+  --copper-500: #b56a36;
+  --copper-700: #8a4c23;
+  --moss-600: #456552;
+  --grid-max: 1440px;
+}
+
+@theme inline {
+  --font-sans: var(--font-plus-jakarta), var(--font-noto-sans-sc), sans-serif;
+  --font-serif: var(--font-fraunces), var(--font-noto-serif-sc), serif;
+  --color-ink-950: var(--ink-950);
+  --color-ink-900: var(--ink-900);
+  --color-ink-700: var(--ink-700);
+  --color-ink-500: var(--ink-500);
+  --color-parchment: var(--parchment);
+  --color-parchment-deep: var(--parchment-deep);
+  --color-copper-500: var(--copper-500);
+  --color-copper-700: var(--copper-700);
+  --color-moss-600: var(--moss-600);
+  --font-display: var(--font-serif);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(181, 106, 54, 0.13), transparent 22%),
+    radial-gradient(circle at right 20%, rgba(69, 101, 82, 0.11), transparent 24%),
+    linear-gradient(180deg, #f2e8d7 0%, #faf4ea 24%, #fffdf8 100%);
+  color: var(--ink-950);
+  font-family: var(--font-plus-jakarta), var(--font-noto-sans-sc), sans-serif;
+  text-rendering: optimizeLegibility;
+  line-height: 1.45;
+}
+
+a,
+code,
+.anywhere {
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+  letter-spacing: -0.03em;
+}
+
+p,
+li,
+td,
+th {
+  hyphens: auto;
+}
+
+::selection {
+  background: rgba(181, 106, 54, 0.22);
+  color: var(--ink-950);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.measure-copy {
+  max-width: 76ch;
+}
+
+.prose-ledger {
+  max-width: 76ch;
+}
+
+.prose-ledger p,
+.prose-ledger li {
+  overflow-wrap: anywhere;
+}
+
+.surface-panel {
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: rgba(255, 253, 248, 0.84);
+  box-shadow: 0 30px 100px -60px rgba(13, 24, 36, 0.48);
+}
+
+.surface-muted {
+  background: linear-gradient(180deg, rgba(239, 226, 206, 0.8), rgba(247, 240, 228, 0.72));
+}

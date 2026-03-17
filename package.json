@@ -1,6 +1,6 @@
 {
   "name": "agent-ledger",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Agent Ledger is a reputation and benchmark layer for OpenClaw-native agents.",
   "type": "module",
@@ -10,10 +10,13 @@
   },
   "scripts": {
     "build": "next build",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
     "dev": "next dev",
     "start": "next start",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "worker:benchmarks": "tsx scripts/benchmark-worker.ts"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -38,8 +41,10 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.31.4",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
+    "tsx": "^4.20.6",
     "vitest": "4.1.0"
   }
 }

@@ -1,43 +1,76 @@
 import {
-  agents,
   benchmarkSuites,
-  builders,
-  compareAgents,
+  builders as sampleBuilders,
+  decisionMemos as sampleDecisionMemos,
   featureSlots,
   getLeaderboards,
-  getModerationCases,
+  agents as sampleAgents,
   getVerifiedReviews,
-  listAgents,
-  listBuilders,
+  moderationCases as sampleModerationCases,
   resolveText,
-  verifiedInstalls,
+  shortlists as sampleShortlists,
   type AgentRecord,
+  type BuilderProfile,
   type Locale,
+  type SessionActor,
 } from "@openclaw/agent-ledger-core";
 
-export function hydrateAgent(agent: AgentRecord): AgentRecord {
-  const reviews = getVerifiedReviews().filter((review) => review.agentSlug === agent.slug);
+import { getReadCatalog, getRepositoryBundle } from "./repositories";
+import { sampleProvenance } from "./provenance";
+
+function filterReviewsToVersion(agent: AgentRecord, versionId?: string): AgentRecord {
+  const selectedVersionId = versionId ?? agent.versions[0]?.id;
   return {
     ...agent,
-    reviews,
+    reviews: agent.reviews.filter((review) => review.versionId === selectedVersionId),
   };
+}
+
+function hydrateSampleAgent(agent: AgentRecord, versionId?: string): AgentRecord {
+  const reviews = getVerifiedReviews().filter((review) => review.agentSlug === agent.slug);
+  const merged = {
+    ...agent,
+    provenance: agent.provenance ?? sampleProvenance,
+    reviews: reviews.map((review) => ({
+      ...review,
+      provenance: review.provenance ?? sampleProvenance,
+    })),
+    versions: agent.versions.map((version) => ({
+      ...version,
+      provenance: version.provenance ?? sampleProvenance,
+      benchmarkRuns: version.benchmarkRuns.map((run) => ({
+        ...run,
+        provenance: run.provenance ?? sampleProvenance,
+      })),
+    })),
+  };
+  return filterReviewsToVersion(merged, versionId);
+}
+
+function sampleBuilder(builder: BuilderProfile): BuilderProfile {
+  return {
+    ...builder,
+    provenance: builder.provenance ?? sampleProvenance,
+  };
+}
+
+function sampleAgentList(): AgentRecord[] {
+  return sampleAgents.map((agent) => hydrateSampleAgent(agent));
 }
 
 export async function getHomepageData() {
+  const catalog = await getReadCatalog();
   return {
     featuredAgents: featureSlots
-      .map((slot) => agents.find((agent) => agent.slug === slot.agentSlug))
-      .filter((agent): agent is AgentRecord => Boolean(agent))
-      .map(hydrateAgent),
-    builders: listBuilders().slice(0, 3),
+      .map((slot) => catalog.agents.find((agent) => agent.slug === slot.agentSlug))
+      .filter((agent): agent is AgentRecord => Boolean(agent)),
+    builders: catalog.builders.slice(0, 3),
     leaderboards: getLeaderboards(),
-    featureSlots,
-    suites: benchmarkSuites,
+    featureSlots: featureSlots.map((slot) => ({ ...slot, provenance: slot.provenance ?? sampleProvenance })),
+    suites: benchmarkSuites.map((suite) => ({ ...suite, provenance: suite.provenance ?? sampleProvenance })),
+    metrics: catalog.metrics,
+    publicDataMode: catalog.metrics.liveAgentCount > 0 ? "mixed" : "sample",
   };
-}
-
-export async function getAgentsPageData(query?: string) {
-  return listAgents(query).map(hydrateAgent);
 }
 
 export async function getFilteredAgentsPageData({
@@ -49,9 +82,15 @@ export async function getFilteredAgentsPageData({
   category?: string;
   status?: string;
 }) {
-  return listAgents(query)
-    .map(hydrateAgent)
+  const catalog = await getReadCatalog();
+  return catalog.agents
     .filter((agent) => {
+      if (query) {
+        const haystack = [agent.name, agent.slug, agent.summary.en, agent.summary["zh-CN"], ...agent.categories].join(" ").toLowerCase();
+        if (!haystack.includes(query.toLowerCase())) {
+          return false;
+        }
+      }
       if (category && category !== "all" && !agent.categories.includes(category)) {
         return false;
       }
@@ -59,35 +98,39 @@ export async function getFilteredAgentsPageData({
         return false;
       }
       return true;
-    });
+    })
+    .map((agent) => hydrateSampleAgent(agent));
 }
 
-export async function getAgentPageData(slug: string) {
-  const agent = agents.find((entry) => entry.slug === slug);
-  return agent ? hydrateAgent(agent) : undefined;
+export async function getAgentPageData(slug: string, versionId?: string) {
+  const catalog = await getReadCatalog();
+  const agent = catalog.agents.find((entry) => entry.slug === slug);
+  return agent ? hydrateSampleAgent(agent, versionId) : undefined;
 }
 
 export async function getBuilderPageData(handle: string) {
-  const builder = builders.find((entry) => entry.handle === handle);
+  const builder = sampleBuilders.find((entry) => entry.handle === handle);
   if (!builder) {
     return undefined;
   }
 
+  const catalog = await getReadCatalog();
   const publishedAgents = builder.publishedAgentSlugs
-    .map((slug) => agents.find((entry) => entry.slug === slug))
+    .map((slug) => catalog.agents.find((entry) => entry.slug === slug))
     .filter((agent): agent is AgentRecord => Boolean(agent))
-    .map(hydrateAgent);
+    .map((agent) => hydrateSampleAgent(agent));
 
   return {
-    builder,
+    builder: sampleBuilder(builder),
     publishedAgents,
-    reviews: getVerifiedReviews().filter((review) => review.builderHandle === handle),
+    reviews: getVerifiedReviews().filter((review) => review.builderHandle === handle).map((review) => ({ ...review, provenance: review.provenance ?? sampleProvenance })),
   };
 }
 
 export async function getBenchmarksPageData() {
   return benchmarkSuites.map((suite) => ({
     ...suite,
+    provenance: suite.provenance ?? sampleProvenance,
     entries: Object.values(getLeaderboards())
       .flat()
       .filter((entry) => entry.suiteSlug === suite.slug)
@@ -101,43 +144,77 @@ export async function getBenchmarkDetailPageData(slug: string) {
     return undefined;
   }
 
-  const runs = agents
+  const catalog = await getReadCatalog();
+  const runs = catalog.agents
     .flatMap((agent) =>
-      agent.versions[0]?.benchmarkRuns
+      agent.versions
+        .flatMap((version) => version.benchmarkRuns)
         .filter((run) => run.suiteSlug === slug)
-        .map((run) => ({ agent: hydrateAgent(agent), run })) ?? [],
+        .map((run) => ({ agent: hydrateSampleAgent(agent, run.id), run })),
     )
     .sort((left, right) => left.run.publicRank - right.run.publicRank);
 
   return {
-    suite,
+    suite: { ...suite, provenance: suite.provenance ?? sampleProvenance },
     runs,
   };
 }
 
 export async function getComparePageData(slugs: string[]) {
-  return compareAgents(slugs).map(hydrateAgent);
+  const catalog = await getReadCatalog();
+  return slugs
+    .map((slug) => catalog.agents.find((entry) => entry.slug === slug))
+    .filter((agent): agent is AgentRecord => Boolean(agent))
+    .slice(0, 4)
+    .map((agent) => hydrateSampleAgent(agent));
 }
 
-export async function getWorkspaceData(locale: Locale) {
+export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
+  const bundle = await getRepositoryBundle();
+  const [submissions, builderAgents, installs, reviews, shortlists, decisionMemos, benchmarkRequests, moderationCases] = await Promise.all([
+    bundle.agentRepository.listSubmissionsForActor(actor),
+    bundle.agentRepository.listBuilderAgents(actor),
+    bundle.installRepository.listInstallsForActor(actor),
+    bundle.reviewRepository.listReviewsForActor(actor),
+    bundle.shortlistRepository.listShortlistsForActor(actor),
+    bundle.shortlistRepository.listDecisionMemosForActor(actor),
+    bundle.benchmarkRepository.listRequestsForActor(actor),
+    bundle.moderationRepository.listModerationCases(actor),
+  ]);
+
   return {
-    submissions: agents.slice(0, 4).map(hydrateAgent),
-    moderationCases: getModerationCases(),
-    verifiedInstalls,
-    reviewHighlights: getVerifiedReviews().map((review) => ({
+    actor,
+    submissions,
+    builderAgents,
+    verifiedInstalls: installs,
+    reviews,
+    shortlists,
+    decisionMemos,
+    benchmarkRequests,
+    moderationCases,
+    reviewHighlights: reviews.map((review) => ({
       ...review,
       headlineText: resolveText(review.headline, locale),
     })),
   };
 }
 
-export async function getAdminData() {
+export async function getAdminData(actor: SessionActor) {
+  const bundle = await getRepositoryBundle();
   return {
-    moderationCases: getModerationCases(),
-    flaggedAgents: agents.filter((agent) => agent.verificationStatus !== "verified").map(hydrateAgent),
+    moderationCases: await bundle.moderationRepository.listModerationCases(actor),
+    flaggedAgents: sampleAgentList().filter((agent) => agent.verificationStatus !== "verified"),
   };
 }
 
 export async function getBuildersDirectory() {
-  return listBuilders();
+  return sampleBuilders.map(sampleBuilder);
+}
+
+export function getSampleBuyerArtifacts() {
+  return {
+    shortlists: sampleShortlists,
+    decisionMemos: sampleDecisionMemos,
+    moderationCases: sampleModerationCases,
+  };
 }

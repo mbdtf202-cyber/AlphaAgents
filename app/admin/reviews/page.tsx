@@ -1,11 +1,13 @@
 import { resolveText } from "@openclaw/agent-ledger-core";
 
 import { getCurrentLocale } from "../../../lib/locale";
+import { requirePageSession } from "../../../lib/server/page-session";
 import { getWorkspaceData } from "../../../lib/server/repository";
 
 export default async function AdminReviewsPage() {
   const locale = await getCurrentLocale();
-  const workspace = await getWorkspaceData(locale);
+  const actor = await requirePageSession(["admin"]);
+  const workspace = await getWorkspaceData(actor, locale);
 
   return (
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">

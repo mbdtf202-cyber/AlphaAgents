@@ -4,8 +4,8 @@ import { computeBundleHash, runDemoBenchmark } from "./index";
 
 describe("agent-ledger runner", () => {
   it("builds deterministic bundle hashes", () => {
-    const a = computeBundleHash({ foo: "bar" });
-    const b = computeBundleHash({ foo: "bar" });
+    const a = computeBundleHash({ foo: "bar", baz: 1 });
+    const b = computeBundleHash({ baz: 1, foo: "bar" });
 
     expect(a).toBe(b);
   });
@@ -20,6 +20,7 @@ describe("agent-ledger runner", () => {
     });
 
     expect(run.agentSlug).toBe("swe-copilot-forge");
+    expect(run.versionId).toBe("ver-swe-copilot-forge-1-4-2");
     expect(run.artifactBundle.toolTrace).toHaveLength(4);
   });
 });

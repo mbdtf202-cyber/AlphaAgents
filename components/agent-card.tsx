@@ -4,6 +4,8 @@ import type { AgentRecord, Locale } from "@openclaw/agent-ledger-core";
 
 import { resolveText } from "@openclaw/agent-ledger-core";
 
+import { ProvenanceBadge } from "./provenance-badge";
+
 export function AgentCard({ agent, locale }: { agent: AgentRecord; locale: Locale }) {
   const version = agent.versions[0];
   const primaryRun = version?.benchmarkRuns[0];
@@ -14,6 +16,7 @@ export function AgentCard({ agent, locale }: { agent: AgentRecord; locale: Local
         <span className="rounded-full bg-ink-950 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-parchment">
           {agent.verificationStatus}
         </span>
+        <ProvenanceBadge locale={locale} provenance={agent.provenance} />
         <span className="rounded-full border border-ink-950/10 px-3 py-1 text-xs font-medium text-ink-600 anywhere">{agent.slug}</span>
       </div>
       <div className="space-y-3">

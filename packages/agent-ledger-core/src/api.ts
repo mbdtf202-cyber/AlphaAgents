@@ -13,7 +13,19 @@ export const submissionInputSchema = z.object({
   sourceUrl: z.url(),
   installCommand: z.string().min(3).max(200),
   summary: localizedTextSchema,
-  skills: z.array(z.string().min(1)).min(1),
+  permissionManifest: z.object({
+    summary: localizedTextSchema,
+    skills: z.array(z.string().min(1)).min(1),
+    secrets: z.array(z.string().min(1)).default([]),
+    networkAccess: z.array(z.string().min(1)).default([]),
+    fileAccess: z.array(z.string().min(1)).default([]),
+    shellAccess: z.boolean().default(false),
+    automationHooks: z.boolean().default(false),
+    riskLevel: z.enum(["low", "medium", "high"]),
+  }),
+  dependencies: z.array(z.string().min(1)).default([]),
+  knownLimits: z.array(localizedTextSchema).default([]),
+  supportedEnvironments: z.array(z.string().min(1)).default([]),
 });
 
 export const publishInputSchema = z.object({
@@ -61,11 +73,26 @@ export const compareInputSchema = z.object({
 
 export const shortlistInputSchema = z.object({
   name: localizedTextSchema,
-  agentSlugs: z.array(z.string().min(1)).min(1).max(10),
+  agentSlugs: z.array(z.string().min(1)).min(1).max(4),
   buyerType: z.enum(["individual", "team", "enterprise"]),
 });
 
 export const moderationDecisionSchema = z.object({
   status: z.enum(["pending", "changes-requested", "approved", "rejected"]),
   note: z.string().min(3).max(400),
+});
+
+export const magicLinkRequestSchema = z.object({
+  email: z.email(),
+  redirectTo: z.string().min(1).max(200).default("/workspace"),
+  role: z.enum(["buyer", "builder"]).default("buyer"),
+});
+
+export const decisionMemoInputSchema = z.object({
+  shortlistId: z.string().min(1),
+  title: localizedTextSchema,
+  summary: localizedTextSchema,
+  recommendationState: z.enum(["hold", "pilot", "rollout", "reject"]),
+  rolloutRecommendation: localizedTextSchema,
+  tradeoffs: z.array(localizedTextSchema).min(1),
 });

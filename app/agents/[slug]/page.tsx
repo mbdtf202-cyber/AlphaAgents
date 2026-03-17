@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { agents, resolveText } from "@openclaw/agent-ledger-core";
 
+import { ProvenanceBadge } from "../../../components/provenance-badge";
 import { ScoreBars } from "../../../components/score-bars";
 import { getCurrentLocale } from "../../../lib/locale";
 import { getAgentPageData } from "../../../lib/server/repository";
@@ -45,6 +46,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
             <span className="rounded-full bg-ink-950 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-parchment">
               {agent.verificationStatus}
             </span>
+            <ProvenanceBadge locale={locale} provenance={agent.provenance} />
             <span className="rounded-full border border-ink-950/10 px-3 py-1 text-xs font-medium text-ink-600 anywhere">{agent.slug}</span>
             <span className="rounded-full border border-copper-500/20 bg-copper-500/8 px-3 py-1 text-xs font-medium text-copper-800">
               v{version.version}
@@ -109,6 +111,19 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
                     </div>
                   </div>
                   <p className="mt-4 text-base leading-8 text-ink-700">{resolveText(run.notes, locale)}</p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <a href={run.transcriptUrl} className="rounded-full border border-ink-950/12 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
+                      {locale === "en" ? "Transcript" : "Transcript"}
+                    </a>
+                    <a href={run.toolTraceUrl} className="rounded-full border border-ink-950/12 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
+                      {locale === "en" ? "Tool trace" : "Tool trace"}
+                    </a>
+                    {run.finalArtifactUrl ? (
+                      <a href={run.finalArtifactUrl} className="rounded-full border border-ink-950/12 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
+                        {locale === "en" ? "Final artifact" : "最终工件"}
+                      </a>
+                    ) : null}
+                  </div>
                   <div className="mt-5 grid gap-3 md:grid-cols-3">
                     <div className="rounded-2xl bg-white px-4 py-3">
                       <div className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Latency" : "时延"}</div>

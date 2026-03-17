@@ -1,24 +1,40 @@
-import { randomUUID } from "node:crypto";
+import crypto from "node:crypto";
 
 import { NextResponse } from "next/server";
 
 import { reviewInputSchema } from "@openclaw/agent-ledger-core";
 
+import { requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../lib/server/auth";
+import { errorResponse, parseRequestWithSchema } from "../../../lib/server/http";
+import { getRepositoryBundle } from "../../../lib/server/repositories";
+
 export async function POST(request: Request) {
-  const json = await request.json();
-  const parsed = reviewInputSchema.safeParse(json);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  try {
+    requireConfiguredAuthForWrite();
+    const actor = await requireSessionFromRequest(request);
+    const parsed = await parseRequestWithSchema(request, reviewInputSchema);
+    const bundle = await getRepositoryBundle();
+    const review = await bundle.reviewRepository.createVerifiedReview(actor, {
+      id: crypto.randomUUID(),
+      ...parsed,
+      builderHandle: "",
+      createdAt: new Date().toISOString(),
+    });
+    await bundle.auditRepository.append({
+      actor,
+      eventType: "review.created",
+      entityType: "review",
+      entityId: review.id,
+      newState: review,
+    });
+    return NextResponse.json(
+      {
+        message: "Verified review persisted.",
+        review,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  return NextResponse.json(
-    {
-      message: "Verified review accepted for moderation.",
-      reviewId: `review_${randomUUID()}`,
-      status: "pending",
-      payload: parsed.data,
-    },
-    { status: 201 },
-  );
 }

@@ -1,24 +1,40 @@
-import { randomUUID } from "node:crypto";
+import crypto from "node:crypto";
 
 import { NextResponse } from "next/server";
 
 import { installVerificationSchema } from "@openclaw/agent-ledger-core";
 
+import { generateOpaqueToken, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
+import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";
+import { getRepositoryBundle } from "../../../../lib/server/repositories";
+
 export async function POST(request: Request) {
-  const json = await request.json();
-  const parsed = installVerificationSchema.safeParse(json);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  try {
+    requireConfiguredAuthForWrite();
+    const actor = await requireSessionFromRequest(request);
+    const parsed = await parseRequestWithSchema(request, installVerificationSchema);
+    const bundle = await getRepositoryBundle();
+    const install = await bundle.installRepository.createVerifiedInstall(actor, {
+      id: crypto.randomUUID(),
+      ...parsed,
+      verificationToken: generateOpaqueToken(),
+      verifiedAt: new Date().toISOString(),
+    });
+    await bundle.auditRepository.append({
+      actor,
+      eventType: "install.verified",
+      entityType: "install",
+      entityId: install.id,
+      newState: install,
+    });
+    return NextResponse.json(
+      {
+        message: "Install proof verified and persisted.",
+        install,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  return NextResponse.json(
-    {
-      message: "Install proof verified.",
-      installId: `install_${randomUUID()}`,
-      verificationToken: `verify_${randomUUID()}`,
-      payload: parsed.data,
-    },
-    { status: 201 },
-  );
 }

@@ -1,23 +1,43 @@
-import { randomUUID } from "node:crypto";
+import crypto from "node:crypto";
 
 import { NextResponse } from "next/server";
 
 import { shortlistInputSchema } from "@openclaw/agent-ledger-core";
 
+import { requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
+import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";
+import { getRepositoryBundle } from "../../../../lib/server/repositories";
+
 export async function POST(request: Request) {
-  const json = await request.json();
-  const parsed = shortlistInputSchema.safeParse(json);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  try {
+    requireConfiguredAuthForWrite();
+    const actor = await requireSessionFromRequest(request);
+    const parsed = await parseRequestWithSchema(request, shortlistInputSchema);
+    const bundle = await getRepositoryBundle();
+    const shortlist = await bundle.shortlistRepository.createShortlist(actor, {
+      id: crypto.randomUUID(),
+      name: parsed.name,
+      ownerUserId: actor.userId,
+      ownerOrganizationId: actor.activeOrganizationId,
+      createdByUserId: actor.userId,
+      agentSlugs: parsed.agentSlugs,
+      buyerType: parsed.buyerType,
+    });
+    await bundle.auditRepository.append({
+      actor,
+      eventType: "shortlist.created",
+      entityType: "shortlist",
+      entityId: shortlist.id,
+      newState: shortlist,
+    });
+    return NextResponse.json(
+      {
+        message: "Shortlist persisted.",
+        shortlist,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  return NextResponse.json(
-    {
-      message: "Shortlist created.",
-      shortlistId: `shortlist_${randomUUID()}`,
-      payload: parsed.data,
-    },
-    { status: 201 },
-  );
 }

@@ -8,11 +8,10 @@ export function ReviewForm({ locale }: { locale: Locale }) {
   const [status, setStatus] = useState<string>("");
 
   async function handleSubmit(formData: FormData) {
-    const score = Number(formData.get("score") ?? 90);
     const payload = {
-      installId: String(formData.get("installId") ?? "install-swe-1"),
-      agentSlug: String(formData.get("agentSlug") ?? "swe-copilot-forge"),
-      versionId: String(formData.get("versionId") ?? "ver-swe-copilot-forge-1-4-2"),
+      installId: String(formData.get("installId") ?? ""),
+      agentSlug: String(formData.get("agentSlug") ?? ""),
+      versionId: String(formData.get("versionId") ?? ""),
       company: String(formData.get("company") ?? ""),
       role: String(formData.get("role") ?? ""),
       headline: {
@@ -25,14 +24,14 @@ export function ReviewForm({ locale }: { locale: Locale }) {
       },
       rating: Number(formData.get("rating") ?? 5),
       dimensions: {
-        taskSuccess: score,
-        reliability: score,
-        costEfficiency: score - 4,
-        latency: score - 6,
-        safetyFootprint: score,
-        setupFriction: score - 3,
-        operatorBurden: score - 2,
-        domainFit: score,
+        taskSuccess: Number(formData.get("taskSuccess") ?? 0),
+        reliability: Number(formData.get("reliability") ?? 0),
+        costEfficiency: Number(formData.get("costEfficiency") ?? 0),
+        latency: Number(formData.get("latency") ?? 0),
+        safetyFootprint: Number(formData.get("safetyFootprint") ?? 0),
+        setupFriction: Number(formData.get("setupFriction") ?? 0),
+        operatorBurden: Number(formData.get("operatorBurden") ?? 0),
+        domainFit: Number(formData.get("domainFit") ?? 0),
       },
     };
 
@@ -48,6 +47,20 @@ export function ReviewForm({ locale }: { locale: Locale }) {
 
   return (
     <form action={handleSubmit} className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <label className="grid gap-2 text-sm text-ink-700">
+          Install ID
+          <input name="installId" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3 anywhere" placeholder="install_xxx" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          Agent slug
+          <input name="agentSlug" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="swe-copilot-forge" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          Version ID
+          <input name="versionId" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3 anywhere" placeholder="ver_xxx" />
+        </label>
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm text-ink-700">
           {locale === "en" ? "Company" : "公司"}
@@ -83,10 +96,23 @@ export function ReviewForm({ locale }: { locale: Locale }) {
           {locale === "en" ? "Rating" : "评分"}
           <input name="rating" type="number" min="1" max="5" defaultValue="5" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
         </label>
-        <label className="grid gap-2 text-sm text-ink-700">
-          {locale === "en" ? "Structured score baseline" : "结构化评分基线"}
-          <input name="score" type="number" min="60" max="100" defaultValue="90" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
-        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        {[
+          ["taskSuccess", "Task success"],
+          ["reliability", "Reliability"],
+          ["costEfficiency", "Cost efficiency"],
+          ["latency", "Latency"],
+          ["safetyFootprint", "Safety footprint"],
+          ["setupFriction", "Setup friction"],
+          ["operatorBurden", "Operator burden"],
+          ["domainFit", "Domain fit"],
+        ].map(([key, label]) => (
+          <label key={key} className="grid gap-2 text-sm text-ink-700">
+            {label}
+            <input name={key} type="number" min="0" max="100" defaultValue="85" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" />
+          </label>
+        ))}
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">

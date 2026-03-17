@@ -37,6 +37,70 @@ export const organizations = pgTable("agent_ledger_organizations", {
   ...timestamps,
 });
 
+export const organizationMemberships = pgTable(
+  "agent_ledger_organization_memberships",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id)
+      .notNull(),
+    organizationId: uuid("organization_id")
+      .references(() => organizations.id)
+      .notNull(),
+    role: varchar("role", { length: 24 }).default("member").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("agent_ledger_org_membership_user_idx").on(table.userId), index("agent_ledger_org_membership_org_idx").on(table.organizationId)],
+);
+
+export const authAccounts = pgTable(
+  "agent_ledger_auth_accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id)
+      .notNull(),
+    provider: varchar("provider", { length: 32 }).notNull(),
+    providerAccountId: varchar("provider_account_id", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    profile: jsonb("profile").default(sql`'{}'::jsonb`).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("agent_ledger_auth_account_provider_idx").on(table.provider, table.providerAccountId)],
+);
+
+export const authSessions = pgTable(
+  "agent_ledger_auth_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id)
+      .notNull(),
+    activeOrganizationId: uuid("active_organization_id").references(() => organizations.id),
+    tokenHash: varchar("token_hash", { length: 255 }).notNull().unique(),
+    role: varchar("role", { length: 32 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (table) => [index("agent_ledger_auth_session_user_idx").on(table.userId), index("agent_ledger_auth_session_token_idx").on(table.tokenHash)],
+);
+
+export const magicLinkChallenges = pgTable(
+  "agent_ledger_magic_link_challenges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: varchar("email", { length: 255 }).notNull(),
+    role: varchar("role", { length: 32 }).notNull(),
+    redirectTo: varchar("redirect_to", { length: 255 }).notNull(),
+    tokenHash: varchar("token_hash", { length: 255 }).notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [index("agent_ledger_magic_link_email_idx").on(table.email), index("agent_ledger_magic_link_token_idx").on(table.tokenHash)],
+);
+
 export const builderProfiles = pgTable(
   "agent_ledger_builder_profiles",
   {
@@ -60,6 +124,8 @@ export const agentRecords = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     builderProfileId: uuid("builder_profile_id").references(() => builderProfiles.id),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
     slug: varchar("slug", { length: 160 }).notNull().unique(),
     name: varchar("name", { length: 160 }).notNull(),
     status: varchar("status", { length: 32 }).notNull(),
@@ -169,6 +235,49 @@ export const benchmarkRunsTable = pgTable(
   (table) => [index("agent_ledger_benchmark_run_version_idx").on(table.agentVersionId)],
 );
 
+export const benchmarkRequestsTable = pgTable(
+  "agent_ledger_benchmark_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+    createdByUserId: uuid("created_by_user_id")
+      .references(() => users.id)
+      .notNull(),
+    agentId: uuid("agent_id")
+      .references(() => agentRecords.id)
+      .notNull(),
+    agentVersionId: uuid("agent_version_id")
+      .references(() => agentVersions.id)
+      .notNull(),
+    suiteId: uuid("suite_id")
+      .references(() => benchmarkSuitesTable.id)
+      .notNull(),
+    objective: text("objective"),
+    status: varchar("status", { length: 32 }).default("queued").notNull(),
+    queuedAt: timestamp("queued_at", { withTimezone: true }).defaultNow().notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [index("agent_ledger_benchmark_request_version_idx").on(table.agentVersionId), index("agent_ledger_benchmark_request_status_idx").on(table.status)],
+);
+
+export const benchmarkArtifactsTable = pgTable("agent_ledger_benchmark_artifacts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  benchmarkRequestId: uuid("benchmark_request_id")
+    .references(() => benchmarkRequestsTable.id)
+    .notNull(),
+  bundleHash: varchar("bundle_hash", { length: 255 }).notNull(),
+  transcriptUrl: text("transcript_url").notNull(),
+  toolTraceUrl: text("tool_trace_url").notNull(),
+  finalArtifactUrl: text("final_artifact_url"),
+  screenshotUrl: text("screenshot_url"),
+  htmlArtifactUrl: text("html_artifact_url"),
+  rubric: jsonb("rubric").default(sql`'{}'::jsonb`).notNull(),
+  ...timestamps,
+});
+
 export const benchmarkScorecards = pgTable("agent_ledger_benchmark_scorecards", {
   id: uuid("id").defaultRandom().primaryKey(),
   benchmarkRunId: uuid("benchmark_run_id")
@@ -188,6 +297,8 @@ export const benchmarkScorecards = pgTable("agent_ledger_benchmark_scorecards", 
 
 export const verifiedInstallsTable = pgTable("agent_ledger_verified_installs", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
+  ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
   agentId: uuid("agent_id")
     .references(() => agentRecords.id)
     .notNull(),
@@ -203,6 +314,8 @@ export const verifiedInstallsTable = pgTable("agent_ledger_verified_installs", {
 
 export const verifiedReviewsTable = pgTable("agent_ledger_verified_reviews", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
+  ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
   agentId: uuid("agent_id")
     .references(() => agentRecords.id)
     .notNull(),
@@ -221,17 +334,63 @@ export const verifiedReviewsTable = pgTable("agent_ledger_verified_reviews", {
   ...timestamps,
 });
 
-export const collectionsTable = pgTable("agent_ledger_collections", {
+export const shortlistsTable = pgTable("agent_ledger_shortlists", {
   id: uuid("id").defaultRandom().primaryKey(),
-  ownerId: uuid("owner_id").references(() => users.id),
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
+  ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+  createdByUserId: uuid("created_by_user_id")
+    .references(() => users.id)
+    .notNull(),
   name: jsonb("name").default(sql`'{}'::jsonb`).notNull(),
   buyerType: varchar("buyer_type", { length: 32 }).notNull(),
   agentSlugs: jsonb("agent_slugs").default(sql`'[]'::jsonb`).notNull(),
   ...timestamps,
 });
 
+export const decisionMemosTable = pgTable("agent_ledger_decision_memos", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  shortlistId: uuid("shortlist_id")
+    .references(() => shortlistsTable.id)
+    .notNull(),
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
+  ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+  createdByUserId: uuid("created_by_user_id")
+    .references(() => users.id)
+    .notNull(),
+  title: jsonb("title").default(sql`'{}'::jsonb`).notNull(),
+  summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+  recommendationState: varchar("recommendation_state", { length: 24 }).notNull(),
+  rolloutRecommendation: jsonb("rollout_recommendation").default(sql`'{}'::jsonb`).notNull(),
+  tradeoffs: jsonb("tradeoffs").default(sql`'[]'::jsonb`).notNull(),
+  ...timestamps,
+});
+
+export const submissionsTable = pgTable("agent_ledger_submissions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
+  ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+  createdByUserId: uuid("created_by_user_id")
+    .references(() => users.id)
+    .notNull(),
+  agentName: varchar("agent_name", { length: 160 }).notNull(),
+  agentSlug: varchar("agent_slug", { length: 160 }).notNull(),
+  builderHandle: varchar("builder_handle", { length: 80 }).notNull(),
+  sourceKind: varchar("source_kind", { length: 32 }).notNull(),
+  sourceUrl: text("source_url").notNull(),
+  installCommand: text("install_command").notNull(),
+  summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+  permissionManifest: jsonb("permission_manifest").default(sql`'{}'::jsonb`).notNull(),
+  dependencies: jsonb("dependencies").default(sql`'[]'::jsonb`).notNull(),
+  knownLimits: jsonb("known_limits").default(sql`'[]'::jsonb`).notNull(),
+  supportedEnvironments: jsonb("supported_environments").default(sql`'[]'::jsonb`).notNull(),
+  status: varchar("status", { length: 32 }).default("pending").notNull(),
+  ...timestamps,
+});
+
 export const moderationCasesTable = pgTable("agent_ledger_moderation_cases", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownerUserId: uuid("owner_user_id").references(() => users.id),
+  ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
   entityType: varchar("entity_type", { length: 64 }).notNull(),
   entityId: varchar("entity_id", { length: 255 }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -240,6 +399,25 @@ export const moderationCasesTable = pgTable("agent_ledger_moderation_cases", {
   assignedTo: varchar("assigned_to", { length: 80 }).notNull(),
   ...timestamps,
 });
+
+export const auditLogsTable = pgTable(
+  "agent_ledger_audit_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorUserId: uuid("actor_user_id")
+      .references(() => users.id)
+      .notNull(),
+    actorOrganizationId: uuid("actor_organization_id").references(() => organizations.id),
+    eventType: varchar("event_type", { length: 80 }).notNull(),
+    entityType: varchar("entity_type", { length: 80 }).notNull(),
+    entityId: varchar("entity_id", { length: 255 }).notNull(),
+    previousState: jsonb("previous_state"),
+    newState: jsonb("new_state"),
+    metadata: jsonb("metadata"),
+    ...timestamps,
+  },
+  (table) => [index("agent_ledger_audit_entity_idx").on(table.entityType, table.entityId), index("agent_ledger_audit_actor_idx").on(table.actorUserId)],
+);
 
 export const featureSlotsTable = pgTable("agent_ledger_feature_slots", {
   id: uuid("id").defaultRandom().primaryKey(),

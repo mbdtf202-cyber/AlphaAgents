@@ -8,6 +8,12 @@ const fields = [
   { key: "cost", label: { en: "Cost / success", "zh-CN": "成功成本" } },
   { key: "latency", label: { en: "Median latency", "zh-CN": "中位时延" } },
   { key: "risk", label: { en: "Risk level", "zh-CN": "权限风险" } },
+  { key: "shell", label: { en: "Shell access", "zh-CN": "Shell 权限" } },
+  { key: "network", label: { en: "Network access", "zh-CN": "网络访问" } },
+  { key: "files", label: { en: "File scope", "zh-CN": "文件范围" } },
+  { key: "secrets", label: { en: "Secrets", "zh-CN": "密钥" } },
+  { key: "setup", label: { en: "Setup friction", "zh-CN": "配置摩擦" } },
+  { key: "operator", label: { en: "Operator burden", "zh-CN": "监督负担" } },
   { key: "fit", label: { en: "Best fit", "zh-CN": "适用场景" } },
   { key: "limits", label: { en: "Not ideal for", "zh-CN": "不适用场景" } },
 ] as const;
@@ -46,6 +52,18 @@ export function CompareTable({ agents, locale }: { agents: AgentRecord[]; locale
                             ? `${run?.medianLatencySeconds}s`
                             : field.key === "risk"
                               ? agent.permissionManifest.riskLevel
+                              : field.key === "shell"
+                                ? agent.permissionManifest.shellAccess ? "yes" : "no"
+                                : field.key === "network"
+                                  ? agent.permissionManifest.networkAccess.join(", ")
+                                  : field.key === "files"
+                                    ? agent.permissionManifest.fileAccess.join(", ")
+                                    : field.key === "secrets"
+                                      ? agent.permissionManifest.secrets.join(", ")
+                                      : field.key === "setup"
+                                        ? run?.scorecard.setupFriction
+                                        : field.key === "operator"
+                                          ? run?.scorecard.operatorBurden
                               : field.key === "fit"
                                 ? resolveText(agent.useCases[0], locale)
                                 : resolveText(agent.notFor[0], locale);

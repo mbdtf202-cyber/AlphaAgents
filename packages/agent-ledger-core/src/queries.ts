@@ -1,4 +1,4 @@
-import { agents, benchmarkSuites, builders, collections, featureSlots, moderationCases, verifiedReviews } from "./data/index";
+import { agents, benchmarkSuites, builders, featureSlots, moderationCases, shortlists, verifiedReviews } from "./data/index";
 import { rankingSignal, toLeaderboardEntry } from "./scoring";
 import type { AgentRecord, BenchmarkSuite, BuilderProfile, LeaderboardEntry } from "./types";
 
@@ -82,7 +82,7 @@ export function compareAgents(slugs: string[]): AgentRecord[] {
 }
 
 export function getCollections() {
-  return collections;
+  return shortlists;
 }
 
 export function getModerationCases() {

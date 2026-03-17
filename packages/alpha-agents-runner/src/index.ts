@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { benchmarkRequestSchema, getAgentBySlug, getBenchmarkSuiteBySlug, latestVersion } from "@openclaw/agent-ledger-core";
+import { benchmarkRequestSchema, getAgentBySlug, getBenchmarkSuiteBySlug, latestVersion } from "@openclaw/alpha-agents-core";
 import { PgBoss } from "pg-boss";
 import { z } from "zod";
 

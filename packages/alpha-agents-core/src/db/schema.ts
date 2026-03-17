@@ -16,7 +16,7 @@ const timestamps = {
 };
 
 export const users = pgTable(
-  "agent_ledger_users",
+  "alpha_agents_users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     email: varchar("email", { length: 255 }).notNull().unique(),
@@ -26,10 +26,10 @@ export const users = pgTable(
     profile: jsonb("profile").default(sql`'{}'::jsonb`).notNull(),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_users_email_idx").on(table.email)],
+  (table) => [index("alpha_agents_users_email_idx").on(table.email)],
 );
 
-export const organizations = pgTable("agent_ledger_organizations", {
+export const organizations = pgTable("alpha_agents_organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 160 }).notNull(),
   slug: varchar("slug", { length: 160 }).notNull().unique(),
@@ -38,7 +38,7 @@ export const organizations = pgTable("agent_ledger_organizations", {
 });
 
 export const organizationMemberships = pgTable(
-  "agent_ledger_organization_memberships",
+  "alpha_agents_organization_memberships",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id")
@@ -50,11 +50,11 @@ export const organizationMemberships = pgTable(
     role: varchar("role", { length: 24 }).default("member").notNull(),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_org_membership_user_idx").on(table.userId), index("agent_ledger_org_membership_org_idx").on(table.organizationId)],
+  (table) => [index("alpha_agents_org_membership_user_idx").on(table.userId), index("alpha_agents_org_membership_org_idx").on(table.organizationId)],
 );
 
 export const authAccounts = pgTable(
-  "agent_ledger_auth_accounts",
+  "alpha_agents_auth_accounts",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id")
@@ -66,11 +66,11 @@ export const authAccounts = pgTable(
     profile: jsonb("profile").default(sql`'{}'::jsonb`).notNull(),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_auth_account_provider_idx").on(table.provider, table.providerAccountId)],
+  (table) => [index("alpha_agents_auth_account_provider_idx").on(table.provider, table.providerAccountId)],
 );
 
 export const authSessions = pgTable(
-  "agent_ledger_auth_sessions",
+  "alpha_agents_auth_sessions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id")
@@ -83,11 +83,11 @@ export const authSessions = pgTable(
     lastUsedAt: timestamp("last_used_at", { withTimezone: true }).defaultNow().notNull(),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_auth_session_user_idx").on(table.userId), index("agent_ledger_auth_session_token_idx").on(table.tokenHash)],
+  (table) => [index("alpha_agents_auth_session_user_idx").on(table.userId), index("alpha_agents_auth_session_token_idx").on(table.tokenHash)],
 );
 
 export const magicLinkChallenges = pgTable(
-  "agent_ledger_magic_link_challenges",
+  "alpha_agents_magic_link_challenges",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     email: varchar("email", { length: 255 }).notNull(),
@@ -98,11 +98,11 @@ export const magicLinkChallenges = pgTable(
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_magic_link_email_idx").on(table.email), index("agent_ledger_magic_link_token_idx").on(table.tokenHash)],
+  (table) => [index("alpha_agents_magic_link_email_idx").on(table.email), index("alpha_agents_magic_link_token_idx").on(table.tokenHash)],
 );
 
 export const builderProfiles = pgTable(
-  "agent_ledger_builder_profiles",
+  "alpha_agents_builder_profiles",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id").references(() => users.id),
@@ -116,11 +116,11 @@ export const builderProfiles = pgTable(
     embedding: vector("embedding"),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_builder_handle_idx").on(table.handle)],
+  (table) => [index("alpha_agents_builder_handle_idx").on(table.handle)],
 );
 
 export const agentRecords = pgTable(
-  "agent_ledger_agents",
+  "alpha_agents_agents",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     builderProfileId: uuid("builder_profile_id").references(() => builderProfiles.id),
@@ -136,10 +136,10 @@ export const agentRecords = pgTable(
     searchEmbedding: vector("search_embedding"),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_agent_slug_idx").on(table.slug)],
+  (table) => [index("alpha_agents_agent_slug_idx").on(table.slug)],
 );
 
-export const agentSources = pgTable("agent_ledger_agent_sources", {
+export const agentSources = pgTable("alpha_agents_agent_sources", {
   id: uuid("id").defaultRandom().primaryKey(),
   agentId: uuid("agent_id")
     .references(() => agentRecords.id)
@@ -151,7 +151,7 @@ export const agentSources = pgTable("agent_ledger_agent_sources", {
   ...timestamps,
 });
 
-export const permissionManifests = pgTable("agent_ledger_permission_manifests", {
+export const permissionManifests = pgTable("alpha_agents_permission_manifests", {
   id: uuid("id").defaultRandom().primaryKey(),
   agentId: uuid("agent_id")
     .references(() => agentRecords.id)
@@ -168,7 +168,7 @@ export const permissionManifests = pgTable("agent_ledger_permission_manifests", 
 });
 
 export const agentVersions = pgTable(
-  "agent_ledger_agent_versions",
+  "alpha_agents_agent_versions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     agentId: uuid("agent_id")
@@ -183,10 +183,10 @@ export const agentVersions = pgTable(
     reviewCount: integer("review_count").default(0).notNull(),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_agent_version_agent_idx").on(table.agentId)],
+  (table) => [index("alpha_agents_agent_version_agent_idx").on(table.agentId)],
 );
 
-export const benchmarkSuitesTable = pgTable("agent_ledger_benchmark_suites", {
+export const benchmarkSuitesTable = pgTable("alpha_agents_benchmark_suites", {
   id: uuid("id").defaultRandom().primaryKey(),
   slug: varchar("slug", { length: 160 }).notNull().unique(),
   track: varchar("track", { length: 64 }).notNull(),
@@ -198,7 +198,7 @@ export const benchmarkSuitesTable = pgTable("agent_ledger_benchmark_suites", {
   ...timestamps,
 });
 
-export const benchmarkTasks = pgTable("agent_ledger_benchmark_tasks", {
+export const benchmarkTasks = pgTable("alpha_agents_benchmark_tasks", {
   id: uuid("id").defaultRandom().primaryKey(),
   suiteId: uuid("suite_id")
     .references(() => benchmarkSuitesTable.id)
@@ -211,7 +211,7 @@ export const benchmarkTasks = pgTable("agent_ledger_benchmark_tasks", {
 });
 
 export const benchmarkRunsTable = pgTable(
-  "agent_ledger_benchmark_runs",
+  "alpha_agents_benchmark_runs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     suiteId: uuid("suite_id")
@@ -232,11 +232,11 @@ export const benchmarkRunsTable = pgTable(
     notes: jsonb("notes").default(sql`'{}'::jsonb`).notNull(),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_benchmark_run_version_idx").on(table.agentVersionId)],
+  (table) => [index("alpha_agents_benchmark_run_version_idx").on(table.agentVersionId)],
 );
 
 export const benchmarkRequestsTable = pgTable(
-  "agent_ledger_benchmark_requests",
+  "alpha_agents_benchmark_requests",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     ownerUserId: uuid("owner_user_id").references(() => users.id),
@@ -260,10 +260,10 @@ export const benchmarkRequestsTable = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_benchmark_request_version_idx").on(table.agentVersionId), index("agent_ledger_benchmark_request_status_idx").on(table.status)],
+  (table) => [index("alpha_agents_benchmark_request_version_idx").on(table.agentVersionId), index("alpha_agents_benchmark_request_status_idx").on(table.status)],
 );
 
-export const benchmarkArtifactsTable = pgTable("agent_ledger_benchmark_artifacts", {
+export const benchmarkArtifactsTable = pgTable("alpha_agents_benchmark_artifacts", {
   id: uuid("id").defaultRandom().primaryKey(),
   benchmarkRequestId: uuid("benchmark_request_id")
     .references(() => benchmarkRequestsTable.id)
@@ -278,7 +278,7 @@ export const benchmarkArtifactsTable = pgTable("agent_ledger_benchmark_artifacts
   ...timestamps,
 });
 
-export const benchmarkScorecards = pgTable("agent_ledger_benchmark_scorecards", {
+export const benchmarkScorecards = pgTable("alpha_agents_benchmark_scorecards", {
   id: uuid("id").defaultRandom().primaryKey(),
   benchmarkRunId: uuid("benchmark_run_id")
     .references(() => benchmarkRunsTable.id)
@@ -295,7 +295,7 @@ export const benchmarkScorecards = pgTable("agent_ledger_benchmark_scorecards", 
   ...timestamps,
 });
 
-export const verifiedInstallsTable = pgTable("agent_ledger_verified_installs", {
+export const verifiedInstallsTable = pgTable("alpha_agents_verified_installs", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerUserId: uuid("owner_user_id").references(() => users.id),
   ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
@@ -312,7 +312,7 @@ export const verifiedInstallsTable = pgTable("agent_ledger_verified_installs", {
   ...timestamps,
 });
 
-export const verifiedReviewsTable = pgTable("agent_ledger_verified_reviews", {
+export const verifiedReviewsTable = pgTable("alpha_agents_verified_reviews", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerUserId: uuid("owner_user_id").references(() => users.id),
   ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
@@ -334,7 +334,7 @@ export const verifiedReviewsTable = pgTable("agent_ledger_verified_reviews", {
   ...timestamps,
 });
 
-export const shortlistsTable = pgTable("agent_ledger_shortlists", {
+export const shortlistsTable = pgTable("alpha_agents_shortlists", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerUserId: uuid("owner_user_id").references(() => users.id),
   ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
@@ -347,7 +347,7 @@ export const shortlistsTable = pgTable("agent_ledger_shortlists", {
   ...timestamps,
 });
 
-export const decisionMemosTable = pgTable("agent_ledger_decision_memos", {
+export const decisionMemosTable = pgTable("alpha_agents_decision_memos", {
   id: uuid("id").defaultRandom().primaryKey(),
   shortlistId: uuid("shortlist_id")
     .references(() => shortlistsTable.id)
@@ -365,7 +365,7 @@ export const decisionMemosTable = pgTable("agent_ledger_decision_memos", {
   ...timestamps,
 });
 
-export const submissionsTable = pgTable("agent_ledger_submissions", {
+export const submissionsTable = pgTable("alpha_agents_submissions", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerUserId: uuid("owner_user_id").references(() => users.id),
   ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
@@ -387,7 +387,7 @@ export const submissionsTable = pgTable("agent_ledger_submissions", {
   ...timestamps,
 });
 
-export const moderationCasesTable = pgTable("agent_ledger_moderation_cases", {
+export const moderationCasesTable = pgTable("alpha_agents_moderation_cases", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerUserId: uuid("owner_user_id").references(() => users.id),
   ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
@@ -401,7 +401,7 @@ export const moderationCasesTable = pgTable("agent_ledger_moderation_cases", {
 });
 
 export const auditLogsTable = pgTable(
-  "agent_ledger_audit_logs",
+  "alpha_agents_audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     actorUserId: uuid("actor_user_id")
@@ -416,10 +416,10 @@ export const auditLogsTable = pgTable(
     metadata: jsonb("metadata"),
     ...timestamps,
   },
-  (table) => [index("agent_ledger_audit_entity_idx").on(table.entityType, table.entityId), index("agent_ledger_audit_actor_idx").on(table.actorUserId)],
+  (table) => [index("alpha_agents_audit_entity_idx").on(table.entityType, table.entityId), index("alpha_agents_audit_actor_idx").on(table.actorUserId)],
 );
 
-export const featureSlotsTable = pgTable("agent_ledger_feature_slots", {
+export const featureSlotsTable = pgTable("alpha_agents_feature_slots", {
   id: uuid("id").defaultRandom().primaryKey(),
   agentId: uuid("agent_id").references(() => agentRecords.id),
   title: jsonb("title").default(sql`'{}'::jsonb`).notNull(),

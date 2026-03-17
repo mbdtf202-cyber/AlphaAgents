@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
           color: "#0d1824",
         }}
       >
-        <div style={{ fontSize: 24, letterSpacing: "0.25em", textTransform: "uppercase", color: "#8a4c23" }}>Agent Ledger</div>
+        <div style={{ fontSize: 24, letterSpacing: "0.25em", textTransform: "uppercase", color: "#8a4c23" }}>AlphaAgents</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ fontSize: 82, lineHeight: 0.94 }}>Hireable agents, backed by evidence.</div>
           <div style={{ fontSize: 30, lineHeight: 1.4, maxWidth: 960 }}>

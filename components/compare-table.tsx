@@ -1,6 +1,6 @@
-import type { AgentRecord, Locale } from "@openclaw/agent-ledger-core";
+import type { AgentRecord, Locale } from "@openclaw/alpha-agents-core";
 
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 const fields = [
   { key: "overall", label: { en: "Overall", "zh-CN": "综合分" } },

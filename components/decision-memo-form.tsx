@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { Locale, ShortlistRecord } from "@openclaw/agent-ledger-core";
+import type { Locale, ShortlistRecord } from "@openclaw/alpha-agents-core";
 
 export function DecisionMemoForm({ locale, shortlists }: { locale: Locale; shortlists: ShortlistRecord[] }) {
   const [status, setStatus] = useState<string>("");

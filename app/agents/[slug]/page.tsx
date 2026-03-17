@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { agents, resolveText } from "@openclaw/agent-ledger-core";
+import { agents, resolveText } from "@openclaw/alpha-agents-core";
 
 import { ProvenanceBadge } from "../../../components/provenance-badge";
 import { ScoreBars } from "../../../components/score-bars";

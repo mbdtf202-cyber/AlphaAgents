@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { computeBundleHash, runDemoBenchmark } from "./index";
 
-describe("agent-ledger runner", () => {
+describe("alpha-agents runner", () => {
   it("builds deterministic bundle hashes", () => {
     const a = computeBundleHash({ foo: "bar", baz: 1 });
     const b = computeBundleHash({ baz: 1, foo: "bar" });

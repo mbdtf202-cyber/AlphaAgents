@@ -1,7 +1,7 @@
 import type { Config } from "drizzle-kit";
 
 export default {
-  schema: "./packages/agent-ledger-core/src/db/schema.ts",
+  schema: "./packages/alpha-agents-core/src/db/schema.ts",
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {

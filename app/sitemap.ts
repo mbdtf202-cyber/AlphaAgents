@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 
-import { agents, benchmarkSuites, builders } from "@openclaw/agent-ledger-core";
+import { agents, benchmarkSuites, builders } from "@openclaw/alpha-agents-core";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://agent-ledger.example.com";
+  const base = "https://alpha-agents.example.com";
   return [
     "",
     "/agents",

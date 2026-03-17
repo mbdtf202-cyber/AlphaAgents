@@ -9,7 +9,7 @@ function buildReviewRequest(body: Record<string, unknown>, rawSessionToken?: str
     method: "POST",
     headers: {
       "content-type": "application/json",
-      ...(rawSessionToken ? { cookie: `agent_ledger_session=${rawSessionToken}` } : {}),
+      ...(rawSessionToken ? { cookie: `alpha_agents_session=${rawSessionToken}` } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -38,8 +38,8 @@ const baseReview = {
 
 describe("POST /api/reviews", () => {
   beforeEach(() => {
-    process.env.AGENT_LEDGER_STORAGE = "memory";
-    process.env.NODE_ENV = "test";
+    process.env.ALPHA_AGENTS_STORAGE = "memory";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     resetMemoryState();
   });
 

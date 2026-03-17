@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import type { Locale, SessionActor } from "@openclaw/agent-ledger-core";
+import type { Locale, SessionActor } from "@openclaw/alpha-agents-core";
 
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { LanguageToggle } from "./language-toggle";
 import { publicNavigation, siteName, siteTagline, siteTaglineZh } from "../lib/site";

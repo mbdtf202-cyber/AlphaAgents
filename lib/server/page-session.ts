@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import type { ActorRole, SessionActor } from "@openclaw/agent-ledger-core";
+import type { ActorRole, SessionActor } from "@openclaw/alpha-agents-core";
 
 import { getServerSession } from "./auth";
 

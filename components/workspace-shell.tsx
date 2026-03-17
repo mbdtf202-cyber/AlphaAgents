@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { PropsWithChildren } from "react";
 
-import type { Locale, SessionActor } from "@openclaw/agent-ledger-core";
+import type { Locale, SessionActor } from "@openclaw/alpha-agents-core";
 
 import { cn } from "../lib/utils";
 

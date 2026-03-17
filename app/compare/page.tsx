@@ -1,4 +1,4 @@
-import { listAgents } from "@openclaw/agent-ledger-core";
+import { listAgents } from "@openclaw/alpha-agents-core";
 
 import { CompareSelectorForm } from "../../components/compare-selector-form";
 import { CompareTable } from "../../components/compare-table";

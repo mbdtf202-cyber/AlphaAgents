@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { magicLinkRequestSchema } from "@openclaw/agent-ledger-core";
+import { magicLinkRequestSchema } from "@openclaw/alpha-agents-core";
 
 import { generateOpaqueToken, hashToken, requireConfiguredAuthForWrite } from "../../../../../lib/server/auth";
 import { getAppUrl } from "../../../../../lib/server/env";

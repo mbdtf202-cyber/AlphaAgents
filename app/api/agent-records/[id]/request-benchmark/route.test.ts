@@ -6,8 +6,8 @@ import { POST } from "./route";
 
 describe("POST /api/agent-records/[id]/request-benchmark", () => {
   beforeEach(() => {
-    process.env.AGENT_LEDGER_STORAGE = "memory";
-    process.env.NODE_ENV = "test";
+    process.env.ALPHA_AGENTS_STORAGE = "memory";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     resetMemoryState();
   });
 
@@ -20,7 +20,7 @@ describe("POST /api/agent-records/[id]/request-benchmark", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          cookie: `agent_ledger_session=${rawSessionToken}`,
+          cookie: `alpha_agents_session=${rawSessionToken}`,
         },
         body: JSON.stringify({
           suiteSlug: "coding-command",

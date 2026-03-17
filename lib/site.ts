@@ -1,6 +1,6 @@
-import type { Locale } from "@openclaw/agent-ledger-core";
+import type { Locale } from "@openclaw/alpha-agents-core";
 
-export const siteName = "Agent Ledger";
+export const siteName = "AlphaAgents";
 export const siteTagline = "Hireable agents, backed by evidence.";
 export const siteTaglineZh = "让每个 Agent 都有一份可验证的职业档案";
 export const defaultLocale: Locale = "en";

@@ -33,13 +33,13 @@ const notoSerifSc = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://agent-ledger.example.com"),
+  metadataBase: new URL("https://alpha-agents.example.com"),
   title: {
     default: `${siteName} | ${siteTagline}`,
     template: `%s | ${siteName}`,
   },
   description:
-    "Agent Ledger is the reputation layer for OpenClaw-native agents: buyer-facing dossiers, benchmark evidence, permission manifests, version-scoped reviews, and shortlist workflows.",
+    "AlphaAgents is the reputation layer for OpenClaw-native agents: buyer-facing dossiers, benchmark evidence, permission manifests, version-scoped reviews, and shortlist workflows.",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

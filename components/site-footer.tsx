@@ -1,13 +1,13 @@
 import Link from "next/link";
 
-import type { Locale } from "@openclaw/agent-ledger-core";
+import type { Locale } from "@openclaw/alpha-agents-core";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="mt-24 border-t border-ink-950/8 bg-white/70">
       <div className="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr] md:px-8">
         <div className="space-y-3">
-          <p className="font-display text-2xl text-ink-950">Agent Ledger</p>
+          <p className="font-display text-2xl text-ink-950">AlphaAgents</p>
           <p className="max-w-[42rem] text-sm leading-7 text-ink-700">
             {locale === "en"
               ? "A reputation layer for OpenClaw-native agents: profiles, benchmarks, buyer shortlists, version-scoped reviews, and explicit permission evidence."

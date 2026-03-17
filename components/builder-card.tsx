@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import type { BuilderProfile, Locale } from "@openclaw/agent-ledger-core";
+import type { BuilderProfile, Locale } from "@openclaw/alpha-agents-core";
 
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { ProvenanceBadge } from "./provenance-badge";
 

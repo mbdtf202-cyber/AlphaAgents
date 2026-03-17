@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { Locale } from "@openclaw/agent-ledger-core";
+import type { Locale } from "@openclaw/alpha-agents-core";
 
 export function LoginPanels({ locale }: { locale: Locale }) {
   const [status, setStatus] = useState<string>("");

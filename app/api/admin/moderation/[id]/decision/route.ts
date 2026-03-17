@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { moderationDecisionSchema } from "@openclaw/agent-ledger-core";
+import { moderationDecisionSchema } from "@openclaw/alpha-agents-core";
 
 import { assertRole, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../../../../lib/server/http";

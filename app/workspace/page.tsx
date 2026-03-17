@@ -1,4 +1,4 @@
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { WorkspaceShell } from "../../components/workspace-shell";
 import { getCurrentLocale } from "../../lib/locale";

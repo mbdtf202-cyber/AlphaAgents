@@ -1,4 +1,4 @@
-import { flattenScore, type ScoreBreakdown } from "@openclaw/agent-ledger-core";
+import { flattenScore, type ScoreBreakdown } from "@openclaw/alpha-agents-core";
 
 export function ScoreBars({ scorecard }: { scorecard: ScoreBreakdown }) {
   return (

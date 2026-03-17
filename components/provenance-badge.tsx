@@ -1,6 +1,6 @@
-import type { Locale, ProvenanceInfo } from "@openclaw/agent-ledger-core";
+import type { Locale, ProvenanceInfo } from "@openclaw/alpha-agents-core";
 
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 export function ProvenanceBadge({ locale, provenance }: { locale: Locale; provenance?: ProvenanceInfo }) {
   if (!provenance) {

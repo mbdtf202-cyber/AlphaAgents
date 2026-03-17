@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { installVerificationSchema } from "@openclaw/agent-ledger-core";
+import { installVerificationSchema } from "@openclaw/alpha-agents-core";
 
 import { generateOpaqueToken, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";

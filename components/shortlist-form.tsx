@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import type { AgentRecord, Locale } from "@openclaw/agent-ledger-core";
+import type { AgentRecord, Locale } from "@openclaw/alpha-agents-core";
 
 export function ShortlistForm({ locale, agents }: { locale: Locale; agents: AgentRecord[] }) {
   const [status, setStatus] = useState<string>("");

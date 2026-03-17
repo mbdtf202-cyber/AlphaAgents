@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { listAgents } from "@openclaw/agent-ledger-core";
+import { listAgents } from "@openclaw/alpha-agents-core";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

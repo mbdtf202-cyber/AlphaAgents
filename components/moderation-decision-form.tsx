@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import type { Locale, ModerationCase } from "@openclaw/agent-ledger-core";
+import type { Locale, ModerationCase } from "@openclaw/alpha-agents-core";
 
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 export function ModerationDecisionForm({ locale, item }: { locale: Locale; item: ModerationCase }) {
   const [status, setStatus] = useState<string>("");

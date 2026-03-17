@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAgentBySlug } from "@openclaw/agent-ledger-core";
+import { getAgentBySlug } from "@openclaw/alpha-agents-core";
 
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

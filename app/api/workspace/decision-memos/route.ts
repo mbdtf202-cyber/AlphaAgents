@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { decisionMemoInputSchema } from "@openclaw/agent-ledger-core";
+import { decisionMemoInputSchema } from "@openclaw/alpha-agents-core";
 
 import { assertRole, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { builders, resolveText } from "@openclaw/agent-ledger-core";
+import { builders, resolveText } from "@openclaw/alpha-agents-core";
 
 import { AgentCard } from "../../../components/agent-card";
 import { getCurrentLocale } from "../../../lib/locale";

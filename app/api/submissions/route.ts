@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { submissionInputSchema } from "@openclaw/agent-ledger-core";
+import { submissionInputSchema } from "@openclaw/alpha-agents-core";
 
 import { requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../lib/server/http";

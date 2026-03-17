@@ -2,14 +2,14 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { cookies } from "next/headers";
 
-import type { ActorRole, SessionActor } from "@openclaw/agent-ledger-core";
+import type { ActorRole, SessionActor } from "@openclaw/alpha-agents-core";
 
 import { getMemoryState, getActorFromMemorySession } from "./memory-store";
 import { getStorageMode, getAuthSecret } from "./env";
 import { AuthError, ConfigurationError, ForbiddenError } from "./errors";
 
-export const SESSION_COOKIE_NAME = "agent_ledger_session";
-export const OAUTH_STATE_COOKIE_NAME = "agent_ledger_oauth_state";
+export const SESSION_COOKIE_NAME = "alpha_agents_session";
+export const OAUTH_STATE_COOKIE_NAME = "alpha_agents_oauth_state";
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(`${getAuthSecret()}:${token}`).digest("hex");
@@ -107,7 +107,7 @@ export function assertRole(session: SessionActor, allowed: ActorRole[]) {
 
 export function requireConfiguredAuthForWrite() {
   if (getStorageMode() === "sample") {
-    throw new ConfigurationError("Write actions are disabled while Agent Ledger is running in sample-only mode.");
+    throw new ConfigurationError("Write actions are disabled while AlphaAgents is running in sample-only mode.");
   }
 }
 

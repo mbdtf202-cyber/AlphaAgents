@@ -5,7 +5,7 @@ const withMDX = createMDX();
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "mdx"],
-  transpilePackages: ["@openclaw/agent-ledger-core", "@openclaw/agent-ledger-runner"],
+  transpilePackages: ["@openclaw/alpha-agents-core", "@openclaw/alpha-agents-runner"],
 };
 
 export default withMDX(nextConfig);

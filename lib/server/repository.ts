@@ -13,7 +13,7 @@ import {
   type BuilderProfile,
   type Locale,
   type SessionActor,
-} from "@openclaw/agent-ledger-core";
+} from "@openclaw/alpha-agents-core";
 
 import { getReadCatalog, getRepositoryBundle } from "./repositories";
 import { sampleProvenance } from "./provenance";

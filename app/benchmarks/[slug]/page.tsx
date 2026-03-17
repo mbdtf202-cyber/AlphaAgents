@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { benchmarkSuites, resolveText } from "@openclaw/agent-ledger-core";
+import { benchmarkSuites, resolveText } from "@openclaw/alpha-agents-core";
 
 import { ScoreBars } from "../../../components/score-bars";
 import { getCurrentLocale } from "../../../lib/locale";

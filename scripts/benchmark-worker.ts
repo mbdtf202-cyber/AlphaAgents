@@ -1,4 +1,4 @@
-import { runDemoBenchmark } from "@openclaw/agent-ledger-runner";
+import { runDemoBenchmark } from "@openclaw/alpha-agents-runner";
 
 import { getStorageMode } from "../lib/server/env";
 import { getRepositoryBundle } from "../lib/server/repositories";

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { compareInputSchema, compareAgents } from "@openclaw/agent-ledger-core";
+import { compareInputSchema, compareAgents } from "@openclaw/alpha-agents-core";
 
 export async function POST(request: Request) {
   const json = await request.json();

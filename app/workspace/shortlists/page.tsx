@@ -1,4 +1,4 @@
-import { listAgents } from "@openclaw/agent-ledger-core";
+import { listAgents } from "@openclaw/alpha-agents-core";
 
 import { ShortlistForm } from "../../../components/shortlist-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";

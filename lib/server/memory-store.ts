@@ -14,8 +14,8 @@ import type {
   ShortlistRecord,
   VerifiedInstall,
   VerifiedReview,
-} from "@openclaw/agent-ledger-core";
-import { agents, benchmarkSuites, builders, decisionMemos, moderationCases, shortlists, verifiedInstalls, verifiedReviews } from "@openclaw/agent-ledger-core";
+} from "@openclaw/alpha-agents-core";
+import { agents, benchmarkSuites, builders, decisionMemos, moderationCases, shortlists, verifiedInstalls, verifiedReviews } from "@openclaw/alpha-agents-core";
 
 import { sampleProvenance } from "./provenance";
 
@@ -107,7 +107,7 @@ function createInitialState(): MemoryState {
     memberships: [
       sampleMembership("membership-1", "user-sample-builder", "org-sample-studio", "owner", "Northframe Studio", "northframe-studio"),
       sampleMembership("membership-2", "user-sample-buyer", "org-sample-buyers", "member", "Sample Buyers", "sample-buyers"),
-      sampleMembership("membership-3", "user-sample-admin", "org-sample-ops", "owner", "Agent Ledger Ops", "agent-ledger-ops"),
+      sampleMembership("membership-3", "user-sample-admin", "org-sample-ops", "owner", "AlphaAgents Ops", "alpha-agents-ops"),
     ],
     sessions: [],
     magicLinks: [],

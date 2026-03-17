@@ -1,4 +1,4 @@
-import type { AgentRecord } from "@openclaw/agent-ledger-core";
+import type { AgentRecord } from "@openclaw/alpha-agents-core";
 
 import { getCurrentLocale } from "../../../lib/locale";
 import { requirePageSession } from "../../../lib/server/page-session";

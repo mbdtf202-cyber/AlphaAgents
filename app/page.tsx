@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, ShieldCheck, Trophy, Users } from "lucide-react";
 
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import HomeIntroEn from "../content/home-intro.en.mdx";
 import HomeIntroZh from "../content/home-intro.zh-CN.mdx";

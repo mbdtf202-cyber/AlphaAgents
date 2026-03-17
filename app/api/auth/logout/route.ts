@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const rawToken = cookieHeader
     .split(";")
     .map((part) => part.trim())
-    .find((part) => part.startsWith("agent_ledger_session="))
+    .find((part) => part.startsWith("alpha_agents_session="))
     ?.split("=")[1];
 
   if (rawToken) {

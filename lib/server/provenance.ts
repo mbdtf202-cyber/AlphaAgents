@@ -1,4 +1,4 @@
-import type { ProvenanceInfo } from "@openclaw/agent-ledger-core";
+import type { ProvenanceInfo } from "@openclaw/alpha-agents-core";
 
 export const sampleProvenance: ProvenanceInfo = {
   dataMode: "sample",

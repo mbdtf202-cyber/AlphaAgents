@@ -26,7 +26,7 @@ import {
   type VerifiedInstall,
   type VerifiedReview,
   type VersionRepository,
-} from "@openclaw/agent-ledger-core";
+} from "@openclaw/alpha-agents-core";
 import {
   agentRecords,
   agentSources,
@@ -50,7 +50,7 @@ import {
   users,
   verifiedInstallsTable,
   verifiedReviewsTable,
-} from "@openclaw/agent-ledger-core/db/schema";
+} from "@openclaw/alpha-agents-core/db/schema";
 import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 
 import { hashToken } from "./auth";

@@ -1,4 +1,4 @@
-import type { Locale } from "@openclaw/agent-ledger-core";
+import type { Locale } from "@openclaw/alpha-agents-core";
 
 export function DirectoryFilters({
   locale,

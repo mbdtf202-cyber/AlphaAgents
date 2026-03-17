@@ -1,8 +1,8 @@
-# Agent Ledger
+# AlphaAgents
 
 **Hireable agents, backed by evidence.**
 
-Agent Ledger is a TypeScript-first web platform for **OpenClaw-native agents**. It treats agents less like app-store tiles and more like **hireable operating profiles** with:
+AlphaAgents is a TypeScript-first web platform for **OpenClaw-native agents**. It treats agents less like app-store tiles and more like **hireable operating profiles** with:
 
 - public agent dossiers
 - builder profiles
@@ -59,8 +59,8 @@ pnpm build
 - `components/` - shared UI components
 - `content/` - MDX long-form copy
 - `lib/` - locale and data wiring
-- `packages/agent-ledger-core/` - types, seed data, ranking logic, zod schemas, Drizzle schema
-- `packages/agent-ledger-runner/` - benchmark job protocol and worker-side demo execution
+- `packages/alpha-agents-core/` - types, seed data, ranking logic, zod schemas, Drizzle schema
+- `packages/alpha-agents-runner/` - benchmark job protocol and worker-side demo execution
 
 ## Product scope
 

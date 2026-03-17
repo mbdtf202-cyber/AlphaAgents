@@ -20,7 +20,7 @@ export class NotFoundError extends Error {
 }
 
 export class ConfigurationError extends Error {
-  constructor(message = "Agent Ledger is not configured for this action.") {
+  constructor(message = "AlphaAgents is not configured for this action.") {
     super(message);
     this.name = "ConfigurationError";
   }

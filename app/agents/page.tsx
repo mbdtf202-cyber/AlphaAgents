@@ -1,4 +1,4 @@
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { AgentCard } from "../../components/agent-card";
 import { DirectoryFilters } from "../../components/directory-filters";

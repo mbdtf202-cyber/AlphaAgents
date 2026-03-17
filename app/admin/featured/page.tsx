@@ -1,4 +1,4 @@
-import { resolveText } from "@openclaw/agent-ledger-core";
+import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { getCurrentLocale } from "../../../lib/locale";
 import { requirePageSession } from "../../../lib/server/page-session";

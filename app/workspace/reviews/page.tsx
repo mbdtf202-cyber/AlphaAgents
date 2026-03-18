@@ -1,4 +1,6 @@
 import { InstallVerificationForm } from "../../../components/install-verification-form";
+import { ExplainerShell } from "../../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
 import { ReviewForm } from "../../../components/review-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
@@ -44,6 +46,32 @@ export default async function WorkspaceReviewsPage() {
                 : "只有已验证部署才能进入公开信誉记录。下面的表单会保留结构化维度，而不是只保留星级。"}
             </p>
           </div>
+          <ExplainerShell
+            locale={locale}
+            eyebrow={locale === "en" ? "Reputation pipeline" : "信誉流水线"}
+            title={locale === "en" ? "Reputation only becomes public after a verified usage path exists." : "只有当已验证使用路径存在后，信誉才会进入公开层。"}
+            compact
+          >
+            <ProcessFlowDiagram
+              locale={locale}
+              compact
+              steps={
+                locale === "en"
+                  ? [
+                      { label: "Verify install", body: "Attach proof to a real agent and version." },
+                      { label: "Select proof", body: "Choose an owned install record, not a free-text id." },
+                      { label: "Review", body: "Submit structured operational feedback." },
+                      { label: "Publish", body: "The profile receives version-scoped reputation." },
+                    ]
+                  : [
+                      { label: "验证安装", body: "把证明绑定到真实 Agent 与版本。" },
+                      { label: "选择证明", body: "从已拥有的安装记录里选择，而不是手填 id。" },
+                      { label: "评价", body: "提交结构化运营反馈。" },
+                      { label: "公开", body: "档案最终获得绑定版本的信誉。"},
+                    ]
+              }
+            />
+          </ExplainerShell>
           <InstallVerificationForm locale={locale} agents={installAgents} />
           <ReviewForm locale={locale} installs={reviewInstallOptions} />
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">

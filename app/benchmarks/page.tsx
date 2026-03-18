@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { resolveText } from "@openclaw/alpha-agents-core";
 
+import { BenchmarkTrackMap } from "../../components/explainers/benchmark-track-map";
+import { ExplainerShell } from "../../components/explainers/explainer-shell";
 import { SectionHeading } from "../../components/section-heading";
 import { getCurrentLocale } from "../../lib/locale";
 import { getBenchmarksPageData } from "../../lib/server/repository";
@@ -22,6 +24,20 @@ export default async function BenchmarksPage() {
             : "每个 benchmark 套件都定义了一条凭证赛道、任务家族、评分框架、公开 dev set、隐藏集以及证据模型。档案是主入口，这里是方法与凭证登记页。"
         }
       />
+      <div className="mt-8">
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Track map" : "赛道地图"}
+          title={locale === "en" ? "Each track explains a different kind of evidence." : "每条赛道都在解释不同类型的证据。"}
+          description={
+            locale === "en"
+              ? "These tracks are not interchangeable scores. They are separate proof surfaces for different operating jobs."
+              : "这些赛道不是可互换的单一分数，而是针对不同工作类型的独立证明面。"
+          }
+        >
+          <BenchmarkTrackMap locale={locale} />
+        </ExplainerShell>
+      </div>
       <div className="mt-10 grid gap-6 xl:grid-cols-2">
         {suites.map((suite) => (
           <article key={suite.slug} className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">

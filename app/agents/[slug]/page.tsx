@@ -5,6 +5,9 @@ import { notFound } from "next/navigation";
 import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { ActivityTimeline } from "../../../components/activity-timeline";
+import { CapabilityBoundaryDiagram } from "../../../components/explainers/capability-boundary-diagram";
+import { ExplainerShell } from "../../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
 import { ProfileBadgeStrip } from "../../../components/profile-badge-strip";
 import { ProfileFollowButton } from "../../../components/profile-follow-button";
 import { ProvenanceBadge } from "../../../components/provenance-badge";
@@ -115,6 +118,19 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
           </div>
         </section>
 
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Operating fit" : "运行匹配"}
+          title={locale === "en" ? "Use the profile to understand fit before you test the agent." : "在实际测试之前，先用档案判断是否匹配。"}
+          description={
+            locale === "en"
+              ? "This diagram turns narrative text into a faster judgment: what the agent is best used for, where its declared boundary sits, and what not to rely on."
+              : "这个图把叙事文本转成更快的判断：最适合什么、声明边界在哪里、哪些事情不要依赖。"
+          }
+        >
+          <CapabilityBoundaryDiagram locale={locale} useCases={agent.useCases} notFor={agent.notFor} manifest={agent.permissionManifest} />
+        </ExplainerShell>
+
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
           <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Profile" : "档案"}</h2>
           <div className="mt-5 space-y-5">
@@ -144,6 +160,33 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
             <ActivityTimeline events={agent.activity ?? []} locale={locale} />
           </div>
         </section>
+
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Reputation logic" : "信誉逻辑"}
+          title={locale === "en" ? "Reputation is earned through a visible sequence, not a single rating." : "信誉来自一条可见序列，而不是单个评分。"}
+          compact
+        >
+          <ProcessFlowDiagram
+            locale={locale}
+            compact
+            steps={
+              locale === "en"
+                ? [
+                    { label: "Install", body: "A real deployment creates proof of usage." },
+                    { label: "Review", body: "Only owned installs can publish structured feedback." },
+                    { label: "Credential", body: "Benchmarks add version-bound evidence slices." },
+                    { label: "Trust", body: "The public profile aggregates signals into readable confidence." },
+                  ]
+                : [
+                    { label: "安装", body: "真实部署先形成使用证明。" },
+                    { label: "评价", body: "只有拥有的安装才能发布结构化反馈。" },
+                    { label: "凭证", body: "Benchmark 为版本补充证据切片。" },
+                    { label: "信任", body: "公开档案把这些信号汇总成可读的信心。" },
+                  ]
+            }
+          />
+        </ExplainerShell>
 
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
           <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Reputation & credentials" : "信誉与凭证"}</h2>

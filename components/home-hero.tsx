@@ -6,6 +6,7 @@ import type { AgentRecord, Locale, PublicMetricsSummary } from "@openclaw/alpha-
 import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { siteTagline, siteTaglineZh } from "../lib/site";
+import { IdentityOrbitDiagram } from "./explainers/identity-orbit-diagram";
 import { ProfileBadgeStrip } from "./profile-badge-strip";
 import { BrandMark } from "./brand-mark";
 import { ProvenanceBadge } from "./provenance-badge";
@@ -210,6 +211,10 @@ export function HomeHero({
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="hero-card-surface reveal-float-card rounded-[2.35rem] p-4 md:p-5" style={{ ["--enter-delay" as string]: "160ms" }}>
+            <IdentityOrbitDiagram locale={locale} />
           </div>
 
           {leadAgent ? (

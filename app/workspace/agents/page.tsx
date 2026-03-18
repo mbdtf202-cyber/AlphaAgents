@@ -1,5 +1,7 @@
 import { AgentCard } from "../../../components/agent-card";
 import { BenchmarkRequestForm } from "../../../components/benchmark-request-form";
+import { ExplainerShell } from "../../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
 import { PublishVersionForm } from "../../../components/publish-version-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
@@ -36,6 +38,34 @@ export default async function WorkspaceAgentsPage() {
           {workspace.builderAgents.map((agent) => (
             <AgentCard key={agent.slug} agent={agent} locale={locale} />
           ))}
+        </div>
+        <div className="mt-6">
+          <ExplainerShell
+            locale={locale}
+            eyebrow={locale === "en" ? "Builder workflow" : "Builder 工作流"}
+            title={locale === "en" ? "Profile operations move in a strict evidence order." : "档案操作必须按严格的证据顺序推进。"}
+            compact
+          >
+            <ProcessFlowDiagram
+              locale={locale}
+              compact
+              steps={
+                locale === "en"
+                  ? [
+                      { label: "Publish", body: "Push the version into moderation instead of changing public state directly." },
+                      { label: "Benchmark", body: "Queue reruns on concrete version records." },
+                      { label: "Install proof", body: "Let real deployments generate review eligibility." },
+                      { label: "Reputation", body: "Public trust updates after evidence arrives." },
+                    ]
+                  : [
+                      { label: "发布", body: "先把版本推入审核，而不是直接改动公开状态。" },
+                      { label: "Benchmark", body: "针对明确版本记录排队重跑。" },
+                      { label: "安装证明", body: "让真实部署生成评价资格。" },
+                      { label: "信誉", body: "等证据到位后，再更新公开信任。" },
+                    ]
+              }
+            />
+          </ExplainerShell>
         </div>
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
           <PublishVersionForm locale={locale} agents={managedAgents} />

@@ -1,5 +1,7 @@
 import { resolveText } from "@openclaw/alpha-agents-core";
 
+import { ExplainerShell } from "../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../components/explainers/process-flow-diagram";
 import { WorkspaceShell } from "../../components/workspace-shell";
 import { getCurrentLocale } from "../../lib/locale";
 import { requirePageSession } from "../../lib/server/page-session";
@@ -41,6 +43,32 @@ export default async function WorkspacePage() {
               <p className="mt-2 text-4xl font-semibold text-ink-950">{workspace.followingCount}</p>
             </article>
           </div>
+          <ExplainerShell
+            locale={locale}
+            eyebrow={locale === "en" ? "Workspace flow" : "工作台流程"}
+            title={locale === "en" ? "The workspace is where public trust signals turn into team decisions." : "工作台是把公开信任信号转成团队决策的地方。"}
+            compact
+          >
+            <ProcessFlowDiagram
+              locale={locale}
+              compact
+              steps={
+                locale === "en"
+                  ? [
+                      { label: "Observe", body: "Track public dossiers, credentials, and reputation movement." },
+                      { label: "Collect", body: "Save profile lists and deployment proof as internal artifacts." },
+                      { label: "Decide", body: "Write briefs with explicit rollout states and tradeoffs." },
+                      { label: "Operate", body: "Keep confidence current through benchmark and review updates." },
+                    ]
+                  : [
+                      { label: "观察", body: "持续跟踪公开档案、凭证和信誉变化。" },
+                      { label: "收集", body: "把 Profile List 和部署证明沉淀成内部工件。" },
+                      { label: "决策", body: "用明确的 rollout 状态和权衡来写 brief。" },
+                      { label: "运行", body: "通过 benchmark 和 review 更新维持信心。" },
+                    ]
+              }
+            />
+          </ExplainerShell>
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
             <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Latest saved evaluation artifacts" : "最新保存的评估工件"}</h2>
             <div className="mt-6 grid gap-4">

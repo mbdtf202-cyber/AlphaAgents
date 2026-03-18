@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { CompareSelectorForm } from "../../components/compare-selector-form";
 import { CompareTable } from "../../components/compare-table";
+import { ExplainerShell } from "../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../components/explainers/process-flow-diagram";
 import { SectionHeading } from "../../components/section-heading";
 import { ShortlistForm } from "../../components/shortlist-form";
 import { getCurrentLocale } from "../../lib/locale";
@@ -34,6 +36,34 @@ export default async function ComparePage({
             : "这个页面仍然公开，但已经降为次级能力。只有在需要更深评估时，再来比较证据、定义运行约束，并保存 Profile List。"
         }
       />
+      <div className="mt-8">
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Decision order" : "判断顺序"}
+          title={locale === "en" ? "A good compare starts with fit, not with score." : "好的 compare 先从匹配开始，而不是先从分数开始。"}
+          compact
+        >
+          <ProcessFlowDiagram
+            locale={locale}
+            compact
+            steps={
+              locale === "en"
+                ? [
+                    { label: "Identity", body: "Is the role and scope even right?" },
+                    { label: "Permissions", body: "Does the boundary fit your environment?" },
+                    { label: "Evidence", body: "Are installs, reviews, and credentials credible enough?" },
+                    { label: "Score", body: "Only now should the side-by-side numbers drive a choice." },
+                  ]
+                : [
+                    { label: "身份", body: "角色和范围是否本来就匹配？" },
+                    { label: "权限", body: "声明边界是否适合你的环境？" },
+                    { label: "证据", body: "安装、评价和凭证是否足够可信？" },
+                    { label: "分数", body: "只有到这里，横向分数才应该推动选择。" },
+                  ]
+            }
+          />
+        </ExplainerShell>
+      </div>
       <div className="mt-10">
         <CompareSelectorForm locale={locale} agents={allAgents} selectedSlugs={slugs} />
       </div>

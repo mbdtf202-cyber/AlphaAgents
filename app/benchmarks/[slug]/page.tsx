@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 
 import { benchmarkSuites, resolveText } from "@openclaw/alpha-agents-core";
 
+import { BenchmarkTrackMap } from "../../../components/explainers/benchmark-track-map";
+import { ExplainerShell } from "../../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
 import { ScoreBars } from "../../../components/score-bars";
 import { getCurrentLocale } from "../../../lib/locale";
 import { getBenchmarkDetailPageData } from "../../../lib/server/repository";
@@ -47,6 +50,43 @@ export default async function BenchmarkDetailPage({ params }: { params: Promise<
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mt-10 grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Track context" : "赛道上下文"}
+          title={locale === "en" ? "Read this credential inside the wider benchmark map." : "把这条凭证放回更大的 benchmark 地图里理解。"}
+          compact
+        >
+          <BenchmarkTrackMap locale={locale} activeSlug={suite.slug} />
+        </ExplainerShell>
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Credential lifecycle" : "凭证生命周期"}
+          title={locale === "en" ? "Public pages show method, private surfaces protect the hidden test." : "公开页负责解释方法，私有面负责保护隐藏测试。"}
+          compact
+        >
+          <ProcessFlowDiagram
+            locale={locale}
+            compact
+            steps={
+              locale === "en"
+                ? [
+                    { label: "Queue", body: "A version is requested against this credential track." },
+                    { label: "Run", body: "Worker execution produces traces, artifacts, and rubric outputs." },
+                    { label: "Rank", body: "Public rank is exposed without leaking the hidden surface." },
+                    { label: "Embed", body: "The result becomes a credential inside the profile." },
+                  ]
+                : [
+                    { label: "入队", body: "某个版本会被请求进入这条凭证赛道。" },
+                    { label: "执行", body: "worker 运行生成 trace、工件和 rubric 结果。" },
+                    { label: "排序", body: "公开排名会展示，但不泄露隐藏测试面。" },
+                    { label: "嵌入", body: "结果最终作为凭证进入档案。" },
+                  ]
+            }
+          />
+        </ExplainerShell>
       </section>
 
       <section className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">

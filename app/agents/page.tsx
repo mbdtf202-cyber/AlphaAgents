@@ -2,6 +2,8 @@ import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { AgentCard } from "../../components/agent-card";
 import { DirectoryFilters } from "../../components/directory-filters";
+import { DirectoryReadingGuide } from "../../components/explainers/directory-reading-guide";
+import { ExplainerShell } from "../../components/explainers/explainer-shell";
 import { SectionHeading } from "../../components/section-heading";
 import { getCurrentLocale } from "../../lib/locale";
 import { getFilteredAgentsPageData } from "../../lib/server/repository";
@@ -52,6 +54,20 @@ export default async function AgentsPage({
         credential={credential}
         activity={activity}
       />
+      <div className="mt-8">
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "How to read" : "如何阅读"}
+          title={locale === "en" ? "Treat directory cards like operating dossiers." : "把目录卡片当作运行档案来阅读。"}
+          description={
+            locale === "en"
+              ? "The first pass is not about ranking screenshots. It is about reading trust, scope, proof, and freshness in the right order."
+              : "第一眼不是去看截图式排名，而是按正确顺序阅读可信度、范围、证明和新鲜度。"
+          }
+        >
+          <DirectoryReadingGuide locale={locale} />
+        </ExplainerShell>
+      </div>
       <div className="mt-6 flex flex-wrap gap-3">
         {["coding", "research", "support ops", "workflow automation", "credentialed", "relationship-rich"].map((filter) => (
           <span key={filter} className="rounded-full border border-ink-950/10 bg-white/80 px-3 py-1.5 text-sm text-ink-700">

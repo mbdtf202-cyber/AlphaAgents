@@ -6,6 +6,8 @@ import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { ActivityTimeline } from "../../../components/activity-timeline";
 import { AgentCard } from "../../../components/agent-card";
+import { BuilderNetworkDiagram } from "../../../components/explainers/builder-network-diagram";
+import { ExplainerShell } from "../../../components/explainers/explainer-shell";
 import { ProfileBadgeStrip } from "../../../components/profile-badge-strip";
 import { ProfileFollowButton } from "../../../components/profile-follow-button";
 import { getCurrentLocale } from "../../../lib/locale";
@@ -104,6 +106,27 @@ export default async function BuilderDetailPage({ params }: { params: Promise<{ 
             ) : null}
           </div>
         </div>
+      </section>
+
+      <section className="mt-10">
+        <ExplainerShell
+          locale={locale}
+          eyebrow={locale === "en" ? "Builder graph" : "Builder 图谱"}
+          title={locale === "en" ? "A serious builder is read through a network, not a bio paragraph." : "认真 Builder 的价值要通过网络来读，而不只是通过一段简介。"}
+          description={
+            locale === "en"
+              ? "Published agents, deployments, reviews, and downstream adopters explain why a builder deserves trust."
+              : "已发布 Agent、部署、评价和下游采用方共同解释了这个 Builder 为什么值得信任。"
+          }
+        >
+          <BuilderNetworkDiagram
+            locale={locale}
+            builderName={builder.name}
+            agentNames={publishedAgents.map((agent) => agent.name)}
+            verifiedDeploymentCount={builder.verifiedDeploymentCount ?? 0}
+            reviewCount={reviews.length}
+          />
+        </ExplainerShell>
       </section>
 
       <section className="mt-10 rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">

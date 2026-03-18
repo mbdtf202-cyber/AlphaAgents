@@ -1,3 +1,5 @@
+import { ExplainerShell } from "../../../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
 import { WorkspaceSettingsForm } from "../../../components/workspace-settings-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
@@ -48,6 +50,33 @@ export default async function WorkspaceSettingsPage() {
               <p className="mt-2 text-lg font-semibold text-ink-950 anywhere">{workspaceHome}</p>
             </article>
           </div>
+
+          <ExplainerShell
+            locale={locale}
+            eyebrow={locale === "en" ? "Preference impact" : "偏好影响"}
+            title={locale === "en" ? "These settings change navigation behavior, not just cosmetics." : "这些设置改变的是导航行为，而不只是外观。"}
+            compact
+          >
+            <ProcessFlowDiagram
+              locale={locale}
+              compact
+              steps={
+                locale === "en"
+                  ? [
+                      { label: "Locale", body: "The shell and public pages reopen in the saved language." },
+                      { label: "Landing", body: "Header links and auth redirects use the saved workspace path." },
+                      { label: "Session", body: "Cookies keep the same defaults across visits." },
+                      { label: "Daily use", body: "Repeated navigation becomes shorter and more predictable." },
+                    ]
+                  : [
+                      { label: "语言", body: "shell 和公开页会按保存的语言重新打开。" },
+                      { label: "落点", body: "Header 链接和登录回跳会使用保存的工作台路径。" },
+                      { label: "会话", body: "cookie 会在多次访问间保持同一默认值。" },
+                      { label: "日常使用", body: "重复导航会更短、更可预测。" },
+                    ]
+              }
+            />
+          </ExplainerShell>
 
           <WorkspaceSettingsForm
             locale={locale}

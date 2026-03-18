@@ -330,6 +330,325 @@ textarea {
   }
 }
 
+.explainer-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  border-radius: 2rem;
+  padding: 1.5rem;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.94), rgba(255, 255, 255, 0.82)),
+    url("/visuals/ledger-grid.svg");
+  background-size: cover;
+  box-shadow: 0 34px 110px -68px rgba(13, 24, 36, 0.58);
+}
+
+.explainer-shell--compact {
+  padding: 1.25rem;
+  border-radius: 1.75rem;
+}
+
+.explainer-orbit {
+  position: absolute;
+  inset: auto -5rem -5rem auto;
+  height: 12rem;
+  width: 12rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(181, 106, 54, 0.12), transparent 60%),
+    url("/visuals/signal-orbit.svg");
+  background-size: cover;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: alpha-orbit 24s linear infinite;
+}
+
+.explainer-animated .explainer-step-card {
+  animation: alpha-rise 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.explainer-step-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  padding: 1rem 1rem 1.1rem;
+  box-shadow: 0 25px 80px -62px rgba(13, 24, 36, 0.56);
+}
+
+.explainer-step-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(181, 106, 54, 0.8), rgba(69, 101, 82, 0.55));
+}
+
+.explainer-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 999px;
+  background: var(--ink-950);
+  color: var(--parchment);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.explainer-step-connector {
+  position: absolute;
+  right: -1.5rem;
+  top: 50%;
+  height: 2px;
+  width: 2rem;
+  background: linear-gradient(90deg, rgba(181, 106, 54, 0.52), rgba(13, 24, 36, 0));
+}
+
+.identity-orbit-diagram {
+  position: relative;
+  display: grid;
+  min-height: 32rem;
+  place-items: center;
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.9), rgba(239, 226, 206, 0.74)),
+    url("/visuals/signal-orbit.svg");
+  background-size: cover;
+  padding: 2rem;
+  box-shadow: inset 0 0 0 1px rgba(13, 24, 36, 0.06);
+}
+
+.identity-orbit-diagram::before,
+.identity-orbit-diagram::after {
+  content: "";
+  position: absolute;
+  inset: 12% 16%;
+  border-radius: 999px;
+  border: 1px dashed rgba(181, 106, 54, 0.34);
+  animation: alpha-orbit 22s linear infinite;
+}
+
+.identity-orbit-diagram::after {
+  inset: 24% 28%;
+  border-color: rgba(69, 101, 82, 0.28);
+  animation-duration: 18s;
+  animation-direction: reverse;
+}
+
+.identity-orbit-core,
+.identity-orbit-node {
+  position: absolute;
+  max-width: 15rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: rgba(255, 255, 255, 0.86);
+  padding: 1rem 1rem 1.05rem;
+  box-shadow: 0 28px 88px -64px rgba(13, 24, 36, 0.6);
+}
+
+.identity-orbit-core {
+  position: relative;
+  max-width: 18rem;
+  text-align: center;
+  background: rgba(255, 253, 248, 0.92);
+}
+
+.identity-orbit-node--1 {
+  left: 3%;
+  top: 12%;
+}
+
+.identity-orbit-node--2 {
+  right: 5%;
+  top: 10%;
+}
+
+.identity-orbit-node--3 {
+  right: 1%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.identity-orbit-node--4 {
+  left: 12%;
+  bottom: 8%;
+}
+
+.identity-orbit-node--5 {
+  left: 2%;
+  top: 52%;
+  transform: translateY(-50%);
+}
+
+.explainer-boundary-card {
+  border-radius: 1.7rem;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  padding: 1.25rem;
+  box-shadow: 0 22px 68px -54px rgba(13, 24, 36, 0.56);
+}
+
+.explainer-boundary-card--emphasis {
+  background: linear-gradient(180deg, rgba(248, 242, 232, 0.96), rgba(255, 255, 255, 0.9));
+}
+
+.explainer-track-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  padding: 1rem;
+}
+
+.explainer-track-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(181, 106, 54, 0.07), transparent 45%, rgba(69, 101, 82, 0.08));
+}
+
+.explainer-track-card--active {
+  border-color: rgba(181, 106, 54, 0.28);
+  box-shadow: 0 24px 68px -58px rgba(181, 106, 54, 0.72);
+}
+
+.builder-network-diagram {
+  position: relative;
+  min-height: 28rem;
+  overflow: hidden;
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(239, 226, 206, 0.7)),
+    url("/visuals/ledger-grid.svg");
+  background-size: cover;
+  padding: 1.5rem;
+}
+
+.builder-network-center,
+.builder-network-node {
+  position: absolute;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(13, 24, 36, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0.9rem 1rem;
+  box-shadow: 0 22px 70px -60px rgba(13, 24, 36, 0.58);
+}
+
+.builder-network-center {
+  left: 50%;
+  top: 50%;
+  width: min(18rem, 70%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.builder-network-node::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(181, 106, 54, 0.4), rgba(69, 101, 82, 0.28));
+}
+
+.builder-network-node--1 {
+  left: 3%;
+  top: 14%;
+}
+
+.builder-network-node--1::before {
+  left: calc(100% - 0.25rem);
+  top: 50%;
+  height: 2px;
+  width: 6.5rem;
+}
+
+.builder-network-node--2 {
+  right: 6%;
+  top: 12%;
+}
+
+.builder-network-node--2::before {
+  right: calc(100% - 0.25rem);
+  top: 50%;
+  height: 2px;
+  width: 7rem;
+}
+
+.builder-network-node--3 {
+  right: 4%;
+  bottom: 16%;
+}
+
+.builder-network-node--3::before {
+  right: calc(100% - 0.25rem);
+  top: 50%;
+  height: 2px;
+  width: 7rem;
+}
+
+.builder-network-node--4 {
+  left: 6%;
+  bottom: 14%;
+}
+
+.builder-network-node--4::before {
+  left: calc(100% - 0.25rem);
+  top: 50%;
+  height: 2px;
+  width: 6.5rem;
+}
+
+.builder-network-node--5 {
+  left: 50%;
+  top: 10%;
+  transform: translateX(-50%);
+}
+
+.builder-network-node--5::before {
+  left: 50%;
+  top: calc(100% - 0.2rem);
+  height: 5rem;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 1024px) {
+  .explainer-step-connector {
+    display: none;
+  }
+
+  .identity-orbit-diagram,
+  .builder-network-diagram {
+    min-height: auto;
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .identity-orbit-core,
+  .identity-orbit-node,
+  .builder-network-center,
+  .builder-network-node {
+    position: relative;
+    inset: auto;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    transform: none;
+    width: auto;
+    max-width: none;
+  }
+
+  .builder-network-node::before {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -341,6 +660,10 @@ textarea {
   .hero-stage::before,
   .hero-stage::after,
   .hero-card-surface::before,
+  .explainer-orbit,
+  .explainer-animated .explainer-step-card,
+  .identity-orbit-diagram::before,
+  .identity-orbit-diagram::after,
   .hero-status-dot,
   .reveal-card,
   .reveal-float-card {

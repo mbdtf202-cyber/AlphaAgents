@@ -6,6 +6,8 @@ import HomeIntroEn from "../content/home-intro.en.mdx";
 import HomeIntroZh from "../content/home-intro.zh-CN.mdx";
 import { AgentCard } from "../components/agent-card";
 import { BuilderCard } from "../components/builder-card";
+import { ExplainerShell } from "../components/explainers/explainer-shell";
+import { ProcessFlowDiagram } from "../components/explainers/process-flow-diagram";
 import { HomeHero } from "../components/home-hero";
 import { SectionHeading } from "../components/section-heading";
 import { getCurrentLocale } from "../lib/locale";
@@ -55,6 +57,70 @@ export default async function HomePage() {
             <p className="mt-3 text-lg leading-8 text-ink-700">{resolveText(slot.description, locale)}</p>
           </article>
         ))}
+      </section>
+
+      <section className="mx-auto max-w-[1440px] px-5 py-16 md:px-8">
+        <div className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+          <ExplainerShell
+            locale={locale}
+            eyebrow={locale === "en" ? "How it clicks" : "如何一眼看懂"}
+            title={locale === "en" ? "Three trust questions should be answered before any purchase motion." : "在进入采购动作之前，三个可信问题必须先被回答。"}
+            description={
+              locale === "en"
+                ? "These visual cards translate the dense trust system into first-pass judgment: who it is, what it can touch, and what evidence already exists."
+                : "这组三张可视卡片把高密度信任系统翻译成首轮判断：它是谁、能接触什么、已经有哪些证据。"
+            }
+          >
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: locale === "en" ? "Identity before hype" : "身份先于热度",
+                  body: locale === "en" ? "Builder, role, scope, and trust tier should be legible before rankings." : "在看排名之前，Builder、角色、范围和信任等级必须先可读。",
+                },
+                {
+                  title: locale === "en" ? "Permission before automation" : "权限先于自动化",
+                  body: locale === "en" ? "File, shell, network, and secret posture should be explicit before adoption." : "在采纳前，文件、shell、网络和密钥姿态必须明确。",
+                },
+                {
+                  title: locale === "en" ? "Proof before rollout" : "证明先于上线",
+                  body: locale === "en" ? "Credentials, installs, and reviews should form a visible evidence trail." : "凭证、安装与评价必须能形成一条可见证据链。",
+                },
+              ].map((card) => (
+                <article key={card.title} className="explainer-step-card">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copper-700">{card.title}</p>
+                  <p className="mt-4 text-sm leading-7 text-ink-700">{card.body}</p>
+                </article>
+              ))}
+            </div>
+          </ExplainerShell>
+
+          <ExplainerShell
+            locale={locale}
+            eyebrow={locale === "en" ? "System flow" : "系统流程"}
+            title={locale === "en" ? "This product works like a trust engine, not a gallery." : "这个产品更像信任引擎，而不是展示画廊。"}
+            compact
+          >
+            <ProcessFlowDiagram
+              locale={locale}
+              compact
+              steps={
+                locale === "en"
+                  ? [
+                      { label: "Profile", body: "Identity and permission posture become public first." },
+                      { label: "Evidence", body: "Benchmarks, installs, and reviews add proof over time." },
+                      { label: "Decision", body: "Teams compare, shortlist, and brief only after fit is plausible." },
+                      { label: "Rollout", body: "Operational confidence grows from visible history, not screenshots." },
+                    ]
+                  : [
+                      { label: "档案", body: "先公开身份与权限姿态。" },
+                      { label: "证据", body: "Benchmark、安装和评价逐步补充证明。" },
+                      { label: "决策", body: "只有在匹配成立后，团队才进入比较、短名单和 brief。" },
+                      { label: "上线", body: "运营信心来自可见历史，而不是截图。" },
+                    ]
+              }
+            />
+          </ExplainerShell>
+        </div>
       </section>
 
       <section className="mx-auto max-w-[1440px] px-5 py-18 md:px-8">
@@ -241,6 +307,26 @@ export default async function HomePage() {
                 : "这个版本现在把公开职业档案、Builder 身份页、凭证、关系感知的信任信号、审核队列和次级团队评估工具整合进一个应用。"
             }
           />
+          <div className="mt-8">
+            <ProcessFlowDiagram
+              locale={locale}
+              steps={
+                locale === "en"
+                  ? [
+                      { label: "Browse", body: "Start from public profiles instead of store cards." },
+                      { label: "Inspect", body: "Check credentials, permissions, and network proof." },
+                      { label: "Evaluate", body: "Use compare and profile lists for explicit tradeoffs." },
+                      { label: "Operate", body: "Move into workspace flows once the trust case is real." },
+                    ]
+                  : [
+                      { label: "浏览", body: "从公开档案开始，而不是从商店卡片开始。" },
+                      { label: "检查", body: "确认凭证、权限和关系证明。" },
+                      { label: "评估", body: "使用 compare 和 Profile List 形成明确权衡。" },
+                      { label: "操作", body: "当信任基础成立后，再进入工作台流程。" },
+                    ]
+              }
+            />
+          </div>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link href="/agents" className="rounded-full bg-parchment px-5 py-3 text-sm font-semibold text-ink-950">
               {locale === "en" ? "Browse profiles" : "浏览档案"}

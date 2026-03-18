@@ -5,6 +5,36 @@ export type ActorRole = "buyer" | "builder" | "admin";
 export type MembershipRole = "member" | "manager" | "owner";
 export type BenchmarkRequestStatus = "queued" | "running" | "completed" | "failed";
 export type DecisionState = "hold" | "pilot" | "rollout" | "reject";
+export type ProfileSubjectType = "agent" | "builder" | "organization";
+export type RelationshipNodeType = ProfileSubjectType | "user";
+export type ActivityEventType =
+  | "version-published"
+  | "benchmark-completed"
+  | "install-verified"
+  | "review-published"
+  | "permission-changed"
+  | "badge-awarded"
+  | "featured-work-added"
+  | "endorsement-received"
+  | "adoption-verified";
+export type RelationshipEdgeType =
+  | "built-by"
+  | "affiliated-with"
+  | "adopted-by"
+  | "collaborates-with"
+  | "verified-by"
+  | "follows";
+export type ProfileBadgeType =
+  | "identity-verified"
+  | "permissions-declared"
+  | "versioned-reviews"
+  | "benchmark-credential"
+  | "verified-deployment"
+  | "profile-complete";
+export type TrustTier = "Emerging" | "Verified" | "Established";
+export type ClaimVerificationStatus = "verified" | "pending" | "disputed";
+export type ClaimVerificationType = "identity" | "deployment" | "benchmark" | "affiliation" | "capability" | "permission";
+export type ProfileCredentialType = "benchmark" | "claim" | "deployment" | "review";
 
 export interface LocalizedText {
   en: string;
@@ -15,6 +45,142 @@ export interface ProvenanceInfo {
   dataMode: DataMode;
   sourceType: SourceType;
   label: LocalizedText;
+}
+
+export interface OrganizationProfile {
+  id: string;
+  slug: string;
+  name: string;
+  headline: LocalizedText;
+  summary: LocalizedText;
+  location?: string;
+  websiteUrl?: string;
+  verificationStatus: VerificationStatus;
+  provenance?: ProvenanceInfo;
+}
+
+export interface CompletenessCheck {
+  id:
+    | "identity-basics"
+    | "install-source"
+    | "permission-manifest"
+    | "scope-and-limits"
+    | "version-history"
+    | "verified-credential"
+    | "activity-or-work";
+  label: LocalizedText;
+  complete: boolean;
+}
+
+export interface ProfileBadge {
+  id: string;
+  type: ProfileBadgeType;
+  label: LocalizedText;
+  description: LocalizedText;
+  awardedAt: string;
+  provenance?: ProvenanceInfo;
+}
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  subjectType: ProfileSubjectType;
+  subjectId: string;
+  occurredAt: string;
+  title: LocalizedText;
+  summary: LocalizedText;
+  verified: boolean;
+  relatedUrl?: string;
+  relatedVersionId?: string;
+  relatedAgentSlug?: string;
+  relatedBuilderHandle?: string;
+  relatedOrganizationId?: string;
+  provenance?: ProvenanceInfo;
+}
+
+export interface RelationshipEdge {
+  id: string;
+  type: RelationshipEdgeType;
+  fromType: RelationshipNodeType;
+  fromId: string;
+  toType: RelationshipNodeType;
+  toId: string;
+  verified: boolean;
+  createdAt: string;
+  note?: LocalizedText;
+  provenance?: ProvenanceInfo;
+}
+
+export interface ClaimVerification {
+  id: string;
+  subjectType: ProfileSubjectType;
+  subjectId: string;
+  claimType: ClaimVerificationType;
+  label: LocalizedText;
+  summary: LocalizedText;
+  status: ClaimVerificationStatus;
+  verifiedAt?: string;
+  evidenceUrl?: string;
+  relatedVersionId?: string;
+  provenance?: ProvenanceInfo;
+}
+
+export interface Endorsement {
+  id: string;
+  subjectType: ProfileSubjectType;
+  subjectId: string;
+  authorType: ProfileSubjectType;
+  authorId: string;
+  authorName: string;
+  authorHeadline: LocalizedText;
+  body: LocalizedText;
+  createdAt: string;
+  verified: boolean;
+  provenance?: ProvenanceInfo;
+}
+
+export interface FeaturedWork {
+  id: string;
+  subjectType: ProfileSubjectType;
+  subjectId: string;
+  title: LocalizedText;
+  summary: LocalizedText;
+  artifactUrl?: string;
+  publishedAt: string;
+  verified: boolean;
+  provenance?: ProvenanceInfo;
+}
+
+export interface ProfileCredential {
+  id: string;
+  type: ProfileCredentialType;
+  title: LocalizedText;
+  summary: LocalizedText;
+  issuedAt: string;
+  verified: boolean;
+  badgeType?: ProfileBadgeType;
+  relatedUrl?: string;
+  relatedVersionId?: string;
+  relatedSuiteSlug?: string;
+  score?: number;
+  rank?: number;
+  provenance?: ProvenanceInfo;
+}
+
+export interface ProfileNetwork {
+  organizations: OrganizationProfile[];
+  edges: RelationshipEdge[];
+}
+
+export interface TrustProfile {
+  tier: TrustTier;
+  completenessPercent: number;
+  checks: CompletenessCheck[];
+  primaryBadges: ProfileBadge[];
+  verifiedClaimCount: number;
+  disputedClaimCount: number;
+  followerCount: number;
+  lastVerifiedEventAt?: string;
 }
 
 export type VerificationStatus = "verified" | "review" | "draft";
@@ -92,6 +258,17 @@ export interface BuilderProfile {
   shortlistCount: number;
   verifiedReviewCount: number;
   githubUrl?: string;
+  affiliatedOrganizations?: OrganizationProfile[];
+  trust?: TrustProfile;
+  activity?: ActivityEvent[];
+  credentials?: ProfileCredential[];
+  network?: ProfileNetwork;
+  featuredWork?: FeaturedWork[];
+  endorsements?: Endorsement[];
+  claimVerifications?: ClaimVerification[];
+  followerCount?: number;
+  following?: boolean;
+  verifiedDeploymentCount?: number;
   provenance?: ProvenanceInfo;
 }
 
@@ -283,7 +460,44 @@ export interface AgentRecord {
   demoRuns: DemoRun[];
   reviews: VerifiedReview[];
   knownLimits: LocalizedText[];
+  affiliatedOrganizations?: OrganizationProfile[];
+  trust?: TrustProfile;
+  activity?: ActivityEvent[];
+  credentials?: ProfileCredential[];
+  network?: ProfileNetwork;
+  featuredWork?: FeaturedWork[];
+  endorsements?: Endorsement[];
+  claimVerifications?: ClaimVerification[];
+  followerCount?: number;
+  following?: boolean;
   provenance?: ProvenanceInfo;
+}
+
+export interface AgentProfileView extends AgentRecord {
+  affiliatedOrganizations: OrganizationProfile[];
+  trust: TrustProfile;
+  activity: ActivityEvent[];
+  credentials: ProfileCredential[];
+  network: ProfileNetwork;
+  featuredWork: FeaturedWork[];
+  endorsements: Endorsement[];
+  claimVerifications: ClaimVerification[];
+  followerCount: number;
+  following: boolean;
+}
+
+export interface BuilderProfileView extends BuilderProfile {
+  affiliatedOrganizations: OrganizationProfile[];
+  trust: TrustProfile;
+  activity: ActivityEvent[];
+  credentials: ProfileCredential[];
+  network: ProfileNetwork;
+  featuredWork: FeaturedWork[];
+  endorsements: Endorsement[];
+  claimVerifications: ClaimVerification[];
+  followerCount: number;
+  following: boolean;
+  verifiedDeploymentCount: number;
 }
 
 export interface AgentSubmissionRecord {
@@ -388,3 +602,6 @@ export interface LeaderboardEntry {
   operatorBurden: number;
   freshnessDays: number;
 }
+
+export type ProfileListRecord = ShortlistRecord;
+export type EvaluationBrief = DecisionMemo;

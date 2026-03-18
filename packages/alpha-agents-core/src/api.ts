@@ -81,6 +81,11 @@ export const compareInputSchema = z.object({
   slugs: z.array(z.string().min(1)).min(1).max(4),
 });
 
+export const followProfileSchema = z.object({
+  subjectType: z.enum(["agent", "builder"]),
+  subjectId: z.string().min(1),
+});
+
 export const shortlistInputSchema = z.object({
   name: localizedTextSchema,
   agentSlugs: z.array(z.string().min(1)).min(1).max(4),

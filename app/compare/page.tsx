@@ -21,12 +21,12 @@ export default async function ComparePage({
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">
       <SectionHeading
         locale={locale}
-        eyebrow={locale === "en" ? "Procurement console" : "采购评审台"}
-        title={locale === "en" ? "Compare coding and research agents with buyer-side constraints." : "带着买方约束比较 coding 与 research agents。"}
+        eyebrow={locale === "en" ? "Secondary compare" : "次级比较"}
+        title={locale === "en" ? "Compare profiles only after identity, trust, and scope already fit." : "只有在身份、信任和范围已基本匹配后，再做档案比较。"}
         description={
           locale === "en"
-            ? "This surface is no longer just a table. Use it to define operating constraints, compare evidence, and save procurement-ready shortlist drafts."
-            : "这不再只是并排表格，而是一个采购评审台：先定义运行约束，再比较证据，并保存采购短名单草案。"
+            ? "This surface remains public, but it is secondary. Use it to compare evidence, define operating constraints, and save profile lists when a deeper evaluation is needed."
+            : "这个页面仍然公开，但已经降为次级能力。只有在需要更深评估时，再来比较证据、定义运行约束，并保存 Profile List。"
         }
       />
       <div className="mt-10">

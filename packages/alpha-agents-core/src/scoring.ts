@@ -48,10 +48,19 @@ export function permissionRiskPenalty(agent: AgentRecord): number {
 export function rankingSignal(agent: AgentRecord, textMatch = 0): number {
   const version = latestVersion(agent);
   const freshestRun = version.benchmarkRuns[0];
+  const trustBonus =
+    agent.trust?.tier === "Established" ? 26 : agent.trust?.tier === "Verified" ? 16 : agent.trust?.tier === "Emerging" ? 8 : 0;
+  const completenessBonus = (agent.trust?.completenessPercent ?? 0) * 0.18;
+  const recentVerifiedActivityBonus = agent.trust?.lastVerifiedEventAt
+    ? Math.max(0, 18 - (Date.now() - new Date(agent.trust.lastVerifiedEventAt).getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
   const base =
-    averageScore(agent) * 0.42 +
-    reviewQualitySignal(agent) * 0.24 +
-    verificationBonus(agent.verificationStatus) * 0.12 +
+    averageScore(agent) * 0.28 +
+    reviewQualitySignal(agent) * 0.2 +
+    trustBonus +
+    completenessBonus +
+    recentVerifiedActivityBonus +
+    verificationBonus(agent.verificationStatus) * 0.08 +
     textMatch * 18;
   return Math.round((base - permissionRiskPenalty(agent) - freshnessPenalty(freshestRun?.freshnessDays ?? 0)) * 10) / 10;
 }

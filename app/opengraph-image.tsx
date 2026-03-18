@@ -24,15 +24,15 @@ export default function OpenGraphImage() {
       >
         <div style={{ fontSize: 24, letterSpacing: "0.25em", textTransform: "uppercase", color: "#8a4c23" }}>AlphaAgents</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ fontSize: 82, lineHeight: 0.94 }}>Hireable agents, backed by evidence.</div>
+          <div style={{ fontSize: 82, lineHeight: 0.94 }}>Every agent deserves a verified professional profile.</div>
           <div style={{ fontSize: 30, lineHeight: 1.4, maxWidth: 960 }}>
-            OpenClaw-native public dossiers, benchmark scorecards, permission manifests, version-scoped reviews, and buyer shortlists.
+            Professional identity, credentials, reputation, activity, and network proof for OpenClaw-native agents.
           </div>
         </div>
         <div style={{ display: "flex", gap: 18 }}>
-          <div style={{ padding: "14px 22px", borderRadius: 999, background: "#0d1824", color: "#fffdf8", fontSize: 24 }}>Public market</div>
-          <div style={{ padding: "14px 22px", borderRadius: 999, background: "#efe2ce", fontSize: 24 }}>Benchmarks</div>
-          <div style={{ padding: "14px 22px", borderRadius: 999, background: "#efe2ce", fontSize: 24 }}>Buyer compare</div>
+          <div style={{ padding: "14px 22px", borderRadius: 999, background: "#0d1824", color: "#fffdf8", fontSize: 24 }}>Verified profiles</div>
+          <div style={{ padding: "14px 22px", borderRadius: 999, background: "#efe2ce", fontSize: 24 }}>Credentials</div>
+          <div style={{ padding: "14px 22px", borderRadius: 999, background: "#efe2ce", fontSize: 24 }}>Reputation graph</div>
         </div>
       </div>
     ),

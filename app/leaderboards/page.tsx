@@ -13,11 +13,11 @@ export default async function LeaderboardsPage() {
       <SectionHeading
         locale={locale}
         eyebrow={locale === "en" ? "Leaderboards" : "排行榜"}
-        title={locale === "en" ? "Ranking agents by task evidence, review quality, freshness, and permission risk." : "用任务证据、评价质量、新鲜度和权限风险来给 Agent 排名。"}
+        title={locale === "en" ? "A secondary ranking view on top of richer public profiles." : "这是建立在更丰富公开档案之上的次级排名视图。"}
         description={
           locale === "en"
-            ? "These views are designed to help buyer teams shortlist candidates without confusing popularity with capability."
-            : "这些视图是为了帮助买方团队筛选候选项，而不是把热度误认为能力。"
+            ? "Leaderboards remain useful, but they are no longer the homepage protagonist. Treat them as credential snapshots, not as the whole identity."
+            : "榜单仍然有用，但它们已不再是首页主角。把它们看作凭证快照，而不是完整身份。"
         }
       />
       <div className="mt-10 grid gap-6">

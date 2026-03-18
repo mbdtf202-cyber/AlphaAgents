@@ -1,53 +1,53 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRight, ShieldCheck, Trophy, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, Network, ShieldCheck } from "lucide-react";
 
 import type { AgentRecord, Locale, PublicMetricsSummary } from "@openclaw/alpha-agents-core";
 import { resolveText } from "@openclaw/alpha-agents-core";
 
 import { siteTagline, siteTaglineZh } from "../lib/site";
+import { ProfileBadgeStrip } from "./profile-badge-strip";
 import { BrandMark } from "./brand-mark";
 import { ProvenanceBadge } from "./provenance-badge";
-import { ScoreBars } from "./score-bars";
 
 const heroHighlights = {
-  en: ["Declared permissions", "Version-scoped reviews", "Buyer-ready compare"],
-  "zh-CN": ["明确权限边界", "版本绑定评价", "买方并排比较"],
+  en: ["Verified profiles", "Credential badges", "Relationship proof"],
+  "zh-CN": ["已验证档案", "凭证徽章", "关系证明"],
 } as const;
 
 const trustCards = {
   en: [
     {
-      title: "Trustable permissions",
+      title: "Declared boundaries",
       body: "Every public profile declares skills, network surfaces, file scope, secrets, and shell exposure.",
       Icon: ShieldCheck,
     },
     {
-      title: "Structured scorecards",
-      body: "Success, reliability, cost, latency, safety, setup friction, operator burden, and domain fit are scored independently.",
-      Icon: Trophy,
+      title: "Portable credentials",
+      body: "Benchmark results are presented as reusable credentials inside a profile, not as the whole identity.",
+      Icon: BadgeCheck,
     },
     {
-      title: "Buyer shortlists",
-      body: "Build shortlists, request bakeoffs, and review version changes before widening rollout.",
-      Icon: Users,
+      title: "Network proof",
+      body: "Builders, organizations, adopters, and collaborators make credibility legible at a glance.",
+      Icon: Network,
     },
   ],
   "zh-CN": [
     {
-      title: "可信权限边界",
+      title: "明确边界",
       body: "每个公开档案都明确声明 skills、网络面、文件范围、密钥和 shell 暴露。",
       Icon: ShieldCheck,
     },
     {
-      title: "结构化评分卡",
-      body: "成功率、稳定性、成本、时延、安全、配置摩擦、监督负担和领域契合度分别独立评分。",
-      Icon: Trophy,
+      title: "可携带凭证",
+      body: "Benchmark 结果被呈现为档案里的可复用凭证，而不是整个身份本身。",
+      Icon: BadgeCheck,
     },
     {
-      title: "买方短名单",
-      body: "先建立短名单、申请 bakeoff、审阅版本变化，再决定是否扩大部署。",
-      Icon: Users,
+      title: "关系证明",
+      body: "Builder、组织、采用方和协作 Agent 会把可信度直接显性化。",
+      Icon: Network,
     },
   ],
 } as const;
@@ -66,14 +66,22 @@ function HeroMetrics({
   const cards =
     locale === "en"
       ? [
-          { label: "Coding leader", value: liveCodingName ?? "Sample leaderboard", note: "Top public coding dossier" },
-          { label: "Live reviews", value: String(metrics.liveReviewCount), note: "Persisted authenticated events only" },
-          { label: "Verified installs", value: String(metrics.liveInstallCount), note: liveResearchName ?? "Live install proofs only" },
+          {
+            label: "Verified profiles",
+            value: String(metrics.liveAgentCount || metrics.sampleAgentCount),
+            note: liveCodingName ? `Current spotlight: ${liveCodingName}` : "Public professional profiles",
+          },
+          { label: "Live reviews", value: String(metrics.liveReviewCount), note: "Persisted authenticated reputation events" },
+          { label: "Verified deployments", value: String(metrics.liveInstallCount), note: liveResearchName ?? "Deployment proofs and live verifications" },
         ]
       : [
-          { label: "编码榜首", value: liveCodingName ?? "样例榜单", note: "当前公开编码档案头部" },
-          { label: "实时评价", value: String(metrics.liveReviewCount), note: "只统计已持久化认证事件" },
-          { label: "已验证安装", value: String(metrics.liveInstallCount), note: liveResearchName ?? "这里只展示真实安装证明" },
+          {
+            label: "已验证档案",
+            value: String(metrics.liveAgentCount || metrics.sampleAgentCount),
+            note: liveCodingName ? `当前焦点：${liveCodingName}` : "公开职业档案总量",
+          },
+          { label: "实时评价", value: String(metrics.liveReviewCount), note: "只统计已持久化认证信誉事件" },
+          { label: "已验证部署", value: String(metrics.liveInstallCount), note: liveResearchName ?? "真实部署与验证记录" },
         ];
 
   return (
@@ -121,7 +129,7 @@ export function HomeHero({
             style={{ ["--enter-delay" as string]: "0ms" }}
           >
             <span className="hero-status-dot" />
-            {locale === "en" ? "Evidence-native Agent Market" : "证据优先 Agent 市场"}
+            {locale === "en" ? "Verified Professional Identity for Agents" : "Agent 的可验证职业身份网络"}
           </div>
 
           {publicDataMode === "sample" ? (
@@ -142,7 +150,7 @@ export function HomeHero({
               className="reveal-card max-w-[12ch] font-display text-6xl leading-[0.88] text-balance text-ink-950 md:text-8xl"
               style={{ ["--enter-delay" as string]: "120ms" }}
             >
-              {locale === "en" ? "Hireable agents, not shallow listings." : "把 Agent 做成可招聘对象，而不是浅卡片。"}
+              {locale === "en" ? "Professional identity for serious agents." : "给严肃 Agent 的职业身份系统。"}
             </h1>
             <p className="reveal-card max-w-[68ch] text-xl leading-9 text-ink-700" style={{ ["--enter-delay" as string]: "180ms" }}>
               {locale === "en" ? siteTagline : siteTaglineZh}
@@ -164,10 +172,10 @@ export function HomeHero({
               href="/workspace/submissions"
               className="rounded-full border border-ink-950/12 bg-white/84 px-5 py-3 text-sm font-semibold text-ink-950 shadow-[0_18px_44px_-34px_rgba(13,24,36,0.6)] transition hover:-translate-y-0.5 hover:border-copper-500/40"
             >
-              {locale === "en" ? "Submit your agent" : "提交你的 Agent"}
+              {locale === "en" ? "Publish a profile" : "发布档案"}
             </Link>
             <Link href="/for-teams" className="rounded-full border border-transparent px-5 py-3 text-sm font-semibold text-ink-700 transition hover:text-ink-950">
-              {locale === "en" ? "How teams buy" : "团队如何采购"}
+              {locale === "en" ? "How teams evaluate" : "团队如何评估"}
             </Link>
           </div>
 
@@ -190,15 +198,15 @@ export function HomeHero({
               <BrandMark className="h-16 w-16 shrink-0" />
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-copper-700">
-                  {locale === "en" ? "Alpha signal" : "Alpha 信号"}
+                  {locale === "en" ? "Identity layer" : "身份层"}
                 </p>
                 <h2 className="font-display text-3xl leading-none text-ink-950">
-                  {locale === "en" ? "Evidence, not aesthetics-first fluff." : "不是花架子，而是证据优先。"}
+                  {locale === "en" ? "Profiles should read like careers, not cards." : "档案应该像职业履历，而不是卡片。"}
                 </h2>
                 <p className="text-sm leading-7 text-ink-700">
                   {locale === "en"
-                    ? "Profiles, benchmarks, permission manifests, and version change history should read as one system."
-                    : "公开档案、benchmark、权限清单和版本变化历史，本来就应该被读成一个整体系统。"}
+                    ? "Identity, credentials, reputation, activity, and network proof should read as one system."
+                    : "身份、凭证、信誉、动态和关系证明，本来就应该被读成一个整体系统。"}
                 </p>
               </div>
             </div>
@@ -212,14 +220,23 @@ export function HomeHero({
                     {locale === "en" ? "Current spotlight" : "当前精选"}
                   </p>
                   <h2 className="mt-3 font-display text-4xl text-ink-950">{leadAgent.name}</h2>
-                  <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(leadAgent.summary, locale)}</p>
+                  <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(leadAgent.tagline, locale)}</p>
                 </div>
                 <ProvenanceBadge locale={locale} provenance={leadAgent.provenance} />
               </div>
 
               <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="rounded-[1.65rem] bg-white/72 p-4">
-                  <ScoreBars scorecard={leadAgent.versions[0].benchmarkRuns[0].scorecard} />
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-500">
+                    {locale === "en" ? "Trust tier" : "信任等级"}
+                  </p>
+                  <p className="mt-2 text-4xl font-semibold text-ink-950">{leadAgent.trust?.tier ?? (locale === "en" ? "Emerging" : "成长中")}</p>
+                  <p className="mt-3 text-sm leading-7 text-ink-700">
+                    {locale === "en"
+                      ? `${leadAgent.trust?.completenessPercent ?? 0}% profile completeness with ${leadAgent.followerCount ?? 0} followers.`
+                      : `档案完整度 ${leadAgent.trust?.completenessPercent ?? 0}% ，关注者 ${leadAgent.followerCount ?? 0}。`}
+                  </p>
+                  {leadAgent.trust?.primaryBadges ? <div className="mt-4"><ProfileBadgeStrip badges={leadAgent.trust.primaryBadges} locale={locale} /></div> : null}
                 </div>
                 <div className="grid gap-3">
                   <div className="rounded-[1.45rem] bg-parchment-deep/85 p-4">
@@ -230,12 +247,12 @@ export function HomeHero({
                   </div>
                   <div className="rounded-[1.45rem] bg-parchment-deep/85 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-500">
-                      {locale === "en" ? "Proof surface" : "证据面"}
+                      {locale === "en" ? "Recent activity" : "近期动态"}
                     </p>
                     <p className="mt-2 text-sm leading-7 text-ink-700">
                       {locale === "en"
-                        ? "Benchmark traces, permission scope, live reviews, and versioned scorecards stay visible together."
-                        : "Benchmark trace、权限范围、实时评价和版本化评分卡会同时出现在一个界面里。"}
+                        ? resolveText(leadAgent.activity?.[0]?.title ?? { en: "No activity yet.", "zh-CN": "暂无动态。" }, locale)
+                        : resolveText(leadAgent.activity?.[0]?.title ?? { en: "No activity yet.", "zh-CN": "暂无动态。" }, locale)}
                     </p>
                   </div>
                 </div>
@@ -243,13 +260,13 @@ export function HomeHero({
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href={`/agents/${leadAgent.slug}`} className="rounded-full bg-ink-950 px-4 py-2.5 text-sm font-semibold text-parchment">
-                  {locale === "en" ? "Open dossier" : "查看档案"}
+                  {locale === "en" ? "Open profile" : "查看档案"}
                 </Link>
                 <Link
                   href={`/compare?agents=${leadAgent.slug}`}
                   className="rounded-full border border-ink-950/12 bg-white/80 px-4 py-2.5 text-sm font-semibold text-ink-950"
                 >
-                  {locale === "en" ? "Start compare" : "开始比较"}
+                  {locale === "en" ? "Secondary compare" : "次级比较"}
                 </Link>
               </div>
             </div>

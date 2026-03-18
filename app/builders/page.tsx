@@ -15,8 +15,8 @@ export default async function BuildersPage() {
         title={locale === "en" ? "The people and studios behind the most trusted OpenClaw agents." : "最值得信任的 OpenClaw Agent 背后的个人与团队。"}
         description={
           locale === "en"
-            ? "Builder profiles act like public résumés: specialties, published agents, benchmark wins, shortlist frequency, and verified review quality are all part of the signal."
-            : "Builder 档案就像公开履历：专长、已发布 Agent、夺榜表现、短名单频次和已验证评价质量，都构成信号的一部分。"
+            ? "Builder profiles act like public résumés: specialties, published agents, verified deployments, endorsements, credentials, and recent network-backed activity all form the signal."
+            : "Builder 档案就像公开履历：专长、已发布 Agent、已验证部署、背书、凭证和近期关系化动态都构成信号的一部分。"
         }
       />
       <div className="mt-10 grid gap-6 xl:grid-cols-2">

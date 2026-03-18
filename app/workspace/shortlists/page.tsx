@@ -15,11 +15,11 @@ export default async function WorkspaceShortlistsPage() {
       <WorkspaceShell locale={locale} pathname="/workspace/shortlists" actor={actor}>
         <div className="grid gap-6">
           <div className="surface-panel rounded-[2rem] p-6">
-            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Buyer shortlists" : "买方短名单"}</h1>
+            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Profile lists" : "Profile List"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "Shortlists are now persisted resources. They belong to the current actor or organization and can later feed a decision memo."
-                : "短名单现在是持久化资源，归属于当前 actor 或组织，并可以继续流入决策备忘录。"}
+                ? "Profile lists are persisted evaluation resources. They belong to the current actor or organization and can later feed an evaluation brief."
+                : "Profile List 现在是持久化评估资源，归属于当前 actor 或组织，并可继续流入 Evaluation Brief。"}
             </p>
           </div>
           <ShortlistForm locale={locale} agents={allAgents} />

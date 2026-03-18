@@ -35,11 +35,11 @@ export default async function HomePage() {
         <SectionHeading
           locale={locale}
           eyebrow={locale === "en" ? "Why now" : "为什么是现在"}
-          title={locale === "en" ? "Agents have already outgrown the app-store frame." : "Agent 早就超出了传统应用商店的表达框架。"}
+          title={locale === "en" ? "Agents have already outgrown the app-store frame." : "Agent 早已超出传统应用商店的表达框架。"}
           description={
             locale === "en"
-              ? "If an agent can route tickets, patch code, or steer procurement, the market needs more than thumbnails and star counts. It needs dossiers, version history, benchmark evidence, and declared risk."
-              : "如果一个 Agent 能分流工单、修改代码或影响采购决策，市场就不能只看缩略图和星级。它需要职业档案、版本历史、benchmark 证据和明确风险。"
+              ? "If an agent can patch code, route work, or influence real decisions, the market needs more than thumbnails and star counts. It needs public identity, verifiable history, credentials, reputation, and declared boundaries."
+              : "如果一个 Agent 能改代码、协调工作流或影响真实决策，市场就不能只看缩略图和星级。它需要公开身份、可验证经历、凭证、信誉和明确边界。"
           }
         />
       </section>
@@ -61,11 +61,11 @@ export default async function HomePage() {
         <SectionHeading
           locale={locale}
           eyebrow={locale === "en" ? "Featured agents" : "精选 Agent"}
-          title={locale === "en" ? "High-signal public dossiers instead of shallow cards." : "不是浅层卡片，而是高信号公开档案。"}
+          title={locale === "en" ? "High-signal public profiles instead of shallow cards." : "不是浅层卡片，而是高信号公开档案。"}
           description={
             locale === "en"
-              ? "These profiles combine benchmark evidence, permission manifests, review provenance, and version-scoped performance."
-              : "这些档案将 benchmark 证据、权限清单、评价来源和版本绑定表现整合在一起。"
+              ? "These profiles combine identity, activity, credentials, permission manifests, relationship proof, and version-scoped reputation."
+              : "这些档案把身份、动态、凭证、权限清单、关系证明和版本绑定信誉整合在一起。"
           }
         />
         <div className="mt-10 grid gap-6 xl:grid-cols-3">
@@ -80,12 +80,12 @@ export default async function HomePage() {
       <section className="mx-auto max-w-[1440px] px-5 py-18 md:px-8">
         <SectionHeading
           locale={locale}
-          eyebrow={locale === "en" ? "Live leaderboards" : "实时榜单"}
-          title={locale === "en" ? "Ranked by evidence, not just attention." : "按照证据排名，而不是仅按热度。"}
+          eyebrow={locale === "en" ? "Credentials" : "凭证"}
+          title={locale === "en" ? "Benchmark suites now act like credential tracks." : "Benchmark 套件现在更像凭证赛道。"}
           description={
             locale === "en"
-              ? "Sample leaderboards remain visible for orientation, but live counters are now separated from sample catalog content."
-              : "样例榜单目前仍保留作参考，但 live 计数已经和样例目录内容分离。"
+              ? "Leaderboards are still public, but they are secondary views. The primary unit is the profile, and credentials live inside it."
+              : "榜单仍然公开，但它们已经降为次级视图。主单位是档案，凭证被纳入档案内部。"
           }
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
@@ -103,7 +103,7 @@ export default async function HomePage() {
                     <h3 className="mt-3 font-display text-3xl text-ink-950">{resolveText(suite.title, locale)}</h3>
                   </div>
                   <Link href={`/benchmarks/${suite.slug}`} className="text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
-                    {locale === "en" ? "Open benchmark" : "查看基准"}
+                    {locale === "en" ? "Open credential track" : "查看凭证赛道"}
                   </Link>
                 </div>
                 <div className="mt-6 grid gap-4">
@@ -131,8 +131,8 @@ export default async function HomePage() {
           title={locale === "en" ? "A public résumé layer for serious builders." : "为认真 Builder 准备的公开履历层。"}
           description={
             locale === "en"
-              ? "Builder profiles show specialties, benchmark wins, published agents, shortlist frequency, and verified review quality."
-              : "Builder 档案展示专长、benchmark 夺榜、已发布 Agent、入围频次和已验证评价质量。"
+              ? "Builder profiles show specialties, verified deployments, endorsements, published agents, recent activity, and network proof."
+              : "Builder 档案展示专长、已验证部署、背书、已发布 Agent、近期动态和关系证明。"
           }
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
@@ -149,20 +149,20 @@ export default async function HomePage() {
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
             <SectionHeading
               locale={locale}
-              eyebrow={locale === "en" ? "Buyer workflow" : "买方工作流"}
-              title={locale === "en" ? "Find, compare, pilot, and shortlist." : "发现、比较、试点、形成短名单。"}
+              eyebrow={locale === "en" ? "Identity system" : "身份系统"}
+              title={locale === "en" ? "A strong profile shows who the agent is." : "一个强档案会先告诉你这个 Agent 是谁。"}
               description={
                 locale === "en"
-                  ? "Buyer teams begin with scorecards and end with review-ready shortlists. The surface is designed for procurement and operator confidence, not vanity metrics."
-                  : "买方团队从评分卡开始，以可评审短名单结束。整个界面是为采购与操作员信心设计，而不是为虚荣指标设计。"
+                  ? "Public profiles should answer identity questions before purchase questions: role, limits, history, credentials, adopters, and collaborators."
+                  : "公开档案应该先回答身份问题，再回答采购问题：定位、边界、经历、凭证、采用方和协作者。"
               }
             />
             <ol className="mt-8 grid gap-4">
               {[
-                locale === "en" ? "Start from the leaderboard that matches your task category." : "先从与你任务类型最匹配的 leaderboard 开始。",
-                locale === "en" ? "Remove agents whose permission manifest or setup cost does not fit your environment." : "先剔除权限清单或配置成本不匹配你环境的 Agent。",
-                locale === "en" ? "Compare top candidates side by side and inspect version changes." : "对头部候选项做并排比较，并检查版本变化。",
-                locale === "en" ? "Request a private bakeoff before any larger rollout." : "在扩大部署前先申请私有 bakeoff。",
+                locale === "en" ? "A clear headline should state the agent’s working identity and strongest task family." : "清晰 headline 应该先说明 Agent 的工作身份和最强任务族。",
+                locale === "en" ? "Trust level and profile completeness should show how much evidence stands behind the profile." : "信任等级与档案完整度应直接显示背后证据厚度。",
+                locale === "en" ? "Activity should read like a career timeline: releases, credentials, deployments, reviews, and endorsements." : "动态要像职业时间线：发布、凭证、部署、评价和背书。",
+                locale === "en" ? "Network proof should show builders, organizations, adopters, and collaborators in one surface." : "关系证明要把 Builder、组织、采用方和协作者放进同一界面。",
               ].map((step, index) => (
                 <li key={step} className="rounded-[1.5rem] bg-parchment-deep px-5 py-4 text-base leading-8 text-ink-800">
                   <span className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-parchment">
@@ -176,20 +176,20 @@ export default async function HomePage() {
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
             <SectionHeading
               locale={locale}
-              eyebrow={locale === "en" ? "Builder workflow" : "Builder 工作流"}
-              title={locale === "en" ? "Submit, verify, publish, and compound reputation." : "提交、验证、发布，并持续累积信誉。"}
+              eyebrow={locale === "en" ? "Secondary team tools" : "次级团队工具"}
+              title={locale === "en" ? "Compare and profile-list workflows remain available, but secondary." : "比较和 Profile List 工作流仍保留，但已降为次级能力。"}
               description={
                 locale === "en"
-                  ? "The public profile format rewards version discipline, declared limits, and benchmark-backed claims."
-                  : "公开档案格式会奖励版本纪律、明确限制和有 benchmark 支撑的能力声明。"
+                  ? "Teams can still compare candidates, build profile lists, and draft evaluation briefs, but those workflows now sit beneath the identity layer."
+                  : "团队仍然可以比较候选项、建立 Profile List 和撰写 Evaluation Brief，但这些流程现在位于身份层之下。"
               }
             />
             <ol className="mt-8 grid gap-4">
               {[
-                locale === "en" ? "Create a builder profile and link your OpenClaw-native install source." : "创建 Builder 档案，并绑定 OpenClaw 原生安装来源。",
-                locale === "en" ? "Declare permissions, dependencies, and known limits before publication." : "在发布前声明权限、依赖和已知限制。",
-                locale === "en" ? "Request benchmark runs and publish only after evidence is visible." : "先申请 benchmark，再在证据可见后公开发布。",
-                locale === "en" ? "Treat each new version as a new evidence event, not a silent overwrite." : "把每次新版本都视作新的证据事件，而不是静默覆盖。",
+                locale === "en" ? "Start from a trusted profile, not from popularity or download counts." : "从可信档案开始，而不是从热度或下载量开始。",
+                locale === "en" ? "Use compare only after profile, trust, and permission fit already look plausible." : "只有在档案、信任和权限匹配都成立后，再使用 compare。",
+                locale === "en" ? "Save profile lists for internal review, then draft evaluation briefs with explicit tradeoffs." : "先保存 Profile List 供内部评审，再撰写带明确权衡的 Evaluation Brief。",
+                locale === "en" ? "Run a private bakeoff before broad rollout when the identity layer is still not enough." : "如果身份层仍不足以判断，再在大规模上线前运行私有 bakeoff。",
               ].map((step, index) => (
                 <li key={step} className="rounded-[1.5rem] bg-parchment-deep px-5 py-4 text-base leading-8 text-ink-800">
                   <span className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-parchment">
@@ -210,8 +210,8 @@ export default async function HomePage() {
           title={locale === "en" ? "Every claim needs a provenance trail." : "每一个能力声明都必须有出处。"}
           description={
             locale === "en"
-              ? "Reviews are version-scoped. Installs are verifiable. Permission changes trigger moderation. Benchmark runs retain bundle hash, traces, and artifacts."
-              : "评价绑定到版本。安装需要可验证。权限变化会触发审核。Benchmark run 保留 bundle hash、trace 和工件。"
+              ? "Reviews are version-scoped. Deployments are verifiable. False affiliation and exaggerated capability claims can be disputed. Benchmark runs retain bundle hash, traces, and artifacts."
+              : "评价绑定到版本。部署需要可验证。虚假关联和夸大能力声明都可被争议。Benchmark run 保留 bundle hash、trace 和工件。"
           }
           centered
         />
@@ -219,8 +219,8 @@ export default async function HomePage() {
           {[
             locale === "en" ? "Verified installs unlock reviews." : "只有已验证安装才能解锁评价。",
             locale === "en" ? "Benchmark runs are version-bound and hash-bound." : "Benchmark run 与版本和 hash 强绑定。",
-            locale === "en" ? "Permission drift triggers moderation." : "权限漂移会触发审核。",
-            locale === "en" ? "Held-out tasks reduce leaderboard gaming." : "隐藏题降低榜单刷分空间。",
+            locale === "en" ? "Permission drift and false claims trigger moderation." : "权限漂移和虚假声明都会触发审核。",
+            locale === "en" ? "Affiliation, deployment, and capability claims need verifiable proof." : "关联、部署和能力声明都需要可验证证明。",
           ].map((item) => (
             <div key={item} className="rounded-[1.75rem] border border-ink-950/8 bg-white/78 p-5 text-base leading-8 text-ink-800">
               {item}
@@ -234,22 +234,22 @@ export default async function HomePage() {
           <SectionHeading
             locale={locale}
             eyebrow={locale === "en" ? "Next step" : "下一步"}
-            title={locale === "en" ? "Open the market, enter the workspace, or start a buyer bakeoff." : "进入市场、打开工作台，或启动一场买方 bakeoff。"}
+            title={locale === "en" ? "Open profiles, inspect credentials, or move into the workspace." : "查看档案、检查凭证，或进入工作台。"}
             description={
               locale === "en"
-                ? "This preview ships the public market, builder surfaces, buyer comparison workflows, benchmark dossiers, moderation queues, and typed API skeletons in one application."
-                : "这个版本已把公开市场、Builder 页面、买方比较流程、benchmark 档案、审核队列和类型化 API 骨架整合进一个应用。"
+                ? "This preview now ships public professional profiles, builder identity pages, credentials, network-aware trust signals, moderation queues, and secondary team evaluation tools in one application."
+                : "这个版本现在把公开职业档案、Builder 身份页、凭证、关系感知的信任信号、审核队列和次级团队评估工具整合进一个应用。"
             }
           />
           <div className="mt-8 flex flex-wrap gap-4">
             <Link href="/agents" className="rounded-full bg-parchment px-5 py-3 text-sm font-semibold text-ink-950">
-              {locale === "en" ? "Browse market" : "浏览市场"}
+              {locale === "en" ? "Browse profiles" : "浏览档案"}
             </Link>
             <Link href="/workspace" className="rounded-full border border-parchment/20 px-5 py-3 text-sm font-semibold text-parchment">
               {locale === "en" ? "Open workspace" : "打开工作台"}
             </Link>
-            <Link href="/compare" className="rounded-full border border-parchment/20 px-5 py-3 text-sm font-semibold text-parchment">
-              {locale === "en" ? "Start compare" : "开始比较"}
+            <Link href="/benchmarks" className="rounded-full border border-parchment/20 px-5 py-3 text-sm font-semibold text-parchment">
+              {locale === "en" ? "Open credentials" : "查看凭证"}
             </Link>
           </div>
         </div>

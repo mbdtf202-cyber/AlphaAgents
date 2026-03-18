@@ -372,6 +372,80 @@ export const decisionMemosTable = pgTable("alpha_agents_decision_memos", {
   ...timestamps,
 });
 
+export const relationshipEdgesTable = pgTable(
+  "alpha_agents_relationship_edges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    type: varchar("type", { length: 32 }).notNull(),
+    fromType: varchar("from_type", { length: 24 }).notNull(),
+    fromId: varchar("from_id", { length: 255 }).notNull(),
+    toType: varchar("to_type", { length: 24 }).notNull(),
+    toId: varchar("to_id", { length: 255 }).notNull(),
+    verified: integer("verified").default(0).notNull(),
+    note: jsonb("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("alpha_agents_relationship_target_idx").on(table.toType, table.toId),
+    index("alpha_agents_relationship_source_idx").on(table.fromType, table.fromId),
+  ],
+);
+
+export const claimVerificationsTable = pgTable(
+  "alpha_agents_claim_verifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectType: varchar("subject_type", { length: 24 }).notNull(),
+    subjectId: varchar("subject_id", { length: 255 }).notNull(),
+    claimType: varchar("claim_type", { length: 24 }).notNull(),
+    label: jsonb("label").default(sql`'{}'::jsonb`).notNull(),
+    summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+    status: varchar("status", { length: 24 }).notNull(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    evidenceUrl: text("evidence_url"),
+    relatedVersionId: varchar("related_version_id", { length: 255 }),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_claim_subject_idx").on(table.subjectType, table.subjectId)],
+);
+
+export const endorsementsTable = pgTable(
+  "alpha_agents_endorsements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectType: varchar("subject_type", { length: 24 }).notNull(),
+    subjectId: varchar("subject_id", { length: 255 }).notNull(),
+    authorType: varchar("author_type", { length: 24 }).notNull(),
+    authorId: varchar("author_id", { length: 255 }).notNull(),
+    authorName: varchar("author_name", { length: 160 }).notNull(),
+    authorHeadline: jsonb("author_headline").default(sql`'{}'::jsonb`).notNull(),
+    body: jsonb("body").default(sql`'{}'::jsonb`).notNull(),
+    verified: integer("verified").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_endorsement_subject_idx").on(table.subjectType, table.subjectId)],
+);
+
+export const featuredWorkTable = pgTable(
+  "alpha_agents_featured_work",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectType: varchar("subject_type", { length: 24 }).notNull(),
+    subjectId: varchar("subject_id", { length: 255 }).notNull(),
+    title: jsonb("title").default(sql`'{}'::jsonb`).notNull(),
+    summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+    artifactUrl: text("artifact_url"),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    verified: integer("verified").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_featured_work_subject_idx").on(table.subjectType, table.subjectId)],
+);
+
 export const submissionsTable = pgTable("alpha_agents_submissions", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerUserId: uuid("owner_user_id").references(() => users.id),

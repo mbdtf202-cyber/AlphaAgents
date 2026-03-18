@@ -57,12 +57,12 @@ export function ShortlistForm({ locale, agents }: { locale: Locale; agents: Agen
     <form action={handleSubmit} className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm text-ink-700">
-          {locale === "en" ? "Shortlist name (EN)" : "短名单名称（英文）"}
-          <input name="nameEn" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="Buyer evaluation shortlist" />
+          {locale === "en" ? "Profile list name (EN)" : "Profile List 名称（英文）"}
+          <input name="nameEn" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="Team evaluation profile list" />
         </label>
         <label className="grid gap-2 text-sm text-ink-700">
-          {locale === "en" ? "Shortlist name (ZH)" : "短名单名称（中文）"}
-          <input name="nameZh" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="买方评估短名单" />
+          {locale === "en" ? "Profile list name (ZH)" : "Profile List 名称（中文）"}
+          <input name="nameZh" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="团队评估 Profile List" />
         </label>
       </div>
       <label className="grid gap-2 text-sm text-ink-700">
@@ -169,12 +169,12 @@ export function ShortlistForm({ locale, agents }: { locale: Locale; agents: Agen
           name="internalNotes"
           rows={4}
           className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3"
-          placeholder={locale === "en" ? "Why these candidates, which risks remain, and what evidence still needs a bakeoff." : "记录保留理由、剩余风险、以及还需要 bakeoff 验证的点。"}
+          placeholder={locale === "en" ? "Why these profiles belong together, which risks remain, and what still needs a private evaluation." : "记录这些档案为何应该放在一起、剩余风险，以及还需要私有评估验证的点。"}
         />
       </label>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
-          {locale === "en" ? "Save procurement draft" : "保存采购草案"}
+          {locale === "en" ? "Save profile list" : "保存 Profile List"}
         </button>
         {status ? <p className="text-sm text-ink-600">{status}</p> : null}
       </div>

@@ -4,9 +4,12 @@ import { notFound } from "next/navigation";
 
 import { resolveText } from "@openclaw/alpha-agents-core";
 
+import { ActivityTimeline } from "../../../components/activity-timeline";
+import { ProfileBadgeStrip } from "../../../components/profile-badge-strip";
+import { ProfileFollowButton } from "../../../components/profile-follow-button";
 import { ProvenanceBadge } from "../../../components/provenance-badge";
-import { ScoreBars } from "../../../components/score-bars";
 import { getCurrentLocale } from "../../../lib/locale";
+import { getServerSession } from "../../../lib/server/auth";
 import { getAgentPageData } from "../../../lib/server/repository";
 import { getReadCatalog } from "../../../lib/server/repositories";
 
@@ -29,15 +32,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const locale = await getCurrentLocale();
+  const session = await getServerSession();
   const { slug } = await params;
-  const agent = await getAgentPageData(slug);
+  const agent = await getAgentPageData(slug, undefined, session);
 
   if (!agent) {
     notFound();
   }
 
   const version = agent.versions[0];
-  const primaryRun = version.benchmarkRuns[0];
 
   return (
     <main className="mx-auto grid max-w-[1440px] gap-8 px-5 py-14 md:px-8 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -45,7 +48,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
         <section className="rounded-[2.5rem] border border-ink-950/8 bg-white/84 p-7">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-ink-950 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-parchment">
-              {agent.verificationStatus}
+              {agent.trust?.tier ?? agent.verificationStatus}
             </span>
             <ProvenanceBadge locale={locale} provenance={agent.provenance} />
             <span className="rounded-full border border-ink-950/10 px-3 py-1 text-xs font-medium text-ink-600 anywhere">{agent.slug}</span>
@@ -53,20 +56,67 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
               v{version.version}
             </span>
           </div>
-          <h1 className="mt-6 max-w-[14ch] font-display text-6xl leading-[0.92] text-balance text-ink-950 md:text-7xl">{agent.name}</h1>
-          <p className="mt-6 max-w-[72ch] text-xl leading-9 text-ink-700">{resolveText(agent.tagline, locale)}</p>
+          <div className="mt-6 flex flex-wrap items-start justify-between gap-6">
+            <div className="max-w-[52rem]">
+              <h1 className="font-display text-6xl leading-[0.92] text-balance text-ink-950 md:text-7xl">{agent.name}</h1>
+              <p className="mt-6 text-xl leading-9 text-ink-700">{resolveText(agent.tagline, locale)}</p>
+              <p className="mt-5 text-base leading-8 text-ink-700">{resolveText(agent.summary, locale)}</p>
+              {agent.trust?.primaryBadges?.length ? <div className="mt-6"><ProfileBadgeStrip badges={agent.trust.primaryBadges} locale={locale} /></div> : null}
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-ink-600">
+                <span>{locale === "en" ? `Builder: @${agent.builderHandle}` : `Builder：@${agent.builderHandle}`}</span>
+                <span>{locale === "en" ? `Completeness: ${agent.trust?.completenessPercent ?? 0}%` : `完整度：${agent.trust?.completenessPercent ?? 0}%`}</span>
+                <span>{locale === "en" ? `Followers: ${agent.followerCount ?? 0}` : `关注者：${agent.followerCount ?? 0}`}</span>
+              </div>
+              {agent.affiliatedOrganizations?.length ? (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {agent.affiliatedOrganizations.map((organization) => (
+                    <span key={organization.id} className="rounded-full border border-ink-950/10 bg-parchment px-3 py-1.5 text-sm text-ink-700">
+                      {organization.name}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <div className="grid gap-3 md:w-[320px]">
+              <div className="rounded-[1.5rem] bg-parchment-deep p-4">
+                <div className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Primary credential" : "主凭证"}</div>
+                <div className="mt-2 text-xl font-semibold text-ink-950">
+                  {agent.credentials?.[0] ? resolveText(agent.credentials[0].title, locale) : "--"}
+                </div>
+              </div>
+              <div className="rounded-[1.5rem] bg-parchment-deep p-4">
+                <div className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Recent activity" : "近期动态"}</div>
+                <div className="mt-2 text-base font-semibold text-ink-950">
+                  {agent.activity?.[0] ? resolveText(agent.activity[0].title, locale) : locale === "en" ? "No public activity yet." : "暂无公开动态。"}
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href={agent.source.url} className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
               {locale === "en" ? "View install source" : "查看安装来源"}
             </Link>
+            <ProfileFollowButton
+              locale={locale}
+              subjectType="agent"
+              subjectId={agent.id}
+              initialFollowing={agent.following ?? false}
+              initialFollowerCount={agent.followerCount ?? 0}
+              disabled={!session}
+            />
+            {!session ? (
+              <Link href="/login" className="rounded-full border border-ink-950/12 bg-white px-5 py-3 text-sm font-semibold text-ink-950">
+                {locale === "en" ? "Sign in to follow" : "登录后关注"}
+              </Link>
+            ) : null}
             <Link href={`/compare?agents=${agent.slug}`} className="rounded-full border border-ink-950/12 bg-white px-5 py-3 text-sm font-semibold text-ink-950">
-              {locale === "en" ? "Compare agent" : "比较 Agent"}
+              {locale === "en" ? "Secondary compare" : "次级比较"}
             </Link>
           </div>
         </section>
 
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
-          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Overview" : "概览"}</h2>
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Profile" : "档案"}</h2>
           <div className="mt-5 space-y-5">
             {agent.overview.map((paragraph) => (
               <p key={paragraph.en} className="text-lg leading-9 text-ink-700">
@@ -74,11 +124,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
               </p>
             ))}
           </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
-          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Capabilities" : "能力"}</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
             {agent.capabilities.map((capability) => (
               <div key={capability.en} className="rounded-[1.5rem] bg-parchment-deep p-5 text-base leading-8 text-ink-800">
                 {resolveText(capability, locale)}
@@ -88,92 +134,46 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
         </section>
 
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Benchmark results" : "Benchmark 结果"}</h2>
-              <p className="mt-3 max-w-[64ch] text-lg leading-8 text-ink-700">
-                {locale === "en"
-                  ? "Each run is version-scoped and bundle-hash scoped. Public scorecards are only one layer; traces and artifacts still matter."
-                  : "每次 run 都与版本和 bundle hash 强绑定。公开评分卡只是第一层，trace 和工件同样重要。"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="grid gap-5">
-              {version.benchmarkRuns.map((run) => (
-                <article key={run.id} className="rounded-[1.75rem] border border-ink-950/8 bg-parchment p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{run.suiteSlug}</p>
-                      <h3 className="mt-2 text-2xl font-semibold text-ink-950">{run.scorecard.overall}</h3>
-                    </div>
-                    <div className="text-sm text-ink-600">
-                      #{run.publicRank} / {run.peerGroupSize}
-                    </div>
-                  </div>
-                  <p className="mt-4 text-base leading-8 text-ink-700">{resolveText(run.notes, locale)}</p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <a href={run.transcriptUrl} className="rounded-full border border-ink-950/12 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
-                      {locale === "en" ? "Transcript" : "Transcript"}
-                    </a>
-                    <a href={run.toolTraceUrl} className="rounded-full border border-ink-950/12 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
-                      {locale === "en" ? "Tool trace" : "Tool trace"}
-                    </a>
-                    {run.finalArtifactUrl ? (
-                      <a href={run.finalArtifactUrl} className="rounded-full border border-ink-950/12 bg-white px-4 py-2 text-sm font-semibold text-ink-950">
-                        {locale === "en" ? "Final artifact" : "最终工件"}
-                      </a>
-                    ) : null}
-                  </div>
-                  <div className="mt-5 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-2xl bg-white px-4 py-3">
-                      <div className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Latency" : "时延"}</div>
-                      <div className="mt-2 text-xl font-semibold text-ink-950">{run.medianLatencySeconds}s</div>
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-3">
-                      <div className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Cost" : "成本"}</div>
-                      <div className="mt-2 text-xl font-semibold text-ink-950">${run.costPerSuccessfulRun.toFixed(2)}</div>
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-3">
-                      <div className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Freshness" : "新鲜度"}</div>
-                      <div className="mt-2 text-xl font-semibold text-ink-950">{run.freshnessDays}d</div>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <div className="rounded-[1.75rem] border border-ink-950/8 bg-white p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-copper-700">{locale === "en" ? "Primary scorecard" : "主评分卡"}</p>
-              <div className="mt-4">
-                <ScoreBars scorecard={primaryRun.scorecard} />
-              </div>
-            </div>
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Activity" : "动态"}</h2>
+          <p className="mt-3 max-w-[64ch] text-lg leading-8 text-ink-700">
+            {locale === "en"
+              ? "This timeline is the public work history: releases, credentials, deployments, reviews, badges, and endorsements."
+              : "这条时间线就是公开工作经历：发布、凭证、部署、评价、徽章和背书。"}
+          </p>
+          <div className="mt-6">
+            <ActivityTimeline events={agent.activity ?? []} locale={locale} />
           </div>
         </section>
 
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
-          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Demo runs" : "Demo runs"}</h2>
-          <div className="mt-6 grid gap-4">
-            {agent.demoRuns.map((demo) => (
-              <article key={demo.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="rounded-full border border-ink-950/10 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-600">
-                    {demo.outcome}
-                  </span>
-                  <span className="rounded-full border border-ink-950/10 bg-white px-3 py-1 text-xs font-medium text-ink-600">{demo.industry}</span>
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Reputation & credentials" : "信誉与凭证"}</h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {(agent.credentials ?? []).map((credential) => (
+              <article key={credential.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-copper-700">
+                  <span>{credential.type}</span>
+                  <span>{credential.verified ? (locale === "en" ? "verified" : "已验证") : locale === "en" ? "reported" : "已记录"}</span>
                 </div>
-                <h3 className="mt-4 text-2xl font-semibold text-ink-950">{resolveText(demo.title, locale)}</h3>
-                <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(demo.summary, locale)}</p>
+                <h3 className="mt-3 text-2xl font-semibold text-ink-950">{resolveText(credential.title, locale)}</h3>
+                <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(credential.summary, locale)}</p>
+                {credential.score ? (
+                  <p className="mt-3 text-sm text-ink-500">
+                    {locale === "en"
+                      ? `Score ${credential.score}${credential.rank ? ` · Rank #${credential.rank}` : ""}`
+                      : `得分 ${credential.score}${credential.rank ? ` · 排名 #${credential.rank}` : ""}`}
+                  </p>
+                ) : null}
+                {credential.relatedUrl ? (
+                  <a href={credential.relatedUrl} className="mt-4 inline-flex text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                    {locale === "en" ? "Open evidence" : "查看证据"}
+                  </a>
+                ) : null}
               </article>
             ))}
           </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
-          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Reviews" : "评价"}</h2>
-          <div className="mt-6 grid gap-4">
+          <div className="mt-8 grid gap-4">
             {agent.reviews.map((review) => (
-              <article key={review.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+              <article key={review.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center gap-3 text-sm text-ink-500">
                   <span>{review.company}</span>
                   <span>•</span>
@@ -189,56 +189,97 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
         </section>
 
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
-          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Version history & limits" : "版本历史与限制"}</h2>
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Featured work" : "代表作品"}</h2>
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-              <h3 className="text-xl font-semibold text-ink-950">{locale === "en" ? "Recent change" : "最新变更"}</h3>
-              <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(version.changelog[0], locale)}</p>
-              <p className="mt-4 text-sm text-ink-500 anywhere">{version.bundleHash}</p>
-            </div>
-            <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-              <h3 className="text-xl font-semibold text-ink-950">{locale === "en" ? "Known limits" : "已知限制"}</h3>
-              <ul className="mt-3 space-y-3 text-base leading-8 text-ink-700">
-                {agent.knownLimits.map((limit) => (
-                  <li key={limit.en}>{resolveText(limit, locale)}</li>
-                ))}
-              </ul>
-            </div>
+            {(agent.featuredWork ?? []).map((work) => (
+              <article key={work.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+                <h3 className="text-2xl font-semibold text-ink-950">{resolveText(work.title, locale)}</h3>
+                <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(work.summary, locale)}</p>
+                {work.artifactUrl ? (
+                  <a href={work.artifactUrl} className="mt-4 inline-flex text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                    {locale === "en" ? "Open artifact" : "查看工件"}
+                  </a>
+                ) : null}
+              </article>
+            ))}
           </div>
         </section>
-      </div>
 
-      <aside className="xl:sticky xl:top-28 xl:self-start">
-        <div className="rounded-[2rem] border border-ink-950/8 bg-white/88 p-6">
-          <h2 className="font-display text-3xl text-ink-950">{locale === "en" ? "Summary rail" : "摘要侧栏"}</h2>
-          <div className="mt-6 space-y-5 text-sm leading-7 text-ink-700">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Install" : "安装"}</p>
-              <p className="mt-2 anywhere rounded-2xl bg-parchment-deep px-4 py-3">{agent.source.installCommand}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Skills" : "技能"}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
+        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Network" : "关系网络"}</h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {(agent.network?.edges ?? []).map((edge) => (
+              <article key={edge.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+                <div className="text-xs uppercase tracking-[0.18em] text-copper-700">{edge.type}</div>
+                <p className="mt-3 text-base leading-8 text-ink-700">
+                  {locale === "en"
+                    ? `${edge.fromType}:${edge.fromId} → ${edge.toType}:${edge.toId}`
+                    : `${edge.fromType}:${edge.fromId} → ${edge.toType}:${edge.toId}`}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Permission boundary" : "权限边界"}</h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-[1.5rem] bg-parchment-deep p-5">
+              <h3 className="text-xl font-semibold text-ink-950">{locale === "en" ? "Declared scope" : "声明范围"}</h3>
+              <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(agent.permissionManifest.summary, locale)}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
                 {agent.permissionManifest.skills.map((skill) => (
-                  <span key={skill} className="rounded-full border border-ink-950/10 px-3 py-1 anywhere">
+                  <span key={skill} className="rounded-full border border-ink-950/10 bg-white px-3 py-1 text-sm text-ink-700 anywhere">
                     {skill}
                   </span>
                 ))}
               </div>
             </div>
+            <div className="rounded-[1.5rem] bg-parchment-deep p-5">
+              <h3 className="text-xl font-semibold text-ink-950">{locale === "en" ? "Access model" : "访问模型"}</h3>
+              <ul className="mt-3 space-y-2 text-base leading-8 text-ink-700">
+                <li>{locale === "en" ? `Risk: ${agent.permissionManifest.riskLevel}` : `风险：${agent.permissionManifest.riskLevel}`}</li>
+                <li>{locale === "en" ? `Network: ${agent.permissionManifest.networkAccess.join(", ")}` : `网络：${agent.permissionManifest.networkAccess.join(", ")}`}</li>
+                <li>{locale === "en" ? `Files: ${agent.permissionManifest.fileAccess.join(", ")}` : `文件：${agent.permissionManifest.fileAccess.join(", ")}`}</li>
+                <li>{locale === "en" ? `Secrets: ${agent.permissionManifest.secrets.join(", ")}` : `密钥：${agent.permissionManifest.secrets.join(", ")}`}</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Known limits" : "已知限制"}</h2>
+          <ul className="mt-6 grid gap-4 lg:grid-cols-2">
+            {agent.knownLimits.map((limit) => (
+              <li key={limit.en} className="rounded-[1.5rem] bg-parchment-deep p-5 text-base leading-8 text-ink-700">
+                {resolveText(limit, locale)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <aside className="xl:sticky xl:top-28 xl:self-start">
+        <div className="rounded-[2rem] border border-ink-950/8 bg-white/88 p-6">
+          <h2 className="font-display text-3xl text-ink-950">{locale === "en" ? "Trust summary" : "信任摘要"}</h2>
+          <div className="mt-6 space-y-5 text-sm leading-7 text-ink-700">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Permission risk" : "权限风险"}</p>
-              <p className="mt-2 capitalize">{agent.permissionManifest.riskLevel}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Trust tier" : "信任等级"}</p>
+              <p className="mt-2 text-xl font-semibold text-ink-950">{agent.trust?.tier}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Dependencies" : "依赖"}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Completeness checks" : "完整度检查"}</p>
               <ul className="mt-2 space-y-2">
-                {agent.dependencies.map((dependency) => (
-                  <li key={dependency} className="anywhere">
-                    {dependency}
+                {(agent.trust?.checks ?? []).map((check) => (
+                  <li key={check.id}>
+                    {check.complete ? "●" : "○"} {resolveText(check.label, locale)}
                   </li>
                 ))}
               </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">{locale === "en" ? "Install" : "安装"}</p>
+              <p className="mt-2 anywhere rounded-2xl bg-parchment-deep px-4 py-3">{agent.source.installCommand}</p>
             </div>
           </div>
         </div>

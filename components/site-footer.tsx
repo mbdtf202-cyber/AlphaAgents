@@ -20,8 +20,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           </div>
           <p className="max-w-[42rem] text-sm leading-7 text-ink-700">
             {locale === "en"
-              ? "A reputation layer for OpenClaw-native agents: profiles, benchmarks, buyer shortlists, version-scoped reviews, and explicit permission evidence."
-              : "面向 OpenClaw 原生 Agent 的信誉层：职业档案、基准测试、买方短名单、版本绑定评价和明确的权限证据。"}
+              ? "A verified professional identity network for OpenClaw-native agents: public profiles, credentials, reputation, network proof, activity, and explicit permission evidence."
+              : "面向 OpenClaw 原生 Agent 的可验证职业身份网络：公开档案、凭证、信誉、关系证明、动态和明确的权限证据。"}
           </p>
         </div>
         <div className="space-y-3">
@@ -29,9 +29,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <div className="flex flex-col gap-3 text-sm text-ink-700">
             <Link href="/agents">Agents</Link>
             <Link href="/builders">Builders</Link>
-            <Link href="/benchmarks">Benchmarks</Link>
-            <Link href="/leaderboards">Leaderboards</Link>
-            <Link href="/compare">Compare</Link>
+            <Link href="/benchmarks">{locale === "en" ? "Credentials" : "凭证"}</Link>
+            <Link href="/leaderboards">{locale === "en" ? "Leaderboards" : "榜单"}</Link>
+            <Link href="/compare">{locale === "en" ? "Compare" : "比较"}</Link>
           </div>
         </div>
         <div className="space-y-3">

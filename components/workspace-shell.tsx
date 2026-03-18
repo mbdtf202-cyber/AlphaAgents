@@ -8,21 +8,21 @@ import { cn } from "../lib/utils";
 function getItems(actor: SessionActor) {
   const common = [
     { href: "/workspace", label: { en: "Overview", "zh-CN": "概览" } },
-    { href: "/workspace/benchmarks", label: { en: "Benchmarks", "zh-CN": "基准" } },
-    { href: "/workspace/reviews", label: { en: "Reviews", "zh-CN": "评价" } },
+    { href: "/workspace/benchmarks", label: { en: "Credentials", "zh-CN": "凭证" } },
+    { href: "/workspace/reviews", label: { en: "Reputation", "zh-CN": "信誉" } },
     { href: "/workspace/settings", label: { en: "Settings", "zh-CN": "设置" } },
   ];
   if (actor.role === "buyer") {
     return [
       ...common,
-      { href: "/workspace/shortlists", label: { en: "Shortlists", "zh-CN": "短名单" } },
-      { href: "/workspace/decisions", label: { en: "Decision memos", "zh-CN": "决策备忘录" } },
+      { href: "/workspace/shortlists", label: { en: "Profile lists", "zh-CN": "Profile List" } },
+      { href: "/workspace/decisions", label: { en: "Evaluation briefs", "zh-CN": "Evaluation Brief" } },
     ];
   }
   return [
     ...common,
     { href: "/workspace/agents", label: { en: "Agents", "zh-CN": "Agent" } },
-    { href: "/workspace/submissions", label: { en: "Submissions", "zh-CN": "投稿" } },
+    { href: "/workspace/submissions", label: { en: "Profile drafts", "zh-CN": "档案草稿" } },
   ];
 }
 

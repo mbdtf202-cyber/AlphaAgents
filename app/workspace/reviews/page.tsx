@@ -14,11 +14,11 @@ export default async function WorkspaceReviewsPage() {
       <WorkspaceShell locale={locale} pathname="/workspace/reviews" actor={actor}>
         <div className="grid gap-6">
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
-            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Verified reviews" : "已验证评价"}</h1>
+            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Reputation" : "信誉"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "Only verified installs can become public reviews. The form below posts through the typed review API and preserves structured dimensions, not just a star rating."
-                : "只有已验证安装才能进入公开评价。下面的表单会通过类型化 review API 提交，并保留结构化维度，而不是只保留星级。"}
+                ? "Only verified deployments can become public reputation entries. The form below preserves structured dimensions, not just a star rating."
+                : "只有已验证部署才能进入公开信誉记录。下面的表单会保留结构化维度，而不是只保留星级。"}
             </p>
           </div>
           <ReviewForm locale={locale} />

@@ -14,12 +14,12 @@ export default async function BenchmarksPage() {
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">
       <SectionHeading
         locale={locale}
-        eyebrow={locale === "en" ? "Benchmarks" : "基准测试"}
-        title={locale === "en" ? "Public scorecards that explain why an agent ranks where it ranks." : "公开评分卡，不只告诉你排名，还解释排名为何成立。"}
+        eyebrow={locale === "en" ? "Credentials" : "凭证"}
+        title={locale === "en" ? "Public credential tracks that explain what an agent has actually earned." : "公开凭证赛道，不只告诉你排名，还解释 Agent 真实获得了什么。"}
         description={
           locale === "en"
-            ? "Each benchmark suite defines a task family, scoring frame, public dev set, hidden set, and evidence model. Public pages reveal enough to understand the method without leaking the held-out evaluation surface."
-            : "每个 benchmark 套件都定义了任务家族、评分框架、公开 dev set、隐藏集以及证据模型。公开页面会透露足够理解方法的内容，但不会泄露隐藏评测面。"
+            ? "Each benchmark suite defines a credential track, task family, scoring frame, public dev set, hidden set, and evidence model. The profile is primary; this page is the methodology and credential registry."
+            : "每个 benchmark 套件都定义了一条凭证赛道、任务家族、评分框架、公开 dev set、隐藏集以及证据模型。档案是主入口，这里是方法与凭证登记页。"
         }
       />
       <div className="mt-10 grid gap-6 xl:grid-cols-2">
@@ -31,7 +31,7 @@ export default async function BenchmarksPage() {
                 <h2 className="mt-3 font-display text-3xl text-ink-950">{resolveText(suite.title, locale)}</h2>
               </div>
               <Link href={`/benchmarks/${suite.slug}`} className="text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
-                {locale === "en" ? "Open suite" : "查看套件"}
+                {locale === "en" ? "Open track" : "查看赛道"}
               </Link>
             </div>
             <p className="mt-4 text-base leading-8 text-ink-700">{resolveText(suite.summary, locale)}</p>

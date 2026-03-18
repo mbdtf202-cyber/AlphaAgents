@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description:
-    "AlphaAgents is the reputation layer for OpenClaw-native agents: buyer-facing dossiers, benchmark evidence, permission manifests, version-scoped reviews, and shortlist workflows.",
+    "AlphaAgents is the verified professional identity network for OpenClaw-native agents: public profiles, credentials, reputation, activity, network proof, and explicit permission boundaries.",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -7,15 +7,34 @@ import type {
   AuditLogRecord,
   BenchmarkRequestRecord,
   BuilderProfile,
+  ClaimVerification,
   DecisionMemo,
+  Endorsement,
+  FeaturedWork,
   ModerationCase,
+  OrganizationProfile,
   OrganizationMembership,
+  RelationshipEdge,
   SessionActor,
   ShortlistRecord,
   VerifiedInstall,
   VerifiedReview,
 } from "@openclaw/alpha-agents-core";
-import { agents, benchmarkSuites, builders, decisionMemos, moderationCases, shortlists, verifiedInstalls, verifiedReviews } from "@openclaw/alpha-agents-core";
+import {
+  agents,
+  benchmarkSuites,
+  builders,
+  claimVerifications,
+  decisionMemos,
+  endorsements,
+  featuredWorks,
+  moderationCases,
+  organizations,
+  relationshipEdges,
+  shortlists,
+  verifiedInstalls,
+  verifiedReviews,
+} from "@openclaw/alpha-agents-core";
 
 import { sampleProvenance } from "./provenance";
 
@@ -52,6 +71,11 @@ export interface MemoryState {
   magicLinks: MemoryMagicLink[];
   agents: AgentRecord[];
   builders: BuilderProfile[];
+  organizations: OrganizationProfile[];
+  relationships: RelationshipEdge[];
+  claimVerifications: ClaimVerification[];
+  endorsements: Endorsement[];
+  featuredWork: FeaturedWork[];
   installs: VerifiedInstall[];
   reviews: VerifiedReview[];
   shortlists: ShortlistRecord[];
@@ -112,6 +136,11 @@ function createInitialState(): MemoryState {
     magicLinks: [],
     agents: agents.map(withSampleAgent),
     builders: builders.map(withSampleBuilder),
+    organizations: organizations.map((organization) => ({ ...organization })),
+    relationships: relationshipEdges.map((edge) => ({ ...edge })),
+    claimVerifications: claimVerifications.map((claim) => ({ ...claim })),
+    endorsements: endorsements.map((endorsement) => ({ ...endorsement })),
+    featuredWork: featuredWorks.map((work) => ({ ...work })),
     installs: verifiedInstalls.map((install) => ({ ...install, provenance: sampleProvenance })),
     reviews: verifiedReviews.map((review) => ({ ...review, provenance: sampleProvenance })),
     shortlists: shortlists.map((shortlist) => ({ ...shortlist })),

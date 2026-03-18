@@ -9,6 +9,8 @@ import {
   type BuilderProfile,
   type LeaderboardEntry,
   type Locale,
+  type ProfileSubjectType,
+  type RelationshipEdge,
   type SessionActor,
 } from "@openclaw/alpha-agents-core";
 
@@ -18,6 +20,25 @@ import { sampleProvenance } from "./provenance";
 
 const buildLeaderboards = (agents: AgentRecord[]): Record<string, LeaderboardEntry[]> =>
   buildLeaderboardsFromAgents(agents);
+
+function isFollowing(
+  actor: SessionActor | null | undefined,
+  relationships: RelationshipEdge[],
+  subjectType: ProfileSubjectType,
+  subjectId: string,
+) {
+  if (!actor) {
+    return false;
+  }
+  return relationships.some(
+    (edge) =>
+      edge.type === "follows" &&
+      edge.toType === subjectType &&
+      edge.toId === subjectId &&
+      edge.fromType === "user" &&
+      edge.fromId === actor.userId,
+  );
+}
 
 export async function getHomepageData() {
   const catalog = await getReadCatalog();
@@ -40,37 +61,47 @@ export async function getFilteredAgentsPageData(filters: {
   query?: string;
   category?: string;
   status?: string;
+  trustTier?: string;
+  riskLevel?: string;
+  credential?: string;
+  activity?: string;
 }) {
   return filterAgents((await getReadCatalog()).agents, filters);
 }
 
-export async function getAgentPageData(slug: string, versionId?: string) {
-  const agent = (await getReadCatalog()).agents.find((entry) => entry.slug === slug);
+export async function getAgentPageData(slug: string, versionId?: string, actor?: SessionActor | null) {
+  const catalog = await getReadCatalog();
+  const agent = catalog.agents.find((entry) => entry.slug === slug);
   if (!agent) {
     return undefined;
   }
+  const withFollowState = { ...agent, following: isFollowing(actor, catalog.relationships, "agent", agent.id) };
   if (!versionId) {
-    return agent;
+    return withFollowState;
   }
   return {
-    ...agent,
-    versions: agent.versions.filter((version) => version.id === versionId),
-    reviews: agent.reviews.filter((review) => review.versionId === versionId),
+    ...withFollowState,
+    versions: withFollowState.versions.filter((version) => version.id === versionId),
+    reviews: withFollowState.reviews.filter((review) => review.versionId === versionId),
   };
 }
 
-export async function getBuilderPageData(handle: string) {
+export async function getBuilderPageData(handle: string, actor?: SessionActor | null) {
   const catalog = await getReadCatalog();
   const builder = catalog.builders.find((entry) => entry.handle === handle);
   if (!builder) {
     return undefined;
   }
+  const builderWithFollowState = {
+    ...builder,
+    following: isFollowing(actor, catalog.relationships, "builder", builder.id),
+  };
 
   const publishedAgents = catalog.agents.filter((agent) => agent.builderHandle === handle);
   const reviews = publishedAgents.flatMap((agent) => agent.reviews);
 
   return {
-    builder,
+    builder: builderWithFollowState,
     publishedAgents,
     reviews,
   };
@@ -129,7 +160,7 @@ export async function getLeaderboardsPageData() {
 
 export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
   const bundle = await getRepositoryBundle();
-  const [submissions, builderAgents, installs, reviews, shortlists, decisionMemos, benchmarkRequests, moderationCases] =
+  const [submissions, builderAgents, installs, reviews, shortlists, decisionMemos, benchmarkRequests, moderationCases, relationships] =
     await Promise.all([
       bundle.agentRepository.listSubmissionsForActor(actor),
       bundle.agentRepository.listBuilderAgents(actor),
@@ -139,6 +170,7 @@ export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
       bundle.shortlistRepository.listDecisionMemosForActor(actor),
       bundle.benchmarkRepository.listRequestsForActor(actor),
       bundle.moderationRepository.listModerationCases(actor),
+      bundle.relationshipRepository.listRelationships(),
     ]);
 
   return {
@@ -151,6 +183,7 @@ export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
     decisionMemos,
     benchmarkRequests,
     moderationCases,
+    followingCount: relationships.filter((edge) => edge.type === "follows" && edge.fromType === "user" && edge.fromId === actor.userId).length,
     reviewHighlights: reviews.map((review) => ({
       ...review,
       headlineText: resolveText(review.headline, locale),

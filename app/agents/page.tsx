@@ -9,14 +9,26 @@ import { getFilteredAgentsPageData } from "../../lib/server/repository";
 export default async function AgentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string; category?: string; status?: string }>;
+  searchParams: Promise<{
+    query?: string;
+    category?: string;
+    status?: string;
+    trustTier?: string;
+    riskLevel?: string;
+    credential?: string;
+    activity?: string;
+  }>;
 }) {
   const locale = await getCurrentLocale();
   const params = await searchParams;
   const query = params.query ?? "";
   const category = params.category ?? "all";
   const status = params.status ?? "all";
-  const agentList = await getFilteredAgentsPageData({ query, category, status });
+  const trustTier = params.trustTier ?? "all";
+  const riskLevel = params.riskLevel ?? "all";
+  const credential = params.credential ?? "all";
+  const activity = params.activity ?? "all";
+  const agentList = await getFilteredAgentsPageData({ query, category, status, trustTier, riskLevel, credential, activity });
 
   return (
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">
@@ -26,13 +38,22 @@ export default async function AgentsPage({
         title={locale === "en" ? "Explore public dossiers, not shallow store cards." : "浏览公开职业档案，而不是浅层商店卡片。"}
         description={
           locale === "en"
-            ? "Every profile in the directory shows version-scoped evidence, benchmark positioning, permission footprint, install path, and known limits."
-            : "目录中的每个档案都展示版本绑定证据、benchmark 排位、权限足迹、安装路径和已知限制。"
+            ? "Every profile in the directory shows trust tier, profile completeness, recent verified activity, credential history, permission boundaries, and known limits."
+            : "目录中的每个档案都展示信任等级、档案完整度、近期已验证动态、凭证历史、权限边界和已知限制。"
         }
       />
-      <DirectoryFilters locale={locale} query={query} category={category} status={status} />
+      <DirectoryFilters
+        locale={locale}
+        query={query}
+        category={category}
+        status={status}
+        trustTier={trustTier}
+        riskLevel={riskLevel}
+        credential={credential}
+        activity={activity}
+      />
       <div className="mt-6 flex flex-wrap gap-3">
-        {["coding", "research", "support ops", "workflow automation", "benchmark leader", "procurement"].map((filter) => (
+        {["coding", "research", "support ops", "workflow automation", "credentialed", "relationship-rich"].map((filter) => (
           <span key={filter} className="rounded-full border border-ink-950/10 bg-white/80 px-3 py-1.5 text-sm text-ink-700">
             {filter}
           </span>
@@ -49,8 +70,8 @@ export default async function AgentsPage({
       <div className="mt-12 rounded-[2rem] border border-ink-950/8 bg-white/72 p-6">
         <p className="text-sm leading-8 text-ink-700">
           {locale === "en"
-            ? `Profiles are ranked using benchmark results, verified review quality, freshness, verification status, and permission risk penalties. The directory does not default to downloads as the primary ordering signal.`
-            : `档案排序综合 benchmark 结果、已验证评价质量、新鲜度、验证状态和权限风险惩罚。目录不会默认把下载量作为第一排序信号。`}
+            ? `Profiles are ranked using trust tier, completeness, recent verified activity, credential freshness, review quality, and permission risk. Downloads are not a primary ordering signal.`
+            : `档案排序综合信任等级、完整度、近期已验证动态、凭证新鲜度、评价质量和权限风险。下载量不是主要排序信号。`}
         </p>
         <p className="mt-3 text-sm leading-8 text-ink-700">
           {locale === "en"

@@ -13,11 +13,11 @@ export default async function WorkspaceBenchmarksPage() {
       <WorkspaceShell locale={locale} pathname="/workspace/benchmarks" actor={actor}>
         <div className="grid gap-6">
           <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
-            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Benchmark operations" : "Benchmark 操作"}</h1>
+            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Credential operations" : "凭证操作"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "Requests are now persisted queue entries. This surface shows the real benchmark request history for the current actor."
-                : "请求现在是持久化的队列记录。这个界面展示当前 actor 的真实 benchmark 请求历史。"}
+                ? "Requests are persisted queue entries. This surface shows the real credential request history for the current actor."
+                : "请求现在是持久化队列记录。这个界面展示当前 actor 的真实凭证请求历史。"}
             </p>
           </div>
           <div className="grid gap-4">

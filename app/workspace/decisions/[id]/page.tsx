@@ -27,7 +27,7 @@ export default async function DecisionMemoDetailPage({ params }: { params: Promi
         <article className="grid gap-6 rounded-[2rem] border border-ink-950/8 bg-white/88 p-6 print:border-0 print:shadow-none">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{locale === "en" ? "Buyer deliverable" : "买方交付物"}</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{locale === "en" ? "Evaluation deliverable" : "评估交付物"}</p>
               <h1 className="mt-3 font-display text-5xl text-ink-950">{resolveText(memo.title, locale)}</h1>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -44,7 +44,7 @@ export default async function DecisionMemoDetailPage({ params }: { params: Promi
               <p className="mt-2 text-2xl font-semibold text-ink-950">{memo.recommendationState}</p>
             </div>
             <div className="rounded-[1.5rem] bg-parchment-deep p-5">
-              <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Shortlist" : "短名单"}</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-ink-500">{locale === "en" ? "Profile list" : "Profile List"}</p>
               <p className="mt-2 text-2xl font-semibold text-ink-950">{shortlist ? resolveText(shortlist.name, locale) : memo.shortlistId}</p>
             </div>
           </section>

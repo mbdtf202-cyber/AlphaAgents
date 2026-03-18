@@ -16,11 +16,11 @@ export default async function WorkspaceDecisionsPage() {
       <WorkspaceShell locale={locale} pathname="/workspace/decisions" actor={actor}>
         <div className="grid gap-6">
           <div className="surface-panel rounded-[2rem] p-6">
-            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Decision memos" : "决策备忘录"}</h1>
+            <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Evaluation briefs" : "Evaluation Brief"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "Decision memos turn shortlists into signable recommendations with explicit tradeoffs and rollout states."
-                : "决策备忘录把短名单转化成可签字的建议，包含明确权衡和上线状态。"}
+                ? "Evaluation briefs turn profile lists into reviewable recommendations with explicit tradeoffs and rollout states."
+                : "Evaluation Brief 会把 Profile List 转化成可评审建议，包含明确权衡和上线状态。"}
             </p>
           </div>
           <DecisionMemoForm locale={locale} shortlists={workspace.shortlists} />

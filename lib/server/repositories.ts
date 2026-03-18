@@ -3,28 +3,45 @@ import { randomUUID } from "node:crypto";
 import {
   agents as sampleAgents,
   benchmarkSuites,
+  claimVerifications as sampleClaimVerifications,
   type BenchmarkRun,
   builders as sampleBuilders,
+  endorsements as sampleEndorsements,
+  featuredWorks as sampleFeaturedWorks,
+  hydratePublicCatalog,
+  organizations as sampleOrganizations,
   type AgentRecord,
   type AgentRepository,
   type AgentSubmissionRecord,
+  type AgentProfileView,
   type AgentVersionRecord,
   type AuditLogRecord,
   type AuditRepository,
   type BenchmarkRepository,
   type BenchmarkRequestRecord,
   type BuilderProfile,
+  type BuilderProfileView,
   type CatalogRepository,
+  type ClaimVerification,
   type DecisionMemo,
+  type Endorsement,
+  type FeaturedWork,
   type InstallRepository,
   type MembershipRole,
   type ModerationCase,
   type ModerationRepository,
   type PublicMetricsSummary,
+  type RelationshipEdge,
+  type RelationshipRepository,
+  relationshipEdges as sampleRelationshipEdges,
   type ReviewRepository,
   type SessionActor,
   type ShortlistRecord,
   type ShortlistRepository,
+  sortAgentProfiles,
+  sortBuilderProfiles,
+  verifiedInstalls as sampleVerifiedInstalls,
+  verifiedReviews as sampleVerifiedReviews,
   type VerifiedInstall,
   type VerifiedReview,
   type VersionRepository,
@@ -42,12 +59,16 @@ import {
   benchmarkScorecards,
   benchmarkSuitesTable,
   builderProfiles,
+  claimVerificationsTable,
   decisionMemosTable,
+  endorsementsTable,
+  featuredWorkTable,
   magicLinkChallenges,
   moderationCasesTable,
   organizationMemberships,
   organizations,
   permissionManifests,
+  relationshipEdgesTable,
   shortlistsTable,
   submissionsTable,
   users,
@@ -59,7 +80,6 @@ import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 import { hashToken } from "./auth";
 import {
   booleanFromStorage,
-  buildLeaderboardsFromAgents,
   filterAgents,
   localizedTextArrayFromUnknown,
   localizedTextFromUnknown,
@@ -105,12 +125,14 @@ export interface RepositoryBundle {
   moderationRepository: ModerationRepository;
   benchmarkRepository: BenchmarkRepository;
   catalogRepository: CatalogRepository;
+  relationshipRepository: RelationshipRepository;
   auditRepository: AuditRepository;
 }
 
 interface PublicCatalog {
-  agents: AgentRecord[];
-  builders: BuilderProfile[];
+  agents: AgentProfileView[];
+  builders: BuilderProfileView[];
+  relationships: RelationshipEdge[];
   metrics: PublicMetricsSummary;
 }
 
@@ -143,9 +165,21 @@ function sampleAgentList(): AgentRecord[] {
 }
 
 function buildSampleCatalog(): PublicCatalog {
-  return {
+  const hydrated = hydratePublicCatalog({
     agents: sampleAgentList(),
     builders: sampleBuilderList(),
+    organizations: sampleOrganizations,
+    relationshipEdges: sampleRelationshipEdges,
+    claimVerifications: sampleClaimVerifications,
+    endorsements: sampleEndorsements,
+    featuredWork: sampleFeaturedWorks,
+    verifiedInstalls: sampleVerifiedInstalls,
+    verifiedReviews: sampleVerifiedReviews,
+  });
+  return {
+    agents: sortAgentProfiles(hydrated.agents),
+    builders: sortBuilderProfiles(hydrated.builders),
+    relationships: sampleRelationshipEdges,
     metrics: {
       liveAgentCount: 0,
       liveInstallCount: 0,
@@ -157,7 +191,7 @@ function buildSampleCatalog(): PublicCatalog {
 }
 
 function buildMemoryPublicCatalog(state = getMemoryState()): PublicCatalog {
-  const agents = state.agents.map((agent) =>
+  const mergedAgents = state.agents.map((agent) =>
     withRegressionSummaries({
       ...agent,
       reviews: state.reviews.filter((review) => review.agentSlug === agent.slug),
@@ -168,15 +202,15 @@ function buildMemoryPublicCatalog(state = getMemoryState()): PublicCatalog {
     }),
   );
 
-  const builders = state.builders.map((builder) => {
-    const publishedAgentSlugs = agents
+  const mergedBuilders = state.builders.map((builder) => {
+    const publishedAgentSlugs = mergedAgents
       .filter((agent) => agent.builderHandle === builder.handle)
       .map((agent) => agent.slug);
     const builderReviews = state.reviews.filter((review) => review.builderHandle === builder.handle);
     const shortlistCount = state.shortlists.filter((shortlist) =>
       shortlist.agentSlugs.some((slug) => publishedAgentSlugs.includes(slug)),
     ).length;
-    const benchmarkWins = agents
+    const benchmarkWins = mergedAgents
       .filter((agent) => agent.builderHandle === builder.handle)
       .flatMap((agent) => agent.versions)
       .flatMap((version) => version.benchmarkRuns)
@@ -191,11 +225,24 @@ function buildMemoryPublicCatalog(state = getMemoryState()): PublicCatalog {
     };
   });
 
+  const hydrated = hydratePublicCatalog({
+    agents: mergedAgents,
+    builders: mergedBuilders,
+    organizations: state.organizations,
+    relationshipEdges: state.relationships,
+    claimVerifications: state.claimVerifications,
+    endorsements: state.endorsements,
+    featuredWork: state.featuredWork,
+    verifiedInstalls: state.installs,
+    verifiedReviews: state.reviews,
+  });
+
   return {
-    agents,
-    builders,
+    agents: sortAgentProfiles(hydrated.agents),
+    builders: sortBuilderProfiles(hydrated.builders),
+    relationships: state.relationships,
     metrics: {
-      liveAgentCount: agents.filter((item) => item.provenance?.dataMode === "live").length,
+      liveAgentCount: mergedAgents.filter((item) => item.provenance?.dataMode === "live").length,
       liveInstallCount: state.installs.filter((item) => item.provenance?.dataMode === "live").length,
       liveReviewCount: state.reviews.filter((item) => item.provenance?.dataMode === "live").length,
       liveBenchmarkRunCount: state.benchmarkRequests.filter((item) => item.status === "completed").length,
@@ -528,6 +575,38 @@ function createMemoryBundle(): RepositoryBundle {
     },
   };
 
+  const relationshipRepository: RelationshipRepository = {
+    async listRelationships() {
+      return state.relationships;
+    },
+    async followProfile(actor, input) {
+      const existing = state.relationships.find(
+        (edge) => edge.type === "follows" && edge.fromType === "user" && edge.fromId === actor.userId && edge.toType === input.toType && edge.toId === input.toId,
+      );
+      if (existing) {
+        return existing;
+      }
+      const next: RelationshipEdge = {
+        id: randomUUID(),
+        type: "follows",
+        fromType: "user",
+        fromId: actor.userId,
+        toType: input.toType,
+        toId: input.toId,
+        verified: true,
+        createdAt: new Date().toISOString(),
+        provenance: liveProvenance,
+      };
+      state.relationships.push(next);
+      return next;
+    },
+    async unfollowProfile(actor, input) {
+      state.relationships = state.relationships.filter(
+        (edge) => !(edge.type === "follows" && edge.fromType === "user" && edge.fromId === actor.userId && edge.toType === input.toType && edge.toId === input.toId),
+      );
+    },
+  };
+
   const catalogRepository: CatalogRepository = {
     async listBuilders() {
       return buildMemoryPublicCatalog(state).builders;
@@ -550,6 +629,7 @@ function createMemoryBundle(): RepositoryBundle {
     moderationRepository,
     benchmarkRepository,
     catalogRepository,
+    relationshipRepository,
     auditRepository,
   };
 }
@@ -601,9 +681,14 @@ async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
     permissionRows,
     versionRows,
     runRows,
+    installRows,
     reviewRows,
     builderRows,
     shortlistRows,
+    relationshipRows,
+    claimRows,
+    endorsementRows,
+    featuredWorkRows,
     metricsRows,
   ] = await Promise.all([
     db.select().from(agentRecords),
@@ -639,6 +724,20 @@ async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
       .from(benchmarkRunsTable)
       .innerJoin(benchmarkSuitesTable, eq(benchmarkSuitesTable.id, benchmarkRunsTable.suiteId))
       .leftJoin(benchmarkScorecards, eq(benchmarkScorecards.benchmarkRunId, benchmarkRunsTable.id)),
+    db
+      .select({
+        id: verifiedInstallsTable.id,
+        agentSlug: agentRecords.slug,
+        versionId: verifiedInstallsTable.agentVersionId,
+        verificationToken: verifiedInstallsTable.verificationToken,
+        packageHash: verifiedInstallsTable.packageHash,
+        anonymousRuntimeFingerprint: verifiedInstallsTable.anonymousRuntimeFingerprint,
+        verifiedAt: verifiedInstallsTable.verifiedAt,
+        ownerUserId: verifiedInstallsTable.ownerUserId,
+        ownerOrganizationId: verifiedInstallsTable.ownerOrganizationId,
+      })
+      .from(verifiedInstallsTable)
+      .innerJoin(agentRecords, eq(agentRecords.id, verifiedInstallsTable.agentId)),
     db
       .select({
         id: verifiedReviewsTable.id,
@@ -677,6 +776,10 @@ async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
       .from(builderProfiles)
       .leftJoin(users, eq(users.id, builderProfiles.userId)),
     db.select().from(shortlistsTable),
+    db.select().from(relationshipEdgesTable),
+    db.select().from(claimVerificationsTable),
+    db.select().from(endorsementsTable),
+    db.select().from(featuredWorkTable),
     Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(agentRecords).where(eq(agentRecords.status, "verified")),
       db.select({ count: sql<number>`count(*)` }).from(verifiedInstallsTable),
@@ -880,9 +983,105 @@ async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
     (left, right) => right.shortlistCount - left.shortlistCount,
   );
 
-  return {
+  const liveRelationships: RelationshipEdge[] = relationshipRows.map((row) => ({
+    id: row.id,
+    type: row.type as RelationshipEdge["type"],
+    fromType: row.fromType as RelationshipEdge["fromType"],
+    fromId: row.fromId,
+    toType: row.toType as RelationshipEdge["toType"],
+    toId: row.toId,
+    verified: booleanFromStorage(row.verified, false),
+    createdAt: row.createdAt.toISOString(),
+    note: row.note ? localizedTextFromUnknown(row.note) : undefined,
+    provenance: liveProvenance,
+  }));
+
+  const liveClaims = claimRows.map((row) => ({
+    id: row.id,
+    subjectType: row.subjectType as ClaimVerification["subjectType"],
+    subjectId: row.subjectId,
+    claimType: row.claimType as ClaimVerification["claimType"],
+    label: localizedTextFromUnknown(row.label),
+    summary: localizedTextFromUnknown(row.summary),
+    status: row.status as ClaimVerification["status"],
+    verifiedAt: row.verifiedAt?.toISOString(),
+    evidenceUrl: row.evidenceUrl ?? undefined,
+    relatedVersionId: row.relatedVersionId ?? undefined,
+    provenance: liveProvenance,
+  }));
+
+  const liveEndorsements = endorsementRows.map((row) => ({
+    id: row.id,
+    subjectType: row.subjectType as Endorsement["subjectType"],
+    subjectId: row.subjectId,
+    authorType: row.authorType as Endorsement["authorType"],
+    authorId: row.authorId,
+    authorName: row.authorName,
+    authorHeadline: localizedTextFromUnknown(row.authorHeadline),
+    body: localizedTextFromUnknown(row.body),
+    createdAt: row.createdAt.toISOString(),
+    verified: booleanFromStorage(row.verified, false),
+    provenance: liveProvenance,
+  }));
+
+  const liveFeaturedWork = featuredWorkRows.map((row) => ({
+    id: row.id,
+    subjectType: row.subjectType as FeaturedWork["subjectType"],
+    subjectId: row.subjectId,
+    title: localizedTextFromUnknown(row.title),
+    summary: localizedTextFromUnknown(row.summary),
+    artifactUrl: row.artifactUrl ?? undefined,
+    publishedAt: row.publishedAt.toISOString(),
+    verified: booleanFromStorage(row.verified, false),
+    provenance: liveProvenance,
+  }));
+
+  const liveInstalls = installRows.map((row) => ({
+    id: row.id,
+    agentSlug: row.agentSlug,
+    versionId: row.versionId,
+    verificationToken: row.verificationToken,
+    packageHash: row.packageHash,
+    anonymousRuntimeFingerprint: row.anonymousRuntimeFingerprint,
+    verifiedAt: row.verifiedAt.toISOString(),
+    ownerUserId: row.ownerUserId ?? undefined,
+    ownerOrganizationId: row.ownerOrganizationId ?? undefined,
+    provenance: liveProvenance,
+  }));
+
+  const hydrated = hydratePublicCatalog({
     agents: mergedAgents,
     builders: mergedBuilders,
+    organizations: sampleOrganizations,
+    relationshipEdges: [...sampleRelationshipEdges, ...liveRelationships],
+    claimVerifications: [...sampleClaimVerifications, ...liveClaims],
+    endorsements: [...sampleEndorsements, ...liveEndorsements],
+    featuredWork: [...sampleFeaturedWorks, ...liveFeaturedWork],
+    verifiedInstalls: liveInstalls,
+    verifiedReviews: reviewRows.map((row) => ({
+      id: row.id,
+      agentSlug: row.agentSlug,
+      versionId: row.versionId,
+      builderHandle: row.builderHandle ?? sampleAgentsBySlug.get(row.agentSlug)?.builderHandle ?? "",
+      installId: row.installId,
+      company: row.company,
+      role: row.role,
+      headline: localizedTextFromUnknown(row.headline),
+      body: localizedTextFromUnknown(row.body),
+      rating: row.rating,
+      dimensions: row.dimensions as VerifiedReview["dimensions"],
+      context: row.context as VerifiedReview["context"],
+      createdAt: row.createdAt.toISOString(),
+      ownerUserId: row.ownerUserId ?? undefined,
+      ownerOrganizationId: row.ownerOrganizationId ?? undefined,
+      provenance: liveProvenance,
+    })),
+  });
+
+  return {
+    agents: sortAgentProfiles(hydrated.agents),
+    builders: sortBuilderProfiles(hydrated.builders),
+    relationships: [...sampleRelationshipEdges, ...liveRelationships],
     metrics: {
       liveAgentCount: Number(metricsRows[0][0]?.count ?? 0),
       liveInstallCount: Number(metricsRows[1][0]?.count ?? 0),
@@ -1722,6 +1921,88 @@ function createPostgresBundle(): RepositoryBundle {
     },
   };
 
+  const relationshipRepository: RelationshipRepository = {
+    async listRelationships() {
+      const rows = await db.select().from(relationshipEdgesTable).orderBy(desc(relationshipEdgesTable.createdAt));
+      return rows.map((row) => ({
+        id: row.id,
+        type: row.type as RelationshipEdge["type"],
+        fromType: row.fromType as RelationshipEdge["fromType"],
+        fromId: row.fromId,
+        toType: row.toType as RelationshipEdge["toType"],
+        toId: row.toId,
+        verified: booleanFromStorage(row.verified, false),
+        createdAt: row.createdAt.toISOString(),
+        note: row.note ? localizedTextFromUnknown(row.note) : undefined,
+        provenance: liveProvenance,
+      }));
+    },
+    async followProfile(actor, input) {
+      const [existing] = await db
+        .select()
+        .from(relationshipEdgesTable)
+        .where(
+          and(
+            eq(relationshipEdgesTable.type, "follows"),
+            eq(relationshipEdgesTable.fromType, "user"),
+            eq(relationshipEdgesTable.fromId, actor.userId),
+            eq(relationshipEdgesTable.toType, input.toType),
+            eq(relationshipEdgesTable.toId, input.toId),
+          ),
+        )
+        .limit(1);
+      if (existing) {
+        return {
+          id: existing.id,
+          type: existing.type as RelationshipEdge["type"],
+          fromType: existing.fromType as RelationshipEdge["fromType"],
+          fromId: existing.fromId,
+          toType: existing.toType as RelationshipEdge["toType"],
+          toId: existing.toId,
+          verified: booleanFromStorage(existing.verified, false),
+          createdAt: existing.createdAt.toISOString(),
+          note: existing.note ? localizedTextFromUnknown(existing.note) : undefined,
+          provenance: liveProvenance,
+        };
+      }
+      const [row] = await db
+        .insert(relationshipEdgesTable)
+        .values({
+          type: "follows",
+          fromType: "user",
+          fromId: actor.userId,
+          toType: input.toType,
+          toId: input.toId,
+          verified: 1,
+        })
+        .returning();
+      return {
+        id: row!.id,
+        type: "follows",
+        fromType: "user",
+        fromId: actor.userId,
+        toType: input.toType,
+        toId: input.toId,
+        verified: true,
+        createdAt: row!.createdAt.toISOString(),
+        provenance: liveProvenance,
+      };
+    },
+    async unfollowProfile(actor, input) {
+      await db
+        .delete(relationshipEdgesTable)
+        .where(
+          and(
+            eq(relationshipEdgesTable.type, "follows"),
+            eq(relationshipEdgesTable.fromType, "user"),
+            eq(relationshipEdgesTable.fromId, actor.userId),
+            eq(relationshipEdgesTable.toType, input.toType),
+            eq(relationshipEdgesTable.toId, input.toId),
+          ),
+        );
+    },
+  };
+
   const catalogRepository: CatalogRepository = {
     async listBuilders() {
       return (await buildPostgresPublicCatalog()).builders;
@@ -1744,6 +2025,7 @@ function createPostgresBundle(): RepositoryBundle {
     moderationRepository,
     benchmarkRepository,
     catalogRepository,
+    relationshipRepository,
     auditRepository,
   };
 }
@@ -1768,6 +2050,7 @@ export async function getReadCatalog() {
   return {
     agents: await bundle.agentRepository.listPublicAgents(),
     builders: await bundle.catalogRepository.listBuilders(),
+    relationships: await bundle.relationshipRepository.listRelationships(),
     metrics: await bundle.catalogRepository.getPublicMetricsSummary(),
   };
 }

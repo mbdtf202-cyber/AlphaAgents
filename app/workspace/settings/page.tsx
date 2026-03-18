@@ -14,8 +14,8 @@ export default async function WorkspaceSettingsPage() {
             <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Workspace settings" : "工作台设置"}</h1>
             <p className="mt-4 text-lg leading-8 text-ink-700">
               {locale === "en"
-                ? "This preview keeps the settings surface intentionally simple: locale, review defaults, benchmark routing, and trust notifications would live here in a full deployment."
-                : "这个预览版故意让设置面保持简洁：在完整部署中，语言、默认评价设置、benchmark 路由和信任通知都会集中在这里。"}
+                ? "This preview keeps settings intentionally simple: locale, reputation defaults, credential routing, and profile notifications would live here in a full deployment."
+                : "这个预览版故意让设置面保持简洁：在完整部署中，语言、默认信誉设置、凭证路由和档案通知都会集中在这里。"}
             </p>
           </div>
         </div>

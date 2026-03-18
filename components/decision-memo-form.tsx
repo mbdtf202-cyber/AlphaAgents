@@ -61,11 +61,11 @@ export function DecisionMemoForm({ locale, shortlists }: { locale: Locale; short
   return (
     <form action={handleSubmit} className="surface-panel grid gap-4 rounded-[2rem] p-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{locale === "en" ? "Decision memo" : "决策备忘录"}</p>
-        <h2 className="mt-3 font-display text-3xl text-ink-950">{locale === "en" ? "Write a buyer recommendation" : "撰写买方建议"}</h2>
+        <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{locale === "en" ? "Evaluation brief" : "Evaluation Brief"}</p>
+        <h2 className="mt-3 font-display text-3xl text-ink-950">{locale === "en" ? "Write a profile-based recommendation" : "撰写基于档案的建议"}</h2>
       </div>
       <label className="grid gap-2 text-sm text-ink-700">
-        {locale === "en" ? "Shortlist" : "短名单"}
+        {locale === "en" ? "Profile list" : "Profile List"}
         <select name="shortlistId" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3">
           {shortlists.map((shortlist) => (
             <option key={shortlist.id} value={shortlist.id}>
@@ -172,7 +172,7 @@ export function DecisionMemoForm({ locale, shortlists }: { locale: Locale; short
       </fieldset>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" className="rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
-          {locale === "en" ? "Persist memo" : "保存备忘录"}
+          {locale === "en" ? "Persist evaluation brief" : "保存 Evaluation Brief"}
         </button>
         {status ? <p className="text-sm text-ink-600">{status}</p> : null}
       </div>

@@ -6,6 +6,7 @@ import type {
   DecisionMemo,
   ModerationCase,
   PublicMetricsSummary,
+  RelationshipEdge,
   SessionActor,
   ShortlistRecord,
   VerifiedInstall,
@@ -65,6 +66,18 @@ export interface CatalogRepository {
   listBuilders(): Promise<BuilderProfile[]>;
   getBuilderByHandle(handle: string): Promise<BuilderProfile | undefined>;
   getPublicMetricsSummary(): Promise<PublicMetricsSummary>;
+}
+
+export interface RelationshipRepository {
+  listRelationships(): Promise<RelationshipEdge[]>;
+  followProfile(
+    actor: SessionActor,
+    input: Pick<RelationshipEdge, "toType" | "toId">,
+  ): Promise<RelationshipEdge>;
+  unfollowProfile(
+    actor: SessionActor,
+    input: Pick<RelationshipEdge, "toType" | "toId">,
+  ): Promise<void>;
 }
 
 export interface AuditRepository {

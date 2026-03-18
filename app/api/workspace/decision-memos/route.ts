@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       entityId: memo.id,
       newState: memo,
     });
-    return NextResponse.json({ message: "Decision memo persisted.", memo }, { status: 201 });
+    return NextResponse.json({ message: "Evaluation brief persisted.", memo }, { status: 201 });
   } catch (error) {
     return errorResponse(error);
   }

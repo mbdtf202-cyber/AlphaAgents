@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(
       {
-        message: "Shortlist persisted.",
+        message: "Profile list persisted.",
         shortlist,
       },
       { status: 201 },

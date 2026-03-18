@@ -221,7 +221,7 @@ export const agents: AgentRecord[] = [
         "zh-CN": "没有证据标准的开放式创意脑暴。",
       },
     ],
-    categories: ["research", "evidence synthesis", "procurement"],
+    categories: ["research", "evidence synthesis", "decision support"],
     verificationStatus: "verified",
     source: {
       id: "source-research-brief-operator",
@@ -458,17 +458,17 @@ export const agents: AgentRecord[] = [
     name: "Workflow Orchestrator",
     builderHandle: "northframe",
     tagline: {
-      en: "A cross-functional operations agent for shortlist assembly, approvals, and deliverable packaging.",
-      "zh-CN": "一个跨职能运营 Agent，擅长短名单组装、审批流和交付包封装。",
+      en: "A cross-functional operations agent for evaluation flows, approvals, and deliverable packaging.",
+      "zh-CN": "一个跨职能运营 Agent，擅长评估流程、审批流和交付包封装。",
     },
     summary: {
-      en: "Workflow Orchestrator is built for buyer teams that need one operator to coordinate several narrow tools without losing approval visibility.",
-      "zh-CN": "Workflow Orchestrator 面向需要一个操作员统一协调多个窄工具、同时不丢失审批可见性的买方团队。",
+      en: "Workflow Orchestrator is built for teams that need one operator to coordinate several narrow tools without losing approval visibility.",
+      "zh-CN": "Workflow Orchestrator 面向需要一个操作员统一协调多个窄工具、同时不丢失审批可见性的团队。",
     },
     useCases: [
       {
-        en: "Run shortlist workflows across sourcing, review, and handoff steps.",
-        "zh-CN": "执行跨搜寻、评审和交接的短名单流程。",
+        en: "Run evaluation workflows across sourcing, review, and handoff steps.",
+        "zh-CN": "执行跨搜寻、评审和交接的评估流程。",
       },
       {
         en: "Coordinate approvals and package outputs for human review.",
@@ -481,7 +481,7 @@ export const agents: AgentRecord[] = [
         "zh-CN": "用脚本就能解决的单步轻量自动化。",
       },
     ],
-    categories: ["workflow automation", "buyer operations"],
+    categories: ["workflow automation", "evaluation ops"],
     verificationStatus: "verified",
     source: {
       id: "source-workflow-orchestrator",
@@ -550,8 +550,8 @@ export const agents: AgentRecord[] = [
     ],
     capabilities: [
       {
-        en: "Multi-step buyer workflow coordination.",
-        "zh-CN": "多步骤买方工作流协同。",
+        en: "Multi-step evaluation workflow coordination.",
+        "zh-CN": "多步骤评估工作流协同。",
       },
       {
         en: "Structured output packaging for review and audit.",
@@ -563,15 +563,15 @@ export const agents: AgentRecord[] = [
       {
         id: "demo-wo-1",
         title: {
-          en: "Builds a buyer shortlist and packages the review brief in one pass",
-          "zh-CN": "一轮完成买方短名单构建与评审简报打包",
+          en: "Builds a profile list and packages the review brief in one pass",
+          "zh-CN": "一轮完成 Profile List 构建与评审简报打包",
         },
         summary: {
           en: "Demonstrates how the agent coordinates evidence, comparison, and a review-ready artifact without losing operator visibility.",
           "zh-CN": "展示 Agent 如何协调证据、比较和评审产物，同时保留操作员可见性。",
         },
         outcome: "success",
-        industry: "Procurement",
+        industry: "Operations",
       },
     ],
     reviews: [],
@@ -718,8 +718,8 @@ export const agents: AgentRecord[] = [
     name: "Buyer Bakeoff Console",
     builderHandle: "prairiesignal",
     tagline: {
-      en: "A buyer-side evaluation operator for comparing agents, vendors, and rollout readiness in one workflow.",
-      "zh-CN": "一个买方侧评估操作员，可在同一工作流中比较 Agent、供应商和上线准备度。",
+      en: "An evaluation operator for comparing agents, vendors, and rollout readiness in one workflow.",
+      "zh-CN": "一个评估操作员，可在同一工作流中比较 Agent、供应商和上线准备度。",
     },
     summary: {
       en: "Buyer Bakeoff Console helps internal teams run side-by-side evaluations and produce a review-ready recommendation package.",
@@ -727,8 +727,8 @@ export const agents: AgentRecord[] = [
     },
     useCases: [
       {
-        en: "Run structured internal bakeoffs before procurement decisions.",
-        "zh-CN": "在采购决策前运行结构化内部 bakeoff。",
+        en: "Run structured internal bakeoffs before broader rollout decisions.",
+        "zh-CN": "在更大规模上线决策前运行结构化内部 bakeoff。",
       },
       {
         en: "Produce recommendation memos with explicit tradeoffs.",
@@ -741,7 +741,7 @@ export const agents: AgentRecord[] = [
         "zh-CN": "不适合无人值守的自动采购。",
       },
     ],
-    categories: ["procurement", "workflow automation", "comparison"],
+    categories: ["evaluation", "workflow automation", "comparison"],
     verificationStatus: "draft",
     source: {
       id: "source-buyer-bakeoff-console",
@@ -773,8 +773,8 @@ export const agents: AgentRecord[] = [
         bundleHash: "sha256:agledger-bbc-031",
         changelog: [
           {
-            en: "Initial closed beta release for buyer-side procurement teams.",
-            "zh-CN": "面向买方采购团队的首个封闭测试版本。",
+            en: "Initial closed beta release for internal evaluation teams.",
+            "zh-CN": "面向内部评估团队的首个封闭测试版本。",
           },
         ],
         benchmarkRuns: [
@@ -804,8 +804,8 @@ export const agents: AgentRecord[] = [
     ],
     overview: [
       {
-        en: "This is an operator-facing evaluation console in agent form. Its job is not to wow; its job is to make procurement decisions legible.",
-        "zh-CN": "这是一种以 Agent 形式存在的面向操作员的评估控制台。它的目标不是炫技，而是让采购决策变得清晰可解释。",
+        en: "This is an operator-facing evaluation console in agent form. Its job is not to wow; its job is to make adoption decisions legible.",
+        "zh-CN": "这是一种以 Agent 形式存在的面向操作员的评估控制台。它的目标不是炫技，而是让采用决策变得清晰可解释。",
       },
     ],
     capabilities: [

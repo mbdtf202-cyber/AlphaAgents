@@ -165,7 +165,15 @@ const normalizedAgentText = (agent: AgentRecord): string =>
 
 export const filterAgents = (
   agents: AgentRecord[],
-  filters?: { query?: string; category?: string; status?: string },
+  filters?: {
+    query?: string;
+    category?: string;
+    status?: string;
+    trustTier?: string;
+    riskLevel?: string;
+    credential?: string;
+    activity?: string;
+  },
 ): AgentRecord[] => {
   const query = filters?.query?.trim().toLowerCase();
 
@@ -178,6 +186,27 @@ export const filterAgents = (
     }
     if (filters?.status && filters.status !== "all" && agent.verificationStatus !== filters.status) {
       return false;
+    }
+    if (filters?.trustTier && filters.trustTier !== "all" && agent.trust?.tier !== filters.trustTier) {
+      return false;
+    }
+    if (filters?.riskLevel && filters.riskLevel !== "all" && agent.permissionManifest.riskLevel !== filters.riskLevel) {
+      return false;
+    }
+    if (
+      filters?.credential &&
+      filters.credential !== "all" &&
+      !agent.credentials?.some(
+        (credential) => credential.type === filters.credential || credential.relatedSuiteSlug === filters.credential,
+      )
+    ) {
+      return false;
+    }
+    if (filters?.activity === "recent") {
+      const latestActivityAt = agent.activity?.[0]?.occurredAt;
+      if (!latestActivityAt || Date.now() - new Date(latestActivityAt).getTime() > 1000 * 60 * 60 * 24 * 14) {
+        return false;
+      }
     }
     return true;
   });

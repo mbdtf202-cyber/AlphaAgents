@@ -16,11 +16,11 @@ export default async function WorkspaceAgentsPage() {
     <main>
       <WorkspaceShell locale={locale} pathname="/workspace/agents" actor={actor}>
         <div className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
-          <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Managed agents" : "管理中的 Agent"}</h1>
+          <h1 className="font-display text-5xl text-ink-950">{locale === "en" ? "Managed profiles" : "管理中的档案"}</h1>
           <p className="mt-4 text-lg leading-8 text-ink-700">
             {locale === "en"
-              ? "Review active listings, benchmark freshness, install commands, and permission posture before publishing a new version."
-              : "在发布新版本前，检查活跃 listing、benchmark 新鲜度、安装命令和权限姿态。"}
+              ? "Review active public profiles, credential freshness, install commands, and permission posture before publishing a new version."
+              : "在发布新版本前，检查公开档案、凭证新鲜度、安装命令和权限姿态。"}
           </p>
         </div>
         <div className="mt-6 grid gap-6 xl:grid-cols-2">

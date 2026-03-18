@@ -18,8 +18,8 @@ export default async function LoginPage({
         <h1 className="mt-3 font-display text-5xl text-ink-950">{locale === "en" ? "Sign in to the trust layer" : "登录到信任层"}</h1>
         <p className="mt-5 text-lg leading-8 text-ink-700">
           {locale === "en"
-            ? "Builder and buyer actions now require a real session. Public catalog pages remain browseable, but reviews, install proof, moderation, shortlist creation, and benchmark requests are now authenticated operations."
-            : "Builder 和买方动作现在都要求真实 session。公开目录仍可匿名浏览，但评价、安装证明、审核、短名单和 benchmark 请求已经变成需要身份的操作。"}
+            ? "Builder and team actions now require a real session. Public profiles remain browseable, but reputation updates, deployment proof, moderation, follows, profile lists, and credential requests are authenticated operations."
+            : "Builder 和团队动作现在都要求真实 session。公开档案仍可匿名浏览，但信誉更新、部署证明、审核、关注、Profile List 和凭证请求都已变成需要身份的操作。"}
         </p>
         {params.error ? (
           <div className="mt-6 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">{params.error}</div>

@@ -1,6 +1,33 @@
-import { agents, benchmarkSuites, builders, featureSlots, moderationCases, shortlists, verifiedReviews } from "./data/index";
+import {
+  agents,
+  benchmarkSuites,
+  builders,
+  claimVerifications,
+  endorsements,
+  featureSlots,
+  featuredWorks,
+  moderationCases,
+  organizations,
+  relationshipEdges,
+  shortlists,
+  verifiedInstalls,
+  verifiedReviews,
+} from "./data/index";
+import { hydratePublicCatalog, sortAgentProfiles, sortBuilderProfiles } from "./profiles";
 import { rankingSignal, toLeaderboardEntry } from "./scoring";
-import type { AgentRecord, BenchmarkSuite, BuilderProfile, LeaderboardEntry } from "./types";
+import type { AgentProfileView, AgentRecord, BenchmarkSuite, BuilderProfile, BuilderProfileView, LeaderboardEntry } from "./types";
+
+const sampleCatalog = hydratePublicCatalog({
+  agents,
+  builders,
+  organizations,
+  relationshipEdges,
+  claimVerifications,
+  endorsements,
+  featuredWork: featuredWorks,
+  verifiedInstalls,
+  verifiedReviews,
+});
 
 function normalizedText(agent: AgentRecord): string {
   return [
@@ -20,7 +47,7 @@ function normalizedText(agent: AgentRecord): string {
 
 export function listAgents(query?: string): AgentRecord[] {
   const q = query?.trim().toLowerCase();
-  return [...agents]
+  return sortAgentProfiles([...sampleCatalog.agents])
     .filter((agent) => {
       if (!q) {
         return true;
@@ -36,8 +63,8 @@ export function listAgents(query?: string): AgentRecord[] {
 
 export function getFeaturedAgents(): AgentRecord[] {
   return featureSlots
-    .map((slot) => agents.find((agent) => agent.slug === slot.agentSlug))
-    .filter((agent): agent is AgentRecord => Boolean(agent));
+    .map((slot) => sampleCatalog.agents.find((agent) => agent.slug === slot.agentSlug))
+    .filter((agent): agent is AgentProfileView => Boolean(agent));
 }
 
 export function getFeatureSlots() {
@@ -45,15 +72,15 @@ export function getFeatureSlots() {
 }
 
 export function getAgentBySlug(slug: string): AgentRecord | undefined {
-  return agents.find((agent) => agent.slug === slug);
+  return sampleCatalog.agents.find((agent) => agent.slug === slug);
 }
 
 export function listBuilders(): BuilderProfile[] {
-  return [...builders].sort((left, right) => right.shortlistCount - left.shortlistCount);
+  return sortBuilderProfiles([...sampleCatalog.builders]);
 }
 
 export function getBuilderByHandle(handle: string): BuilderProfile | undefined {
-  return builders.find((builder) => builder.handle === handle);
+  return sampleCatalog.builders.find((builder) => builder.handle === handle);
 }
 
 export function listBenchmarkSuites(): BenchmarkSuite[] {
@@ -65,7 +92,7 @@ export function getBenchmarkSuiteBySlug(slug: string): BenchmarkSuite | undefine
 }
 
 export function getLeaderboards(): Record<string, LeaderboardEntry[]> {
-  const entries = agents.flatMap((agent) => agent.versions[0]?.benchmarkRuns.map((run) => toLeaderboardEntry(run, agent)) ?? []);
+  const entries = sampleCatalog.agents.flatMap((agent) => agent.versions[0]?.benchmarkRuns.map((run) => toLeaderboardEntry(run, agent)) ?? []);
   return entries.reduce<Record<string, LeaderboardEntry[]>>((accumulator, entry) => {
     const next = accumulator[entry.suiteSlug] ?? [];
     next.push(entry);
@@ -79,6 +106,14 @@ export function compareAgents(slugs: string[]): AgentRecord[] {
     .map((slug) => getAgentBySlug(slug))
     .filter((agent): agent is AgentRecord => Boolean(agent))
     .slice(0, 4);
+}
+
+export function getSampleHydratedAgents(): AgentProfileView[] {
+  return sampleCatalog.agents;
+}
+
+export function getSampleHydratedBuilders(): BuilderProfileView[] {
+  return sampleCatalog.builders;
 }
 
 export function getCollections() {

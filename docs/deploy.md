@@ -2,7 +2,7 @@
 
 ## Topology
 
-AlphaAgents `v0.6.0` ships as three runtime services plus an external database:
+AlphaAgents `v0.6.1` ships as three runtime services plus an external database:
 
 - `web`: Next.js application server
 - `benchmark-worker`: pg-boss consumer for benchmark requests

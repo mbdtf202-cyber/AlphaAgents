@@ -20,7 +20,7 @@ This repository now operates as a **production-oriented trust and decision platf
 - admin surfaces can now manage featured slots, review visibility, benchmark reruns, and flag resolution
 - sample overlay remains available for non-production preview but is disabled by default in production
 
-## What ships in v0.6.0
+## What ships in v0.6.1
 
 - Public product site with evidence-first agent and builder profiles
 - Live-featured homepage slots backed by database state
@@ -91,5 +91,5 @@ This repository now ships a **decision-oriented production candidate** with veri
 
 ## Release
 
-- Current release: `v0.6.0`
+- Current release: `v0.6.1`
 - GitHub release is tagged directly from `main` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, `pnpm build`, postgres integration, and browser smoke all pass.

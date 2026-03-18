@@ -39,11 +39,22 @@ describe("auth", () => {
 
   it("builds and clears secure cookies in production", () => {
     setNodeEnv("production");
+    delete process.env.ALPHA_AGENTS_FORCE_INSECURE_COOKIES;
 
     expect(buildSessionCookie("raw", new Date("2026-03-18T00:00:00.000Z"))).toContain("Secure");
     expect(clearSessionCookie()).toContain("Secure");
     expect(buildTransientCookie("state", "abc", 60)).toContain("Secure");
     expect(clearTransientCookie("state")).toContain("Secure");
+  });
+
+  it("allows opting out of secure cookies in production", () => {
+    setNodeEnv("production");
+    process.env.ALPHA_AGENTS_FORCE_INSECURE_COOKIES = "true";
+
+    expect(buildSessionCookie("raw", new Date("2026-03-18T00:00:00.000Z"))).not.toContain("Secure");
+    expect(clearSessionCookie()).not.toContain("Secure");
+    expect(buildTransientCookie("state", "abc", 60)).not.toContain("Secure");
+    expect(clearTransientCookie("state")).not.toContain("Secure");
   });
 
   it("resolves a memory backed session from request cookies", async () => {

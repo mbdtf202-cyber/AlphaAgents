@@ -163,7 +163,7 @@ jobs:
 
       - name: Wait For Readiness
         run: |
-          for i in {1..30}; do
+          for _ in {1..30}; do
             if curl -fsS http://localhost:3100/api/readyz > /tmp/readyz.json; then
               cat /tmp/readyz.json
               exit 0

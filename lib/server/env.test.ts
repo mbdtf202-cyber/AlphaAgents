@@ -108,7 +108,7 @@ describe("env", () => {
     process.env.POSTMARK_MESSAGE_STREAM = "outbound";
     process.env.SENTRY_DSN = "https://public@example.ingest.sentry.io/1";
     process.env.SENTRY_ENVIRONMENT = "production";
-    process.env.SENTRY_RELEASE = "v0.6.0";
+    process.env.SENTRY_RELEASE = "v0.6.1";
 
     expect(() => validateRuntimeConfig("web")).toThrow("must share the same origin");
   });

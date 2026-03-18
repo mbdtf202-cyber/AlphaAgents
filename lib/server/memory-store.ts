@@ -10,6 +10,7 @@ import type {
   ClaimVerification,
   DecisionMemo,
   Endorsement,
+  FeatureSlot,
   FeaturedWork,
   ModerationCase,
   OrganizationProfile,
@@ -28,6 +29,7 @@ import {
   decisionMemos,
   endorsements,
   featuredWorks,
+  featureSlots,
   moderationCases,
   organizations,
   relationshipEdges,
@@ -76,6 +78,7 @@ export interface MemoryState {
   claimVerifications: ClaimVerification[];
   endorsements: Endorsement[];
   featuredWork: FeaturedWork[];
+  featureSlots: FeatureSlot[];
   installs: VerifiedInstall[];
   reviews: VerifiedReview[];
   shortlists: ShortlistRecord[];
@@ -141,6 +144,7 @@ function createInitialState(): MemoryState {
     claimVerifications: claimVerifications.map((claim) => ({ ...claim })),
     endorsements: endorsements.map((endorsement) => ({ ...endorsement })),
     featuredWork: featuredWorks.map((work) => ({ ...work })),
+    featureSlots: featureSlots.map((slot) => ({ ...slot, provenance: sampleProvenance })),
     installs: verifiedInstalls.map((install) => ({ ...install, provenance: sampleProvenance })),
     reviews: verifiedReviews.map((review) => ({ ...review, provenance: sampleProvenance })),
     shortlists: shortlists.map((shortlist) => ({ ...shortlist })),

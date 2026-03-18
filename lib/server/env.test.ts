@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   getAppUrl,
+  getCanonicalRequestRedirect,
   getStorageMode,
   isTestMailerEnabled,
   validateRuntimeConfig,
@@ -91,5 +92,35 @@ describe("env", () => {
 
     setNodeEnv("production");
     expect(() => getAppUrl()).toThrow("ALPHA_AGENTS_APP_URL is required in production.");
+  });
+
+  it("rejects mismatched public and canonical app origins in production", () => {
+    setNodeEnv("production");
+    process.env.ALPHA_AGENTS_STORAGE = "postgres";
+    process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/alpha_agents";
+    process.env.ALPHA_AGENTS_APP_URL = "https://alpha.example.com";
+    process.env.NEXT_PUBLIC_APP_URL = "https://preview.example.com";
+    process.env.ALPHA_AGENTS_AUTH_SECRET = "secret";
+    process.env.GITHUB_CLIENT_ID = "github-client";
+    process.env.GITHUB_CLIENT_SECRET = "github-secret";
+    process.env.POSTMARK_SERVER_TOKEN = "postmark-token";
+    process.env.POSTMARK_FROM_EMAIL = "noreply@example.com";
+    process.env.POSTMARK_MESSAGE_STREAM = "outbound";
+    process.env.SENTRY_DSN = "https://public@example.ingest.sentry.io/1";
+    process.env.SENTRY_ENVIRONMENT = "production";
+    process.env.SENTRY_RELEASE = "v0.6.0";
+
+    expect(() => validateRuntimeConfig("web")).toThrow("must share the same origin");
+  });
+
+  it("builds a canonical redirect when the incoming host drifts", () => {
+    setNodeEnv("test");
+    process.env.ALPHA_AGENTS_APP_URL = "http://localhost:3100";
+
+    const redirect = getCanonicalRequestRedirect(
+      new Request("http://127.0.0.1:3100/api/auth/magic-link/verify?token=abc"),
+    );
+
+    expect(redirect?.toString()).toBe("http://localhost:3100/api/auth/magic-link/verify?token=abc");
   });
 });

@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { buildSessionCookie, hashToken, requireConfiguredAuthForWrite } from "../../../../../lib/server/auth";
+import { getCanonicalRequestRedirect } from "../../../../../lib/server/env";
 import { getPreferredWorkspacePathFromRequest } from "../../../../../lib/server/preferences";
 import { getRepositoryBundle } from "../../../../../lib/server/repositories";
 
 export async function GET(request: Request) {
   try {
+    const canonicalRedirect = getCanonicalRequestRedirect(request);
+    if (canonicalRedirect) {
+      return NextResponse.redirect(canonicalRedirect);
+    }
     requireConfiguredAuthForWrite();
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");

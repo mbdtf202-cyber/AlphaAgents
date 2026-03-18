@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { buildTransientCookie, generateOpaqueToken, requireConfiguredAuthForWrite, OAUTH_STATE_COOKIE_NAME } from "../../../../../lib/server/auth";
-import { getAppUrl, getGitHubConfig } from "../../../../../lib/server/env";
+import { getAppUrl, getCanonicalRequestRedirect, getGitHubConfig } from "../../../../../lib/server/env";
 import { enforceRateLimit, getClientIp } from "../../../../../lib/server/rate-limit";
 
 function redirectToLoginError(request: Request, error: string) {
@@ -10,6 +10,10 @@ function redirectToLoginError(request: Request, error: string) {
 
 export async function GET(request: Request) {
   try {
+    const canonicalRedirect = getCanonicalRequestRedirect(request);
+    if (canonicalRedirect) {
+      return NextResponse.redirect(canonicalRedirect);
+    }
     requireConfiguredAuthForWrite();
     await enforceRateLimit("github-start-ip", getClientIp(request));
     const { clientId } = getGitHubConfig();

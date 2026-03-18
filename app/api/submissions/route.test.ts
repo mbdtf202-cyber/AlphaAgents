@@ -45,6 +45,8 @@ describe("POST /api/submissions", () => {
           dependencies: ["GitHub repository access"],
           knownLimits: [{ en: "Draft only", "zh-CN": "仅草稿" }],
           supportedEnvironments: ["macOS"],
+          initialVersion: "0.1.0",
+          initialBundleHash: "sha256:submission-bundle-hash",
         }),
       }),
     );

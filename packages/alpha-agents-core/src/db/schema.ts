@@ -214,12 +214,18 @@ export const benchmarkRunsTable = pgTable(
   "alpha_agents_benchmark_runs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    benchmarkRequestId: uuid("benchmark_request_id").references(() => benchmarkRequestsTable.id),
     suiteId: uuid("suite_id")
       .references(() => benchmarkSuitesTable.id)
       .notNull(),
     agentVersionId: uuid("agent_version_id")
       .references(() => agentVersions.id)
       .notNull(),
+    executorId: varchar("executor_id", { length: 160 }).default("unknown-executor").notNull(),
+    executionRef: varchar("execution_ref", { length: 255 }).default("untracked").notNull(),
+    verificationStatus: varchar("verification_status", { length: 32 }).default("pending").notNull(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verifierId: varchar("verifier_id", { length: 160 }),
     publicRank: integer("public_rank").default(0).notNull(),
     peerGroupSize: integer("peer_group_size").default(0).notNull(),
     bundleHash: varchar("bundle_hash", { length: 255 }).notNull(),
@@ -232,7 +238,11 @@ export const benchmarkRunsTable = pgTable(
     notes: jsonb("notes").default(sql`'{}'::jsonb`).notNull(),
     ...timestamps,
   },
-  (table) => [index("alpha_agents_benchmark_run_version_idx").on(table.agentVersionId)],
+  (table) => [
+    index("alpha_agents_benchmark_run_version_idx").on(table.agentVersionId),
+    index("alpha_agents_benchmark_run_request_idx").on(table.benchmarkRequestId),
+    index("alpha_agents_benchmark_run_verification_idx").on(table.verificationStatus),
+  ],
 );
 
 export const benchmarkRequestsTable = pgTable(
@@ -281,6 +291,18 @@ export const benchmarkArtifactsTable = pgTable("alpha_agents_benchmark_artifacts
   finalArtifactUrl: text("final_artifact_url"),
   screenshotUrl: text("screenshot_url"),
   htmlArtifactUrl: text("html_artifact_url"),
+  executorId: varchar("executor_id", { length: 160 }).default("unknown-executor").notNull(),
+  executionRef: varchar("execution_ref", { length: 255 }).default("untracked").notNull(),
+  inputDigest: varchar("input_digest", { length: 255 }).default("").notNull(),
+  environmentDigest: varchar("environment_digest", { length: 255 }).default("").notNull(),
+  outputDigest: varchar("output_digest", { length: 255 }).default("").notNull(),
+  replayRef: text("replay_ref"),
+  artifactManifest: jsonb("artifact_manifest").default(sql`'[]'::jsonb`).notNull(),
+  attestation: jsonb("attestation").default(sql`'{}'::jsonb`).notNull(),
+  verificationStatus: varchar("verification_status", { length: 32 }).default("pending").notNull(),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  verifierId: varchar("verifier_id", { length: 160 }),
+  verificationFailureReason: text("verification_failure_reason"),
   rubric: jsonb("rubric").default(sql`'{}'::jsonb`).notNull(),
   ...timestamps,
 });
@@ -361,6 +383,7 @@ export const verifiedReviewsTable = pgTable("alpha_agents_verified_reviews", {
   headline: jsonb("headline").default(sql`'{}'::jsonb`).notNull(),
   body: jsonb("body").default(sql`'{}'::jsonb`).notNull(),
   rating: integer("rating").notNull(),
+  visibilityStatus: varchar("visibility_status", { length: 32 }).default("visible").notNull(),
   dimensions: jsonb("dimensions").default(sql`'{}'::jsonb`).notNull(),
   context: jsonb("context").default(sql`'{}'::jsonb`).notNull(),
   ...timestamps,
@@ -495,6 +518,8 @@ export const submissionsTable = pgTable("alpha_agents_submissions", {
   dependencies: jsonb("dependencies").default(sql`'[]'::jsonb`).notNull(),
   knownLimits: jsonb("known_limits").default(sql`'[]'::jsonb`).notNull(),
   supportedEnvironments: jsonb("supported_environments").default(sql`'[]'::jsonb`).notNull(),
+  initialVersion: varchar("initial_version", { length: 64 }).default("0.1.0").notNull(),
+  initialBundleHash: varchar("initial_bundle_hash", { length: 255 }).default("sha256:pending-initial-bundle").notNull(),
   status: varchar("status", { length: 32 }).default("pending").notNull(),
   ...timestamps,
 });

@@ -1,7 +1,6 @@
-import { resolveText } from "@openclaw/alpha-agents-core";
-
 import { ExplainerShell } from "../../../components/explainers/explainer-shell";
 import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
+import { ReviewVisibilityForm } from "../../../components/review-visibility-form";
 import { getCurrentLocale } from "../../../lib/locale";
 import { requirePageSession } from "../../../lib/server/page-session";
 import { getWorkspaceData } from "../../../lib/server/repository";
@@ -46,12 +45,8 @@ export default async function AdminReviewsPage() {
       </div>
       <div className="mt-6 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
         <div className="mt-6 grid gap-4">
-          {workspace.reviewHighlights.map((review) => (
-            <article key={review.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
-              <p className="text-sm text-ink-500">{review.company}</p>
-              <h2 className="mt-3 text-2xl font-semibold text-ink-950">{resolveText(review.headline, locale)}</h2>
-              <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(review.body, locale)}</p>
-            </article>
+          {workspace.reviews.map((review) => (
+            <ReviewVisibilityForm key={review.id} locale={locale} review={review} />
           ))}
         </div>
       </div>

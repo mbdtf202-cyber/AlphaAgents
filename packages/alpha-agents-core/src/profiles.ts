@@ -20,6 +20,7 @@ import type {
   VerifiedInstall,
   VerifiedReview,
 } from "./types";
+import { isVerifiedBenchmarkRun } from "./scoring";
 
 function text(en: string, zh = en): LocalizedText {
   return { en, "zh-CN": zh };
@@ -247,7 +248,7 @@ function buildAgentCredentials(
   claims: ClaimVerification[],
 ): ProfileCredential[] {
   const benchmarkCredentials = agent.versions.flatMap((version) =>
-    version.benchmarkRuns.map((run) => ({
+    version.benchmarkRuns.filter(isVerifiedBenchmarkRun).map((run) => ({
       id: `credential-${agent.slug}-${run.id}`,
       type: "benchmark" as const,
       title: text(`Benchmark credential: ${run.suiteSlug}`, `基准凭证：${run.suiteSlug}`),
@@ -496,7 +497,7 @@ function buildAgentActivity(
     provenance: version.provenance,
   }));
   const benchmarkEvents = agent.versions.flatMap((version) =>
-    version.benchmarkRuns.map((run) => ({
+    version.benchmarkRuns.filter(isVerifiedBenchmarkRun).map((run) => ({
       id: `activity-benchmark-${run.id}`,
       type: "benchmark-completed" as const,
       subjectType: "agent" as const,
@@ -705,13 +706,16 @@ export function hydratePublicCatalog(input: {
     const affiliatedOrganizations = relatedOrganizations("agent", agent.id, input.organizations, input.relationshipEdges);
     const preliminaryChecks = buildAgentChecks(agent, [], [], featuredWork);
     const preliminaryPercent = Math.round((preliminaryChecks.filter((check) => check.complete).length / preliminaryChecks.length) * 100);
-    const benchmarkAt = agent.versions.flatMap((version) => version.benchmarkRuns).sort((left, right) => timestamp(right.evaluatedAt) - timestamp(left.evaluatedAt))[0]?.evaluatedAt;
+    const benchmarkAt = agent.versions
+      .flatMap((version) => version.benchmarkRuns)
+      .filter(isVerifiedBenchmarkRun)
+      .sort((left, right) => timestamp(right.evaluatedAt) - timestamp(left.evaluatedAt))[0]?.evaluatedAt;
     const primaryBadges = buildAgentBadges(agent, reviews, installs, preliminaryPercent, benchmarkAt);
     const credentials = buildAgentCredentials(agent, installs, reviews, claims);
     const activity = buildAgentActivity(agent, primaryBadges, installs, reviews, claims, endorsements, featuredWork);
     const checks = buildAgentChecks(agent, credentials, activity, featuredWork);
     const verifiedClaimTypes = new Set<string>();
-    if (agent.versions.some((version) => version.benchmarkRuns.length > 0)) {
+    if (agent.versions.some((version) => version.benchmarkRuns.some(isVerifiedBenchmarkRun))) {
       verifiedClaimTypes.add("benchmark");
     }
     if (installs.length > 0) {
@@ -808,7 +812,10 @@ export function hydratePublicCatalog(input: {
       verifiedDeploymentCount: builtAgents.filter((agent) =>
         agent.credentials.some((credential) => credential.type === "deployment" && credential.verified),
       ).length,
-      benchmarkWins: builtAgents.flatMap((agent) => agent.versions).flatMap((version) => version.benchmarkRuns).filter((run) => run.publicRank === 1).length,
+      benchmarkWins: builtAgents
+        .flatMap((agent) => agent.versions)
+        .flatMap((version) => version.benchmarkRuns)
+        .filter((run) => isVerifiedBenchmarkRun(run) && run.publicRank === 1).length,
       verifiedReviewCount: builtAgents.reduce((sum, agent) => sum + agent.reviews.length, 0),
     };
   });
@@ -839,8 +846,16 @@ export function sortAgentProfiles(agents: AgentProfileView[]): AgentProfileView[
       return reviewDelta > 0 ? 1 : -1;
     }
     const benchmarkDelta =
-      average(right.versions.flatMap((version) => version.benchmarkRuns.map((run) => run.scorecard.overall))) -
-      average(left.versions.flatMap((version) => version.benchmarkRuns.map((run) => run.scorecard.overall)));
+      average(
+        right.versions.flatMap((version) =>
+          version.benchmarkRuns.filter(isVerifiedBenchmarkRun).map((run) => run.scorecard.overall),
+        ),
+      ) -
+      average(
+        left.versions.flatMap((version) =>
+          version.benchmarkRuns.filter(isVerifiedBenchmarkRun).map((run) => run.scorecard.overall),
+        ),
+      );
     if (benchmarkDelta !== 0) {
       return benchmarkDelta > 0 ? 1 : -1;
     }

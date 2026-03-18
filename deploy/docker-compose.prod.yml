@@ -1,0 +1,37 @@
+services:
+  web:
+    image: ${ALPHA_AGENTS_IMAGE}
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["pnpm", "start"]
+    ports:
+      - "127.0.0.1:3100:3100"
+
+  benchmark-worker:
+    image: ${ALPHA_AGENTS_IMAGE}
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["pnpm", "worker:benchmarks"]
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

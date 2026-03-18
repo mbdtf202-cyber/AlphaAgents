@@ -40,7 +40,7 @@ describeIfDatabase("postgres integration", () => {
     await checkDbConnection();
 
     const requestResponse = await requestMagicLink(
-      new Request("http://localhost/api/auth/magic-link/request", {
+      new Request("http://localhost:3100/api/auth/magic-link/request", {
         method: "POST",
         headers: { "content-type": "application/json", "x-forwarded-for": "127.0.0.1" },
         body: JSON.stringify({
@@ -58,7 +58,7 @@ describeIfDatabase("postgres integration", () => {
     );
 
     expect(requestResponse.status).toBe(202);
-    expect(verifyResponse.headers.get("location")).toBe("http://localhost/workspace");
+    expect(verifyResponse.headers.get("location")).toBe("http://localhost:3100/workspace");
 
     const bundle = await getRepositoryBundle();
     await expect(bundle.authRepository.consumeMagicLink(hashToken(new URL(requestJson.previewUrl).searchParams.get("token")!))).rejects.toThrow(
@@ -80,7 +80,7 @@ describeIfDatabase("postgres integration", () => {
     const buyerSession = await createBuyerSession();
 
     const installResponse = await verifyInstall(
-      new Request("http://localhost/api/installs/verify", {
+      new Request("http://localhost:3100/api/installs/verify", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -97,7 +97,7 @@ describeIfDatabase("postgres integration", () => {
     const installJson = await installResponse.json();
 
     const reviewResponse = await createReview(
-      new Request("http://localhost/api/reviews", {
+      new Request("http://localhost:3100/api/reviews", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -133,7 +133,7 @@ describeIfDatabase("postgres integration", () => {
     );
 
     const followResponse = await followProfile(
-      new Request("http://localhost/api/follows", {
+      new Request("http://localhost:3100/api/follows", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -146,7 +146,7 @@ describeIfDatabase("postgres integration", () => {
       }),
     );
     const unfollowResponse = await unfollowProfile(
-      new Request("http://localhost/api/follows", {
+      new Request("http://localhost:3100/api/follows", {
         method: "DELETE",
         headers: {
           "content-type": "application/json",
@@ -160,7 +160,7 @@ describeIfDatabase("postgres integration", () => {
     );
 
     const shortlistResponse = await createShortlist(
-      new Request("http://localhost/api/workspace/shortlists", {
+      new Request("http://localhost:3100/api/workspace/shortlists", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -179,7 +179,7 @@ describeIfDatabase("postgres integration", () => {
     const shortlistJson = await shortlistResponse.json();
 
     const decisionMemoResponse = await createDecisionMemo(
-      new Request("http://localhost/api/workspace/decision-memos", {
+      new Request("http://localhost:3100/api/workspace/decision-memos", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -211,7 +211,7 @@ describeIfDatabase("postgres integration", () => {
     );
 
     const publishResponse = await publishVersion(
-      new Request(`http://localhost/api/agent-records/${fixture.agentSlug}/publish`, {
+      new Request(`http://localhost:3100/api/agent-records/${fixture.agentSlug}/publish`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -226,7 +226,7 @@ describeIfDatabase("postgres integration", () => {
     );
 
     const benchmarkResponse = await requestBenchmark(
-      new Request(`http://localhost/api/agent-records/${fixture.agentSlug}/request-benchmark`, {
+      new Request(`http://localhost:3100/api/agent-records/${fixture.agentSlug}/request-benchmark`, {
         method: "POST",
         headers: {
           "content-type": "application/json",

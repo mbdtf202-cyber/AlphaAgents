@@ -56,6 +56,8 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
       dependencies: string[];
       knownLimits: Array<{ en: string; "zh-CN": string }>;
       supportedEnvironments: string[];
+      initialVersion: string;
+      initialBundleHash: string;
       recommendedBenchmarks: string[];
     };
 
@@ -84,6 +86,8 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
     assign("dependencies", imported.dependencies.join(", "));
     assign("supportedEnvironments", imported.supportedEnvironments.join(", "));
     assign("knownLimits", imported.knownLimits.map((item) => item.en).join("\n"));
+    assign("initialVersion", imported.initialVersion);
+    assign("initialBundleHash", imported.initialBundleHash);
 
     const shellAccess = form.elements.namedItem("shellAccess");
     if (shellAccess instanceof HTMLInputElement) {
@@ -148,6 +152,8 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
         .split(",")
         .map((value) => value.trim())
         .filter(Boolean),
+      initialVersion: String(formData.get("initialVersion") ?? ""),
+      initialBundleHash: String(formData.get("initialBundleHash") ?? ""),
     };
 
     const response = await fetch("/api/submissions", {
@@ -203,6 +209,16 @@ export function SubmissionForm({ locale }: { locale: Locale }) {
         className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6"
         action={handleSubmit}
       >
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Initial version" : "初始版本"}
+          <input name="initialVersion" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="0.1.0" />
+        </label>
+        <label className="grid gap-2 text-sm text-ink-700">
+          {locale === "en" ? "Initial bundle hash" : "初始 bundle hash"}
+          <input name="initialBundleHash" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="sha256:..." />
+        </label>
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm text-ink-700">
           {locale === "en" ? "Agent name" : "Agent 名称"}

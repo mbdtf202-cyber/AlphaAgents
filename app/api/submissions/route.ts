@@ -35,6 +35,8 @@ export async function POST(request: Request) {
       dependencies: parsed.dependencies,
       knownLimits: parsed.knownLimits,
       supportedEnvironments: parsed.supportedEnvironments,
+      initialVersion: parsed.initialVersion,
+      initialBundleHash: parsed.initialBundleHash,
       status: "pending",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

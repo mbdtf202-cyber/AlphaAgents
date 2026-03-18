@@ -10,6 +10,8 @@ describe("magic link flow", () => {
     process.env.ALPHA_AGENTS_STORAGE = "memory";
     (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     process.env.ALPHA_AGENTS_ENABLE_TEST_MAILER = "true";
+    process.env.ALPHA_AGENTS_APP_URL = "http://localhost:3200";
+    process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3200";
     resetMemoryState();
     resetRateLimiters();
   });

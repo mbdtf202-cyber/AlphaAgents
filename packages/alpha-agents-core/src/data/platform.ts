@@ -58,6 +58,7 @@ export const decisionMemos: DecisionMemo[] = [
 export const featureSlots: FeatureSlot[] = [
   {
     id: "feature-1",
+    slotKey: "coding-primary",
     title: {
       en: "Featured coding operator",
       "zh-CN": "精选编码操作员",
@@ -71,6 +72,7 @@ export const featureSlots: FeatureSlot[] = [
   },
   {
     id: "feature-2",
+    slotKey: "research-primary",
     title: {
       en: "Featured research operator",
       "zh-CN": "精选研究操作员",
@@ -84,6 +86,7 @@ export const featureSlots: FeatureSlot[] = [
   },
   {
     id: "feature-3",
+    slotKey: "workflow-primary",
     title: {
       en: "Featured workflow operator",
       "zh-CN": "精选工作流操作员",

@@ -7,6 +7,8 @@ export type BenchmarkRequestStatus = "queued" | "running" | "completed" | "faile
 export type DecisionState = "hold" | "pilot" | "rollout" | "reject";
 export type ProfileSubjectType = "agent" | "builder" | "organization";
 export type RelationshipNodeType = ProfileSubjectType | "user";
+export type BenchmarkVerificationStatus = "pending" | "verified" | "invalid";
+export type ReviewVisibilityStatus = "visible" | "hidden";
 export type ActivityEventType =
   | "version-published"
   | "benchmark-completed"
@@ -188,7 +190,7 @@ export type BuilderType = "solo" | "studio" | "organization";
 export type SourceKind = "clawhub" | "github" | "agent-pack";
 export type PermissionRiskLevel = "low" | "medium" | "high";
 export type BenchmarkTrack = "coding" | "research" | "support-ops" | "workflow-automation";
-export type ModerationStatus = "pending" | "changes-requested" | "approved" | "rejected";
+export type ModerationStatus = "pending" | "changes-requested" | "approved" | "rejected" | "resolved" | "reopened";
 
 export type RepoSize = "small" | "medium" | "large";
 export type DataSensitivity = "low" | "medium" | "high" | "restricted";
@@ -310,6 +312,36 @@ export interface BenchmarkScorecard extends ScoreBreakdown {
   overall: number;
 }
 
+export interface BenchmarkArtifactLink {
+  kind: "transcript" | "tool-trace" | "final-artifact" | "screenshot" | "html-artifact";
+  url: string;
+  digest: string;
+}
+
+export interface BenchmarkExecutionEvidence {
+  executorId: string;
+  executionRef: string;
+  inputDigest: string;
+  environmentDigest: string;
+  outputDigest: string;
+  replayRef?: string;
+}
+
+export interface BenchmarkAttestation {
+  keyId: string;
+  algorithm: "hmac-sha256";
+  payload: string;
+  signature: string;
+  signedAt: string;
+}
+
+export interface BenchmarkVerificationRecord {
+  status: BenchmarkVerificationStatus;
+  verifiedAt?: string;
+  verifierId?: string;
+  failureReason?: string;
+}
+
 export interface BenchmarkRun {
   id: string;
   suiteSlug: string;
@@ -326,6 +358,10 @@ export interface BenchmarkRun {
   finalArtifactUrl?: string;
   screenshotUrl?: string;
   htmlArtifactUrl?: string;
+  execution?: BenchmarkExecutionEvidence;
+  artifactManifest?: BenchmarkArtifactLink[];
+  attestation?: BenchmarkAttestation;
+  verification?: BenchmarkVerificationRecord;
   scorecard: BenchmarkScorecard;
   notes: LocalizedText;
   provenance?: ProvenanceInfo;
@@ -367,6 +403,7 @@ export interface VerifiedReview {
   dimensions: ScoreBreakdown;
   context?: ReviewContext;
   createdAt: string;
+  visibilityStatus?: ReviewVisibilityStatus;
   ownerUserId?: string;
   ownerOrganizationId?: string;
   provenance?: ProvenanceInfo;
@@ -434,6 +471,7 @@ export interface ModerationCase {
 
 export interface FeatureSlot {
   id: string;
+  slotKey: string;
   title: LocalizedText;
   description: LocalizedText;
   agentSlug: string;
@@ -516,6 +554,8 @@ export interface AgentSubmissionRecord {
   dependencies: string[];
   knownLimits: LocalizedText[];
   supportedEnvironments: string[];
+  initialVersion: string;
+  initialBundleHash: string;
   status: ModerationStatus;
   createdAt: string;
   updatedAt: string;
@@ -528,6 +568,10 @@ export interface BenchmarkArtifactBundle {
   finalArtifactUrl?: string;
   screenshotUrl?: string;
   htmlArtifactUrl?: string;
+  execution: BenchmarkExecutionEvidence;
+  artifactManifest: BenchmarkArtifactLink[];
+  attestation: BenchmarkAttestation;
+  verification: BenchmarkVerificationRecord;
   rubric: Record<string, number | string>;
 }
 

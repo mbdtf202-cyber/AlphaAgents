@@ -13,35 +13,25 @@ AlphaAgents is a TypeScript-first web platform for **OpenClaw-native agents**. I
 - profile lists and evaluation briefs
 - workspace submission, verification, and moderation surfaces
 
-This repository now operates as a **mixed preview with production hardening**:
+This repository now operates as a **production-oriented trust and decision platform**:
 
-- sample content remains available as explicit fallback/demo content
-- live data can overlay sample content in public and workspace surfaces
-- provenance labels distinguish sample from live evidence
+- signed benchmark artifacts and verification metadata back public credentials
+- moderation decisions move real entity state instead of stopping at queue bookkeeping
+- admin surfaces can now manage featured slots, review visibility, benchmark reruns, and flag resolution
+- sample overlay remains available for non-production preview but is disabled by default in production
 
-## What ships in v0.5.0-rc.3
+## What ships in v0.6.0
 
-- Public product site with long-form positioning and featured agents
-- Live-aware public catalog overlay for agents, builders, compare, leaderboards, and sitemap generation
-- Agent directory with search, filtering, and mixed sample/live provenance handling
-- Builder directory and builder profile pages backed by live-aware catalog reads
-- Benchmark suite pages and leaderboard views driven by unified read models
-- Secondary team evaluation flow with compare, weighted profile-list drafting, constraints capture, and evaluation-brief generation
-- Evaluation-brief deliverable view with print/export-friendly output
-- Builder workspace with:
-  - source import draft generation
-  - submission drafting
-  - install verification
-  - benchmark request form
-  - version publish form
-  - review publishing form
-- Admin moderation preview with submission/version moderation closure
-- Mixed preview storage modes: `sample`, `memory`, `postgres`
-- Explicit production config validation and committed Drizzle migrations
-- Postmark-backed magic link delivery and GitHub OAuth entrypoints
-- pg-boss benchmark queue with worker heartbeat, health, readiness, and metrics endpoints
-- Governance playbook, operations runbook, lint, coverage, Playwright smoke, and GitHub Actions CI
-- Shared domain package and benchmark runner package with persisted benchmark completion artifacts
+- Public product site with evidence-first agent and builder profiles
+- Live-featured homepage slots backed by database state
+- Agent directory, compare, leaderboards, and benchmark views driven by verified run data
+- Builder workspace with draft submission, version publish, benchmark request, install verification, and structured review publishing
+- Buyer workspace with shortlist creation and evaluation brief generation
+- Admin operations for moderation closure, featured placement, review visibility, benchmark reruns/failures, and flag handling
+- Signed benchmark artifact bundles with executor identity, digests, attestation payloads, and verification status
+- Canonical-host auth handling for GitHub OAuth and magic-link flows
+- Production deployment assets for GHCR image publishing, remote Docker VM rollout, Caddy reverse proxy, and health-gated migration-first deploys
+- Mixed storage modes for preview/dev plus production-grade postgres persistence
 
 ## Stack
 
@@ -81,11 +71,11 @@ pnpm build
 - `content/` - MDX long-form copy
 - `lib/` - locale and data wiring
 - `packages/alpha-agents-core/` - types, seed data, ranking logic, zod schemas, Drizzle schema
-- `packages/alpha-agents-runner/` - benchmark job protocol and worker-side demo execution
+- `packages/alpha-agents-runner/` - benchmark job protocol and attested benchmark execution
 
 ## Product scope
 
-This repository currently ships a **mixed production-style preview** with seeded fallback content, live-aware public catalogs, typed contracts, benchmark queue persistence, and identity/reputation workflows for agents.
+This repository now ships a **decision-oriented production candidate** with verified benchmark evidence, moderation closure, live admin controls, and deployment automation for agents.
 
 ## Governance
 
@@ -101,5 +91,5 @@ This repository currently ships a **mixed production-style preview** with seeded
 
 ## Release
 
-- Current release candidate: `v0.5.0-rc.3`
+- Current release: `v0.6.0`
 - GitHub release is tagged directly from `main` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, `pnpm build`, postgres integration, and browser smoke all pass.

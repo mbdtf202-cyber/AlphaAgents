@@ -44,6 +44,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
   }
 
   const version = agent.versions[0];
+  const verifiedRuns = version.benchmarkRuns.filter((run) => !run.verification || run.verification.status === "verified");
 
   return (
     <main className="mx-auto grid max-w-[1440px] gap-8 px-5 py-14 md:px-8 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -228,6 +229,51 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
                 <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(review.body, locale)}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Verified benchmark evidence" : "已验证 benchmark 证据"}</h2>
+          <p className="mt-3 max-w-[64ch] text-lg leading-8 text-ink-700">
+            {locale === "en"
+              ? "These runs are not just scores. They carry execution identity, bundle hash, and verification state so buyers can understand why a credential should be trusted."
+              : "这些 run 不只是分数，还带有执行器身份、bundle hash 和验签状态，方便买方判断凭证为什么值得信任。"}
+          </p>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {verifiedRuns.length > 0 ? (
+              verifiedRuns.map((run) => (
+                <article key={run.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+                  <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-copper-700">
+                    <span>{run.suiteSlug}</span>
+                    <span>{run.verification?.status ?? "verified"}</span>
+                    <span>{run.execution?.executorId ?? "seeded"}</span>
+                  </div>
+                  <div className="mt-4 grid gap-3 text-sm leading-7 text-ink-700">
+                    <div>{locale === "en" ? "Overall" : "综合分"}: {run.scorecard.overall}</div>
+                    <div>{locale === "en" ? "Bundle hash" : "Bundle Hash"}: <span className="anywhere">{run.bundleHash}</span></div>
+                    <div>{locale === "en" ? "Execution ref" : "执行引用"}: <span className="anywhere">{run.execution?.executionRef ?? run.id}</span></div>
+                    <div>{locale === "en" ? "Replay ref" : "重放引用"}: <span className="anywhere">{run.execution?.replayRef ?? "--"}</span></div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <a href={run.transcriptUrl} className="text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                      {locale === "en" ? "Transcript" : "Transcript"}
+                    </a>
+                    <a href={run.toolTraceUrl} className="text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                      {locale === "en" ? "Tool trace" : "Tool Trace"}
+                    </a>
+                    {run.htmlArtifactUrl ? (
+                      <a href={run.htmlArtifactUrl} className="text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                        {locale === "en" ? "HTML artifact" : "HTML 工件"}
+                      </a>
+                    ) : null}
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] bg-parchment-deep p-5 text-base leading-8 text-ink-700">
+                {locale === "en" ? "No verified benchmark evidence yet." : "还没有已验证 benchmark 证据。"}
+              </div>
+            )}
           </div>
         </section>
 

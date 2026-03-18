@@ -4,6 +4,7 @@ import type {
   BenchmarkRequestRecord,
   BuilderProfile,
   DecisionMemo,
+  FeatureSlot,
   ModerationCase,
   PublicMetricsSummary,
   RelationshipEdge,
@@ -36,6 +37,7 @@ export interface InstallRepository {
 export interface ReviewRepository {
   createVerifiedReview(actor: SessionActor, input: VerifiedReview): Promise<VerifiedReview>;
   listReviewsForActor(actor: SessionActor): Promise<VerifiedReview[]>;
+  updateVisibility(actor: SessionActor, reviewId: string, visibilityStatus: VerifiedReview["visibilityStatus"]): Promise<VerifiedReview>;
 }
 
 export interface ShortlistRepository {
@@ -58,14 +60,18 @@ export interface BenchmarkRepository {
   queueRequest(actor: SessionActor, input: BenchmarkRequestRecord): Promise<BenchmarkRequestRecord>;
   listRequestsForActor(actor: SessionActor): Promise<BenchmarkRequestRecord[]>;
   listQueuedRequests(): Promise<BenchmarkRequestRecord[]>;
+  getRequestById(requestId: string): Promise<BenchmarkRequestRecord | undefined>;
   claimQueuedRequest(requestId: string): Promise<BenchmarkRequestRecord | undefined>;
   completeRequest(requestId: string, artifactBundle: BenchmarkRequestRecord["artifactBundle"]): Promise<BenchmarkRequestRecord>;
   failRequest(requestId: string, failureReason: string): Promise<BenchmarkRequestRecord>;
+  rerunRequest(actor: SessionActor, requestId: string): Promise<BenchmarkRequestRecord>;
 }
 
 export interface CatalogRepository {
   listBuilders(): Promise<BuilderProfile[]>;
   getBuilderByHandle(handle: string): Promise<BuilderProfile | undefined>;
+  listFeatureSlots(): Promise<FeatureSlot[]>;
+  upsertFeatureSlot(actor: SessionActor, input: FeatureSlot): Promise<FeatureSlot>;
   getPublicMetricsSummary(): Promise<PublicMetricsSummary>;
 }
 

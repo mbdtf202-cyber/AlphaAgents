@@ -33,7 +33,7 @@ export function setPostgresTestEnv() {
   (process.env as Record<string, string | undefined>).NODE_ENV = process.env.NODE_ENV || "test";
   process.env.ALPHA_AGENTS_STORAGE = process.env.ALPHA_AGENTS_STORAGE || "postgres";
   process.env.ALPHA_AGENTS_AUTH_SECRET = process.env.ALPHA_AGENTS_AUTH_SECRET || "test-secret";
-  process.env.ALPHA_AGENTS_APP_URL = process.env.ALPHA_AGENTS_APP_URL || "http://127.0.0.1:3100";
+  process.env.ALPHA_AGENTS_APP_URL = process.env.ALPHA_AGENTS_APP_URL || "http://localhost:3100";
   process.env.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.ALPHA_AGENTS_APP_URL;
   process.env.GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "github-client-id";
   process.env.GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || "github-client-secret";

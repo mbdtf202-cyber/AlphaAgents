@@ -1,6 +1,5 @@
-import type { AgentRecord } from "@openclaw/alpha-agents-core";
-
 import { ExplainerShell } from "../../../components/explainers/explainer-shell";
+import { ModerationDecisionForm } from "../../../components/moderation-decision-form";
 import { ProcessFlowDiagram } from "../../../components/explainers/process-flow-diagram";
 import { getCurrentLocale } from "../../../lib/locale";
 import { requirePageSession } from "../../../lib/server/page-session";
@@ -46,11 +45,8 @@ export default async function AdminFlagsPage() {
       </div>
       <div className="mt-6 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
         <div className="mt-6 grid gap-4">
-          {admin.flaggedAgents.map((agent: AgentRecord) => (
-            <article key={agent.slug} className="rounded-[1.5rem] bg-parchment-deep p-5">
-              <h2 className="text-2xl font-semibold text-ink-950">{agent.name}</h2>
-              <p className="mt-3 text-base leading-8 text-ink-700">{locale === "en" ? agent.summary.en : agent.summary["zh-CN"]}</p>
-            </article>
+          {admin.moderationCases.map((item) => (
+            <ModerationDecisionForm key={item.id} locale={locale} item={item} />
           ))}
         </div>
       </div>

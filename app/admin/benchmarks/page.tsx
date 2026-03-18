@@ -1,13 +1,15 @@
+import { BenchmarkAdminForm } from "../../../components/benchmark-admin-form";
 import { BenchmarkTrackMap } from "../../../components/explainers/benchmark-track-map";
 import { ExplainerShell } from "../../../components/explainers/explainer-shell";
 import { getCurrentLocale } from "../../../lib/locale";
 import { requirePageSession } from "../../../lib/server/page-session";
-import { getBenchmarksPageData } from "../../../lib/server/repository";
+import { getBenchmarksPageData, getWorkspaceData } from "../../../lib/server/repository";
 
 export default async function AdminBenchmarksPage() {
   const locale = await getCurrentLocale();
-  await requirePageSession(["admin"]);
+  const actor = await requirePageSession(["admin"]);
   const suites = await getBenchmarksPageData();
+  const workspace = await getWorkspaceData(actor, locale);
 
   return (
     <main className="mx-auto max-w-[1440px] px-5 py-14 md:px-8">
@@ -31,6 +33,11 @@ export default async function AdminBenchmarksPage() {
               <p className="text-xs uppercase tracking-[0.18em] text-copper-700">{suite.track}</p>
               <h2 className="mt-2 text-2xl font-semibold text-ink-950">{locale === "en" ? suite.title.en : suite.title["zh-CN"]}</h2>
             </article>
+          ))}
+        </div>
+        <div className="mt-8 grid gap-4">
+          {workspace.benchmarkRequests.map((request) => (
+            <BenchmarkAdminForm key={request.id} locale={locale} request={request} />
           ))}
         </div>
       </div>

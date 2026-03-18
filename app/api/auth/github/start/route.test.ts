@@ -24,7 +24,7 @@ describe("GET /api/auth/github/start", () => {
   });
 
   it("redirects into github oauth and sets a transient state cookie", async () => {
-    const response = await GET(new Request("http://localhost/api/auth/github/start"));
+    const response = await GET(new Request("http://localhost:3100/api/auth/github/start"));
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("https://github.com/login/oauth/authorize");
@@ -34,9 +34,9 @@ describe("GET /api/auth/github/start", () => {
   it("returns 503 when github oauth is not configured", async () => {
     delete process.env.GITHUB_CLIENT_ID;
 
-    const response = await GET(new Request("http://localhost/api/auth/github/start"));
+    const response = await GET(new Request("http://localhost:3100/api/auth/github/start"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/login?error=github_not_configured");
+    expect(response.headers.get("location")).toBe("http://localhost:3100/login?error=github_not_configured");
   });
 });

@@ -11,8 +11,12 @@ export function latestVersion(agent: AgentRecord) {
   return agent.versions[0];
 }
 
+export function isVerifiedBenchmarkRun(run: BenchmarkRun): boolean {
+  return run.verification ? run.verification.status === "verified" : true;
+}
+
 export function averageScore(agent: AgentRecord): number {
-  return average(latestVersion(agent).benchmarkRuns.map((run) => run.scorecard.overall));
+  return average(latestVersion(agent).benchmarkRuns.filter(isVerifiedBenchmarkRun).map((run) => run.scorecard.overall));
 }
 
 export function freshnessPenalty(freshnessDays: number): number {

@@ -2,17 +2,19 @@
 
 ## Topology
 
-AlphaAgents `v0.5.0-rc.3` ships as three processes:
+AlphaAgents `v0.6.0` ships as three runtime services plus an external database:
 
-- `migrate`: one-shot schema migration and platform bootstrap
 - `web`: Next.js application server
 - `benchmark-worker`: pg-boss consumer for benchmark requests
+- `caddy`: TLS termination and reverse proxy
+- managed PostgreSQL: persistent application, queue, and moderation state
 
 All production deployments must use:
 
 - Node.js `22`
 - PostgreSQL `17+` with the `pgvector` extension available
 - `ALPHA_AGENTS_STORAGE=postgres`
+- `ALPHA_AGENTS_ENABLE_SAMPLE_OVERLAY=false`
 
 ## Required Environment
 
@@ -32,6 +34,10 @@ Mandatory launch-time variables:
 - `SENTRY_DSN`
 - `SENTRY_ENVIRONMENT`
 - `SENTRY_RELEASE`
+- `ALPHA_AGENTS_EXECUTOR_ID`
+- `ALPHA_AGENTS_EXECUTOR_KEY_ID`
+- `ALPHA_AGENTS_EXECUTOR_ATTESTATION_SECRET`
+- `ALPHA_AGENTS_BENCHMARK_VERIFIER_ID`
 
 Non-production only:
 
@@ -43,11 +49,12 @@ Non-production only:
 
 1. Install dependencies with `pnpm install --frozen-lockfile`.
 2. Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:coverage`, and `pnpm build`.
-3. Apply committed migrations with `pnpm db:migrate`.
-4. Start the web process with `pnpm start`.
-5. Start the worker process with `pnpm worker:benchmarks`.
-6. Verify `/api/healthz`, `/api/readyz`, and `/api/metrics`.
-7. Tag the release only after web and worker both pass postgres smoke checks.
+3. Build and push the release image to GHCR.
+4. Upload `deploy/docker-compose.prod.yml`, `deploy/Caddyfile`, and `scripts/deploy-vm.sh` to the production VM.
+5. Write the production `.env` on the VM.
+6. Run the deploy script so migrations execute before `web`, `benchmark-worker`, and `caddy` restart.
+7. Verify `/api/healthz`, `/api/readyz`, and `/api/metrics`.
+8. Tag and publish the GitHub release only after production smoke is green.
 
 ## Process Commands
 
@@ -71,8 +78,7 @@ pnpm db:migrate
 
 ## Rollback
 
-1. Stop `web` and `benchmark-worker`.
-2. Re-deploy the previous application image or commit.
-3. If the release introduced a bad migration, restore the database from backup before restarting traffic.
-4. Bring `web` up first, then `benchmark-worker`.
-5. Confirm `/api/readyz` is green and queued benchmark requests are draining again.
+1. Re-point `ALPHA_AGENTS_IMAGE` in the production `.env` to the previous GHCR tag.
+2. Re-run `scripts/deploy-vm.sh`.
+3. If the release introduced a bad migration, restore the managed PostgreSQL backup before restarting traffic.
+4. Confirm `/api/readyz` is green and queued benchmark requests are draining again.

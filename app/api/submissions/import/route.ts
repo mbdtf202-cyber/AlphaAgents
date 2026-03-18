@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import { agents, submissionImportSchema, type AgentRecord } from "@openclaw/alpha-agents-core";
@@ -31,6 +33,10 @@ function recommendedTracks(agent: Partial<Pick<AgentRecord, "categories">> & { s
   }
 
   return [...recommendations];
+}
+
+function importedBundleHash(sourceUrl: string, slug: string) {
+  return `sha256:${createHash("sha256").update(`${slug}:${sourceUrl}`).digest("hex").slice(0, 24)}`;
 }
 
 async function importGitHubMetadata(sourceUrl: string) {
@@ -82,6 +88,8 @@ function importFromSampleAgent(match: AgentRecord, sourceKind: string, sourceUrl
     dependencies: match.dependencies,
     knownLimits: match.knownLimits,
     supportedEnvironments: ["macOS", "Linux", "CI runner"],
+    initialVersion: match.versions[0]?.version ?? "0.1.0",
+    initialBundleHash: match.versions[0]?.bundleHash ?? importedBundleHash(sourceUrl, match.slug),
     recommendedBenchmarks: recommendedTracks(match),
   };
 }
@@ -146,6 +154,8 @@ export async function POST(request: Request) {
           },
         ],
         supportedEnvironments: ["macOS", "Linux"],
+        initialVersion: "0.1.0",
+        initialBundleHash: importedBundleHash(parsed.sourceUrl, slug),
         recommendedBenchmarks: recommendedTracks({
           sourceUrl: parsed.sourceUrl,
           description,

@@ -15,6 +15,7 @@ import {
 } from "@openclaw/alpha-agents-core";
 
 import { buildLeaderboardsFromAgents, filterAgents } from "./catalog";
+import { getStorageMode } from "./env";
 import { getReadCatalog, getRepositoryBundle } from "./repositories";
 import { sampleProvenance } from "./provenance";
 
@@ -43,14 +44,18 @@ function isFollowing(
 export async function getHomepageData() {
   const catalog = await getReadCatalog();
   const leaderboards = buildLeaderboards(catalog.agents);
+  const dynamicFeatureSlots =
+    getStorageMode() === "sample"
+      ? featureSlots
+      : await (await getRepositoryBundle()).catalogRepository.listFeatureSlots();
 
   return {
-    featuredAgents: featureSlots
+    featuredAgents: dynamicFeatureSlots
       .map((slot) => catalog.agents.find((agent) => agent.slug === slot.agentSlug))
       .filter((agent): agent is AgentRecord => Boolean(agent)),
     builders: catalog.builders.slice(0, 3),
     leaderboards,
-    featureSlots: featureSlots.map((slot) => ({ ...slot, provenance: slot.provenance ?? sampleProvenance })),
+    featureSlots: dynamicFeatureSlots.map((slot) => ({ ...slot, provenance: slot.provenance ?? sampleProvenance })),
     suites: benchmarkSuites.map((suite) => ({ ...suite, provenance: suite.provenance ?? sampleProvenance })),
     metrics: catalog.metrics,
     publicDataMode: catalog.metrics.liveAgentCount > 0 ? "mixed" : "sample",

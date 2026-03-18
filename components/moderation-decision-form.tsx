@@ -40,6 +40,8 @@ export function ModerationDecisionForm({ locale, item }: { locale: Locale; item:
             <option value="changes-requested">changes-requested</option>
             <option value="approved">approved</option>
             <option value="rejected">rejected</option>
+            <option value="resolved">resolved</option>
+            <option value="reopened">reopened</option>
           </select>
         </label>
         <label className="grid gap-2 text-sm text-ink-700">

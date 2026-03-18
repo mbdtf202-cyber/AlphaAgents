@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeBundleHash, runDemoBenchmark } from "./index";
+import { computeBundleHash, runAttestedBenchmark, verifyBenchmarkArtifactBundle } from "./index";
 
 describe("alpha-agents runner", () => {
   it("builds deterministic bundle hashes", () => {
@@ -10,8 +10,8 @@ describe("alpha-agents runner", () => {
     expect(a).toBe(b);
   });
 
-  it("returns a demo benchmark artifact bundle", () => {
-    const run = runDemoBenchmark({
+  it("returns an attested benchmark artifact bundle", () => {
+    const run = runAttestedBenchmark({
       requestId: "benchmark-request-1",
       agentSlug: "swe-copilot-forge",
       suiteSlug: "coding-command",
@@ -22,6 +22,8 @@ describe("alpha-agents runner", () => {
 
     expect(run.agentSlug).toBe("swe-copilot-forge");
     expect(run.versionId).toBe("ver-swe-copilot-forge-1-4-2");
-    expect(run.artifactBundle.toolTrace).toHaveLength(4);
+    expect(run.artifactBundle.execution.executorId).toBeTruthy();
+    expect(run.artifactBundle.artifactManifest).toHaveLength(5);
+    expect(verifyBenchmarkArtifactBundle(run.artifactBundle).status).toBe("verified");
   });
 });

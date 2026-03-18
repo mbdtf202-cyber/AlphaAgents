@@ -9,7 +9,7 @@ import {
   type ScoreDimension,
   type VersionRegressionSummary,
 } from "@openclaw/alpha-agents-core";
-import { toLeaderboardEntry } from "@openclaw/alpha-agents-core";
+import { isVerifiedBenchmarkRun, toLeaderboardEntry } from "@openclaw/alpha-agents-core";
 
 const SCORE_DIMENSIONS: ScoreDimension[] = [
   "taskSuccess",
@@ -136,7 +136,9 @@ export const withRegressionSummaries = (agent: AgentRecord): AgentRecord => ({
 export const buildLeaderboardsFromAgents = (agents: AgentRecord[]): Record<string, LeaderboardEntry[]> => {
   const entries = agents.flatMap((agent) =>
     agent.versions.flatMap((version) =>
-      version.benchmarkRuns.map((run) => toLeaderboardEntry(run, { ...agent, versions: [version] })),
+      version.benchmarkRuns
+        .filter(isVerifiedBenchmarkRun)
+        .map((run) => toLeaderboardEntry(run, { ...agent, versions: [version] })),
     ),
   );
 

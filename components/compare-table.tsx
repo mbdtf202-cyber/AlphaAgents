@@ -5,6 +5,8 @@ import { resolveText } from "@openclaw/alpha-agents-core";
 const fields = [
   { key: "overall", label: { en: "Overall", "zh-CN": "综合分" } },
   { key: "reliability", label: { en: "Reliability", "zh-CN": "稳定性" } },
+  { key: "verification", label: { en: "Verification", "zh-CN": "验签状态" } },
+  { key: "evidence", label: { en: "Evidence source", "zh-CN": "证据来源" } },
   { key: "cost", label: { en: "Cost / success", "zh-CN": "成功成本" } },
   { key: "latency", label: { en: "Median latency", "zh-CN": "中位时延" } },
   { key: "risk", label: { en: "Risk level", "zh-CN": "权限风险" } },
@@ -40,14 +42,20 @@ export function CompareTable({ agents, locale }: { agents: AgentRecord[]; locale
               <tr key={field.key} className="border-b border-ink-950/6 align-top">
                 <td className="px-6 py-4 text-sm font-medium text-ink-500">{resolveText(field.label, locale)}</td>
                 {agents.map((agent) => {
-                  const run = agent.versions[0]?.benchmarkRuns[0];
+                  const run =
+                    agent.versions[0]?.benchmarkRuns.find((entry) => !entry.verification || entry.verification.status === "verified") ??
+                    agent.versions[0]?.benchmarkRuns[0];
                   const value =
                     field.key === "overall"
                       ? run?.scorecard.overall
                       : field.key === "reliability"
                         ? run?.scorecard.reliability
-                        : field.key === "cost"
-                          ? `$${run?.costPerSuccessfulRun.toFixed(2)}`
+                        : field.key === "verification"
+                          ? run?.verification?.status ?? "seeded"
+                          : field.key === "evidence"
+                            ? run?.execution?.executorId ?? "seeded"
+                          : field.key === "cost"
+                            ? `$${run?.costPerSuccessfulRun.toFixed(2)}`
                           : field.key === "latency"
                             ? `${run?.medianLatencySeconds}s`
                             : field.key === "risk"
@@ -81,16 +89,20 @@ export function CompareTable({ agents, locale }: { agents: AgentRecord[]; locale
       </div>
       <div className="grid gap-4 p-5 lg:hidden">
         {agents.map((agent) => {
-          const run = agent.versions[0]?.benchmarkRuns[0];
+          const run =
+            agent.versions[0]?.benchmarkRuns.find((entry) => !entry.verification || entry.verification.status === "verified") ??
+            agent.versions[0]?.benchmarkRuns[0];
           return (
             <article key={agent.slug} className="rounded-[1.5rem] border border-ink-950/8 bg-parchment/70 p-5">
               <h3 className="font-display text-2xl text-ink-950">{agent.name}</h3>
               <div className="mt-4 grid gap-3 text-sm">
                 <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[0].label, locale)}</span><span>{run?.scorecard.overall}</span></div>
                 <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[1].label, locale)}</span><span>{run?.scorecard.reliability}</span></div>
-                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[2].label, locale)}</span><span>${run?.costPerSuccessfulRun.toFixed(2)}</span></div>
-                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[3].label, locale)}</span><span>{run?.medianLatencySeconds}s</span></div>
-                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[4].label, locale)}</span><span>{agent.permissionManifest.riskLevel}</span></div>
+                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[2].label, locale)}</span><span>{run?.verification?.status ?? "seeded"}</span></div>
+                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[3].label, locale)}</span><span>{run?.execution?.executorId ?? "seeded"}</span></div>
+                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[4].label, locale)}</span><span>${run?.costPerSuccessfulRun.toFixed(2)}</span></div>
+                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[5].label, locale)}</span><span>{run?.medianLatencySeconds}s</span></div>
+                <div className="flex items-start justify-between gap-3"><span>{resolveText(fields[6].label, locale)}</span><span>{agent.permissionManifest.riskLevel}</span></div>
               </div>
             </article>
           );

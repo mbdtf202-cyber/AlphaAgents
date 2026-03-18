@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import {
   enqueueBenchmarkJob,
-  runDemoBenchmark,
+  runAttestedBenchmark,
   startBenchmarkWorker as startQueueWorker,
   stopBoss,
   type BenchmarkJob,
@@ -51,15 +51,8 @@ export async function processBenchmarkRequestJob(job: BenchmarkJob) {
   }
 
   try {
-    const run = runDemoBenchmark(job);
-    const artifactBundle = {
-      bundleHash: run.artifactBundle.bundleHash,
-      transcriptUrl: run.artifactBundle.transcript,
-      toolTraceUrl: run.artifactBundle.toolTrace.join("\n"),
-      finalArtifactUrl: run.artifactBundle.finalArtifact,
-      screenshotUrl: run.artifactBundle.screenshotPath,
-      rubric: run.artifactBundle.rubric,
-    };
+    const run = runAttestedBenchmark(job);
+    const artifactBundle = run.artifactBundle;
     await bundle.benchmarkRepository.completeRequest(claimed.id, artifactBundle);
     incrementBenchmarkRun("completed");
     logEvent("info", "benchmark_request_completed", {

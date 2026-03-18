@@ -27,14 +27,14 @@ describe("GET /api/auth/github/callback", () => {
 
   it("rejects invalid oauth state", async () => {
     const response = await GET(
-      new Request("http://localhost/api/auth/github/callback?code=test-code&state=wrong-state", {
+      new Request("http://localhost:3100/api/auth/github/callback?code=test-code&state=wrong-state", {
         headers: {
           cookie: "alpha_agents_oauth_state=expected-state",
         },
       }),
     );
 
-    expect(response.headers.get("location")).toBe("http://localhost/login?error=invalid_oauth_state");
+    expect(response.headers.get("location")).toBe("http://localhost:3100/login?error=invalid_oauth_state");
   });
 
   it("creates a builder session after a successful github exchange", async () => {
@@ -54,14 +54,14 @@ describe("GET /api/auth/github/callback", () => {
     );
 
     const response = await GET(
-      new Request("http://localhost/api/auth/github/callback?code=test-code&state=expected-state", {
+      new Request("http://localhost:3100/api/auth/github/callback?code=test-code&state=expected-state", {
         headers: {
           cookie: "alpha_agents_oauth_state=expected-state; alpha-agents-workspace-home=/workspace/agents",
         },
       }),
     );
 
-    expect(response.headers.get("location")).toBe("http://localhost/workspace/agents");
+    expect(response.headers.get("location")).toBe("http://localhost:3100/workspace/agents");
     expect(response.headers.get("set-cookie")).toContain("alpha_agents_session=");
   });
 });

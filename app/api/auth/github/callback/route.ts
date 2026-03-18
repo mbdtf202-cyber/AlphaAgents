@@ -6,7 +6,7 @@ import {
   OAUTH_STATE_COOKIE_NAME,
   requireConfiguredAuthForWrite,
 } from "../../../../../lib/server/auth";
-import { getAppUrl, getGitHubConfig } from "../../../../../lib/server/env";
+import { getAppUrl, getCanonicalRequestRedirect, getGitHubConfig } from "../../../../../lib/server/env";
 import { getPreferredWorkspacePathFromRequest } from "../../../../../lib/server/preferences";
 import { getRepositoryBundle } from "../../../../../lib/server/repositories";
 
@@ -21,6 +21,10 @@ function readCookie(request: Request, name: string): string | undefined {
 
 export async function GET(request: Request) {
   try {
+    const canonicalRedirect = getCanonicalRequestRedirect(request);
+    if (canonicalRedirect) {
+      return NextResponse.redirect(canonicalRedirect);
+    }
     requireConfiguredAuthForWrite();
     const { clientId, clientSecret } = getGitHubConfig();
     if (!clientId || !clientSecret) {

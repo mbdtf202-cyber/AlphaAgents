@@ -26,6 +26,8 @@ export const submissionInputSchema = z.object({
   dependencies: z.array(z.string().min(1)).default([]),
   knownLimits: z.array(localizedTextSchema).default([]),
   supportedEnvironments: z.array(z.string().min(1)).default([]),
+  initialVersion: z.string().min(1).max(64),
+  initialBundleHash: z.string().min(8).max(255),
 });
 
 export const publishInputSchema = z.object({
@@ -116,7 +118,7 @@ export const shortlistInputSchema = z.object({
 });
 
 export const moderationDecisionSchema = z.object({
-  status: z.enum(["pending", "changes-requested", "approved", "rejected"]),
+  status: z.enum(["pending", "changes-requested", "approved", "rejected", "resolved", "reopened"]),
   note: z.string().min(3).max(400),
 });
 
@@ -153,4 +155,21 @@ export const submissionImportSchema = z.object({
   sourceKind: z.enum(["clawhub", "github", "agent-pack"]),
   sourceUrl: z.url(),
   builderHandle: z.string().min(2).max(80).optional(),
+});
+
+export const reviewModerationSchema = z.object({
+  visibilityStatus: z.enum(["visible", "hidden"]),
+  note: z.string().min(3).max(400),
+});
+
+export const featureSlotUpdateSchema = z.object({
+  slotKey: z.string().min(1).max(80),
+  agentSlug: z.string().min(1),
+  title: localizedTextSchema,
+  description: localizedTextSchema,
+});
+
+export const benchmarkAdminActionSchema = z.object({
+  action: z.enum(["rerun", "fail"]),
+  failureReason: z.string().min(3).max(400).optional(),
 });

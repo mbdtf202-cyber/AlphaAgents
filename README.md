@@ -19,7 +19,7 @@ This repository now operates as a **mixed preview with production hardening**:
 - live data can overlay sample content in public and workspace surfaces
 - provenance labels distinguish sample from live evidence
 
-## What ships in v0.5.0-rc.2
+## What ships in v0.5.0-rc.3
 
 - Public product site with long-form positioning and featured agents
 - Live-aware public catalog overlay for agents, builders, compare, leaderboards, and sitemap generation
@@ -101,5 +101,5 @@ This repository currently ships a **mixed production-style preview** with seeded
 
 ## Release
 
-- Current release candidate: `v0.5.0-rc.2`
-- GitHub release should be tagged from `codex/release-v0.5.0-rc.2` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, `pnpm build`, postgres integration, and browser smoke all pass.
+- Current release candidate: `v0.5.0-rc.3`
+- GitHub release is tagged directly from `main` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, `pnpm build`, postgres integration, and browser smoke all pass.

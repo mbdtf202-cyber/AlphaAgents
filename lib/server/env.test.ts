@@ -63,7 +63,7 @@ describe("env", () => {
     process.env.ALPHA_AGENTS_STORAGE = "sample";
     process.env.SENTRY_DSN = "https://public@example.ingest.sentry.io/1";
     process.env.SENTRY_ENVIRONMENT = "production";
-    process.env.SENTRY_RELEASE = "v0.5.0-rc.2";
+    process.env.SENTRY_RELEASE = "v0.5.0-rc.3";
 
     expect(validateRuntimeConfig("web")).toEqual({
       target: "web",

@@ -2,7 +2,7 @@
 
 ## Topology
 
-AlphaAgents `v0.5.0-rc.2` ships as three processes:
+AlphaAgents `v0.5.0-rc.3` ships as three processes:
 
 - `migrate`: one-shot schema migration and platform bootstrap
 - `web`: Next.js application server

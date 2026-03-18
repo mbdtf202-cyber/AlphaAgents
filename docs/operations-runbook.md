@@ -38,7 +38,7 @@
 
 ## Release Candidate Gate
 
-Do not tag `v0.5.0-rc.2` until all of the following are true:
+Do not tag `v0.5.0-rc.3` until all of the following are true:
 
 - Git worktree is clean.
 - Drizzle migrations are committed.

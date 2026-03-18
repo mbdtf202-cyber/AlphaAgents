@@ -42,7 +42,7 @@ export function setPostgresTestEnv() {
   process.env.POSTMARK_MESSAGE_STREAM = process.env.POSTMARK_MESSAGE_STREAM || "outbound";
   process.env.SENTRY_DSN = process.env.SENTRY_DSN || "https://public@example.ingest.sentry.io/1";
   process.env.SENTRY_ENVIRONMENT = process.env.SENTRY_ENVIRONMENT || "test";
-  process.env.SENTRY_RELEASE = process.env.SENTRY_RELEASE || "v0.5.0-rc.2-test";
+  process.env.SENTRY_RELEASE = process.env.SENTRY_RELEASE || "v0.5.0-rc.3-test";
   process.env.ALPHA_AGENTS_ENABLE_TEST_MAILER = process.env.ALPHA_AGENTS_ENABLE_TEST_MAILER || "true";
 
   return true;

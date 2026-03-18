@@ -1,6 +1,5 @@
 import { AgentCard } from "../../../components/agent-card";
 import { BenchmarkRequestForm } from "../../../components/benchmark-request-form";
-import { InstallVerificationForm } from "../../../components/install-verification-form";
 import { PublishVersionForm } from "../../../components/publish-version-form";
 import { WorkspaceShell } from "../../../components/workspace-shell";
 import { getCurrentLocale } from "../../../lib/locale";
@@ -11,6 +10,16 @@ export default async function WorkspaceAgentsPage() {
   const locale = await getCurrentLocale();
   const actor = await requirePageSession(["builder", "admin"]);
   const workspace = await getWorkspaceData(actor, locale);
+  const managedAgents = workspace.builderAgents.map((agent) => ({
+    slug: agent.slug,
+    name: agent.name,
+    versions: agent.versions.map((version) => ({
+      id: version.id,
+      version: version.version,
+      status: version.status,
+      releasedAt: version.releasedAt,
+    })),
+  }));
 
   return (
     <main>
@@ -29,11 +38,8 @@ export default async function WorkspaceAgentsPage() {
           ))}
         </div>
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
-          <PublishVersionForm locale={locale} />
-          <BenchmarkRequestForm locale={locale} />
-        </div>
-        <div className="mt-6">
-          <InstallVerificationForm locale={locale} />
+          <PublishVersionForm locale={locale} agents={managedAgents} />
+          <BenchmarkRequestForm locale={locale} agents={managedAgents} />
         </div>
       </WorkspaceShell>
     </main>

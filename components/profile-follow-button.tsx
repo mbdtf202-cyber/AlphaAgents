@@ -43,6 +43,7 @@ export function ProfileFollowButton({
 
   return (
     <button
+      data-testid="profile-follow-button"
       type="button"
       onClick={toggleFollow}
       disabled={disabled || pending}

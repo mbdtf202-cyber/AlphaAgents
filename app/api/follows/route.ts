@@ -4,12 +4,14 @@ import { followProfileSchema } from "@openclaw/alpha-agents-core";
 
 import { requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../lib/server/http";
+import { enforceAuthenticatedWriteRateLimit } from "../../../lib/server/rate-limit";
 import { getRepositoryBundle } from "../../../lib/server/repositories";
 
 export async function POST(request: Request) {
   try {
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
+    await enforceAuthenticatedWriteRateLimit(request, actor);
     const parsed = await parseRequestWithSchema(request, followProfileSchema);
     const bundle = await getRepositoryBundle();
     const edge = await bundle.relationshipRepository.followProfile(actor, {
@@ -33,6 +35,7 @@ export async function DELETE(request: Request) {
   try {
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
+    await enforceAuthenticatedWriteRateLimit(request, actor);
     const parsed = await parseRequestWithSchema(request, followProfileSchema);
     const bundle = await getRepositoryBundle();
     await bundle.relationshipRepository.unfollowProfile(actor, {

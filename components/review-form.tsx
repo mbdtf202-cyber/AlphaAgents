@@ -4,14 +4,36 @@ import { useState } from "react";
 
 import type { Locale } from "@openclaw/alpha-agents-core";
 
-export function ReviewForm({ locale }: { locale: Locale }) {
+interface ReviewInstallOption {
+  id: string;
+  agentSlug: string;
+  versionId: string;
+  label: string;
+}
+
+export function ReviewForm({ locale, installs }: { locale: Locale; installs: ReviewInstallOption[] }) {
   const [status, setStatus] = useState<string>("");
 
+  if (installs.length === 0) {
+    return (
+      <section className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
+        <h2 className="font-display text-3xl text-ink-950">{locale === "en" ? "No verified installs yet" : "还没有已验证安装"}</h2>
+        <p className="text-base leading-8 text-ink-700">
+          {locale === "en"
+            ? "A review must be attached to a verified install that you own. Verify an install first, then come back here to publish structured feedback."
+            : "评价必须绑定到你拥有的已验证安装。先完成安装验证，再回来发布结构化反馈。"}
+        </p>
+      </section>
+    );
+  }
+
   async function handleSubmit(formData: FormData) {
+    const installId = String(formData.get("installId") ?? installs[0]?.id ?? "");
+    const install = installs.find((entry) => entry.id === installId);
     const payload = {
-      installId: String(formData.get("installId") ?? ""),
-      agentSlug: String(formData.get("agentSlug") ?? ""),
-      versionId: String(formData.get("versionId") ?? ""),
+      installId,
+      agentSlug: install?.agentSlug ?? "",
+      versionId: install?.versionId ?? "",
       company: String(formData.get("company") ?? ""),
       role: String(formData.get("role") ?? ""),
       headline: {
@@ -61,20 +83,23 @@ export function ReviewForm({ locale }: { locale: Locale }) {
 
   return (
     <form action={handleSubmit} className="grid gap-4 rounded-[2rem] border border-ink-950/8 bg-white/82 p-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-1">
         <label className="grid gap-2 text-sm text-ink-700">
-          Install ID
-          <input name="installId" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3 anywhere" placeholder="install_xxx" />
-        </label>
-        <label className="grid gap-2 text-sm text-ink-700">
-          Agent slug
-          <input name="agentSlug" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3" placeholder="swe-copilot-forge" />
-        </label>
-        <label className="grid gap-2 text-sm text-ink-700">
-          Version ID
-          <input name="versionId" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3 anywhere" placeholder="ver_xxx" />
+          {locale === "en" ? "Verified install" : "已验证安装"}
+          <select name="installId" className="rounded-2xl border border-ink-950/10 bg-parchment px-4 py-3">
+            {installs.map((install) => (
+              <option key={install.id} value={install.id}>
+                {install.label}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
+      <p className="text-sm leading-7 text-ink-600">
+        {locale === "en"
+          ? "The selected install determines the agent and version automatically, so reviews cannot drift away from owned deployment proof."
+          : "所选安装会自动锁定 Agent 与版本，避免评价与已拥有的部署证明脱节。"}
+      </p>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm text-ink-700">
           {locale === "en" ? "Company" : "公司"}

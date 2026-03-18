@@ -78,6 +78,7 @@ import {
 import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 
 import { hashToken } from "./auth";
+import { ensurePlatformBootstrap } from "./bootstrap";
 import {
   booleanFromStorage,
   filterAgents,
@@ -561,6 +562,8 @@ function createMemoryBundle(): RepositoryBundle {
       }
       request.status = "running";
       request.startedAt = new Date().toISOString();
+      request.failedAt = undefined;
+      request.failureReason = undefined;
       return request;
     },
     async completeRequest(requestId, artifactBundle) {
@@ -570,7 +573,19 @@ function createMemoryBundle(): RepositoryBundle {
       }
       request.status = "completed";
       request.completedAt = new Date().toISOString();
+      request.failedAt = undefined;
+      request.failureReason = undefined;
       request.artifactBundle = artifactBundle;
+      return request;
+    },
+    async failRequest(requestId, failureReason) {
+      const request = state.benchmarkRequests.find((entry) => entry.id === requestId);
+      if (!request) {
+        throw new NotFoundError("Benchmark request not found.");
+      }
+      request.status = "failed";
+      request.failedAt = new Date().toISOString();
+      request.failureReason = failureReason;
       return request;
     },
   };
@@ -1747,6 +1762,7 @@ function createPostgresBundle(): RepositoryBundle {
           suiteId: suite.id,
           objective: input.objective,
           status: input.status,
+          queueJobId: input.queueJobId,
           queuedAt: new Date(input.queuedAt),
         })
         .returning();
@@ -1782,9 +1798,12 @@ function createPostgresBundle(): RepositoryBundle {
         suiteSlug,
         objective: request.objective ?? undefined,
         status: request.status as BenchmarkRequestRecord["status"],
+        queueJobId: request.queueJobId ?? undefined,
         queuedAt: request.queuedAt.toISOString(),
         startedAt: request.startedAt?.toISOString(),
         completedAt: request.completedAt?.toISOString(),
+        failedAt: request.failedAt?.toISOString(),
+        failureReason: request.failureReason ?? undefined,
         artifactBundle: artifact
           ? {
               bundleHash: artifact.bundleHash,
@@ -1820,15 +1839,18 @@ function createPostgresBundle(): RepositoryBundle {
         suiteSlug,
         objective: request.objective ?? undefined,
         status: request.status as BenchmarkRequestRecord["status"],
+        queueJobId: request.queueJobId ?? undefined,
         queuedAt: request.queuedAt.toISOString(),
         startedAt: request.startedAt?.toISOString(),
         completedAt: request.completedAt?.toISOString(),
+        failedAt: request.failedAt?.toISOString(),
+        failureReason: request.failureReason ?? undefined,
       }));
     },
     async claimQueuedRequest(requestId) {
       const [row] = await db
         .update(benchmarkRequestsTable)
-        .set({ status: "running", startedAt: new Date() })
+        .set({ status: "running", startedAt: new Date(), failedAt: null, failureReason: null })
         .where(and(eq(benchmarkRequestsTable.id, requestId), eq(benchmarkRequestsTable.status, "queued")))
         .returning();
       if (!row) {
@@ -1846,14 +1868,18 @@ function createPostgresBundle(): RepositoryBundle {
         suiteSlug: suite?.slug ?? "",
         objective: row.objective ?? undefined,
         status: row.status as BenchmarkRequestRecord["status"],
+        queueJobId: row.queueJobId ?? undefined,
         queuedAt: row.queuedAt.toISOString(),
         startedAt: row.startedAt?.toISOString(),
+        completedAt: row.completedAt?.toISOString(),
+        failedAt: row.failedAt?.toISOString(),
+        failureReason: row.failureReason ?? undefined,
       };
     },
     async completeRequest(requestId, artifactBundle) {
       const [request] = await db
         .update(benchmarkRequestsTable)
-        .set({ status: "completed", completedAt: new Date() })
+        .set({ status: "completed", completedAt: new Date(), failedAt: null, failureReason: null })
         .where(eq(benchmarkRequestsTable.id, requestId))
         .returning();
       if (!request) {
@@ -1913,10 +1939,46 @@ function createPostgresBundle(): RepositoryBundle {
         suiteSlug: suite?.slug ?? "",
         objective: request.objective ?? undefined,
         status: "completed",
+        queueJobId: request.queueJobId ?? undefined,
         queuedAt: request.queuedAt.toISOString(),
         startedAt: request.startedAt?.toISOString(),
         completedAt: new Date().toISOString(),
+        failedAt: request.failedAt?.toISOString(),
+        failureReason: request.failureReason ?? undefined,
         artifactBundle,
+      };
+    },
+    async failRequest(requestId, failureReason) {
+      const [request] = await db
+        .update(benchmarkRequestsTable)
+        .set({
+          status: "failed",
+          failedAt: new Date(),
+          failureReason,
+        })
+        .where(eq(benchmarkRequestsTable.id, requestId))
+        .returning();
+      if (!request) {
+        throw new NotFoundError("Benchmark request not found.");
+      }
+      const [suite] = await db.select().from(benchmarkSuitesTable).where(eq(benchmarkSuitesTable.id, request.suiteId)).limit(1);
+      const [agent] = await db.select().from(agentRecords).where(eq(agentRecords.id, request.agentId)).limit(1);
+      return {
+        id: request.id,
+        ownerUserId: request.ownerUserId ?? undefined,
+        ownerOrganizationId: request.ownerOrganizationId ?? undefined,
+        createdByUserId: request.createdByUserId,
+        agentSlug: agent?.slug ?? "",
+        versionId: request.agentVersionId,
+        suiteSlug: suite?.slug ?? "",
+        objective: request.objective ?? undefined,
+        status: "failed",
+        queueJobId: request.queueJobId ?? undefined,
+        queuedAt: request.queuedAt.toISOString(),
+        startedAt: request.startedAt?.toISOString(),
+        completedAt: request.completedAt?.toISOString(),
+        failedAt: request.failedAt?.toISOString(),
+        failureReason: request.failureReason ?? undefined,
       };
     },
   };
@@ -2038,6 +2100,7 @@ export async function getRepositoryBundle(): Promise<RepositoryBundle> {
   if (mode === "memory") {
     return createMemoryBundle();
   }
+  await ensurePlatformBootstrap();
   return createPostgresBundle();
 }
 

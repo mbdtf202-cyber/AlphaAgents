@@ -541,9 +541,12 @@ export interface BenchmarkRequestRecord {
   suiteSlug: string;
   objective?: string;
   status: BenchmarkRequestStatus;
+  queueJobId?: string;
   queuedAt: string;
   startedAt?: string;
   completedAt?: string;
+  failedAt?: string;
+  failureReason?: string;
   artifactBundle?: BenchmarkArtifactBundle;
 }
 

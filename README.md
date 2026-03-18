@@ -13,13 +13,13 @@ AlphaAgents is a TypeScript-first web platform for **OpenClaw-native agents**. I
 - profile lists and evaluation briefs
 - workspace submission, verification, and moderation surfaces
 
-This repository now operates as a **mixed preview**:
+This repository now operates as a **mixed preview with production hardening**:
 
 - sample content remains available as explicit fallback/demo content
 - live data can overlay sample content in public and workspace surfaces
 - provenance labels distinguish sample from live evidence
 
-## What ships in v0.4.0
+## What ships in v0.5.0-rc.2
 
 - Public product site with long-form positioning and featured agents
 - Live-aware public catalog overlay for agents, builders, compare, leaderboards, and sitemap generation
@@ -37,7 +37,10 @@ This repository now operates as a **mixed preview**:
   - review publishing form
 - Admin moderation preview with submission/version moderation closure
 - Mixed preview storage modes: `sample`, `memory`, `postgres`
-- Governance playbook, lint, coverage, and GitHub Actions CI
+- Explicit production config validation and committed Drizzle migrations
+- Postmark-backed magic link delivery and GitHub OAuth entrypoints
+- pg-boss benchmark queue with worker heartbeat, health, readiness, and metrics endpoints
+- Governance playbook, operations runbook, lint, coverage, Playwright smoke, and GitHub Actions CI
 - Shared domain package and benchmark runner package with persisted benchmark completion artifacts
 
 ## Stack
@@ -53,6 +56,7 @@ This repository now operates as a **mixed preview**:
 
 ```bash
 pnpm install
+cp .env.example .env
 pnpm dev
 ```
 
@@ -63,7 +67,9 @@ Open [http://localhost:3100](http://localhost:3100).
 ```bash
 pnpm lint
 pnpm test
+pnpm test:integration
 pnpm test:coverage
+pnpm test:e2e
 pnpm typecheck
 pnpm build
 ```
@@ -84,6 +90,8 @@ This repository currently ships a **mixed production-style preview** with seeded
 ## Governance
 
 - Operations handbook: [`docs/governance-playbook.md`](docs/governance-playbook.md)
+- Deployment guide: [`docs/deploy.md`](docs/deploy.md)
+- Operations runbook: [`docs/operations-runbook.md`](docs/operations-runbook.md)
 
 ## Local modes
 
@@ -93,5 +101,5 @@ This repository currently ships a **mixed production-style preview** with seeded
 
 ## Release
 
-- Current release: `v0.4.0`
-- GitHub release should be tagged from `main` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, and `pnpm build` all pass.
+- Current release candidate: `v0.5.0-rc.2`
+- GitHub release should be tagged from `codex/release-v0.5.0-rc.2` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, `pnpm build`, postgres integration, and browser smoke all pass.

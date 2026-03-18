@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { ZodSchema } from "zod";
 
-import { AuthError, ConfigurationError, ForbiddenError, NotFoundError } from "./errors";
+import { AuthError, ConfigurationError, ForbiddenError, NotFoundError, RateLimitError } from "./errors";
+import { incrementErrorCount } from "./metrics";
+import { captureException } from "./monitoring";
+import { logError, logEvent } from "./log";
 
 export async function parseRequestWithSchema<T>(request: Request, schema: ZodSchema<T>): Promise<T> {
   const contentType = request.headers.get("content-type") ?? "";
@@ -30,10 +33,24 @@ export function errorResponse(error: unknown) {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
   if (error instanceof ConfigurationError) {
+    logError("configuration_error", error);
+    captureException(error, { category: "configuration" });
     return NextResponse.json({ error: error.message }, { status: 503 });
   }
+  if (error instanceof RateLimitError) {
+    logEvent("warn", "rate_limit_exceeded", { retryAfterSeconds: error.retryAfterSeconds });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 429, headers: { "Retry-After": String(error.retryAfterSeconds) } },
+    );
+  }
   if (error instanceof Error) {
+    incrementErrorCount(error.name);
+    logError("request_failed", error);
+    captureException(error, { category: "request" });
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+  incrementErrorCount("UnknownError");
+  logEvent("error", "request_failed_unknown", { error });
   return NextResponse.json({ error: "Unknown error." }, { status: 500 });
 }

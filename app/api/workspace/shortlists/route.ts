@@ -4,14 +4,17 @@ import { NextResponse } from "next/server";
 
 import { shortlistInputSchema } from "@openclaw/alpha-agents-core";
 
-import { requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
+import { assertRole, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";
+import { enforceAuthenticatedWriteRateLimit } from "../../../../lib/server/rate-limit";
 import { getRepositoryBundle } from "../../../../lib/server/repositories";
 
 export async function POST(request: Request) {
   try {
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
+    assertRole(actor, ["buyer", "admin"]);
+    await enforceAuthenticatedWriteRateLimit(request, actor);
     const parsed = await parseRequestWithSchema(request, shortlistInputSchema);
     const bundle = await getRepositoryBundle();
     const shortlist = await bundle.shortlistRepository.createShortlist(actor, {

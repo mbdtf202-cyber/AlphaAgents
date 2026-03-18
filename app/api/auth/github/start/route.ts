@@ -2,13 +2,19 @@ import { NextResponse } from "next/server";
 
 import { buildTransientCookie, generateOpaqueToken, requireConfiguredAuthForWrite, OAUTH_STATE_COOKIE_NAME } from "../../../../../lib/server/auth";
 import { getAppUrl, getGitHubConfig } from "../../../../../lib/server/env";
+import { enforceRateLimit, getClientIp } from "../../../../../lib/server/rate-limit";
+
+function redirectToLoginError(request: Request, error: string) {
+  return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, request.url));
+}
 
 export async function GET(request: Request) {
   try {
     requireConfiguredAuthForWrite();
+    await enforceRateLimit("github-start-ip", getClientIp(request));
     const { clientId } = getGitHubConfig();
     if (!clientId) {
-      return NextResponse.json({ error: "GitHub OAuth is not configured." }, { status: 503 });
+      return redirectToLoginError(request, "github_not_configured");
     }
     const state = generateOpaqueToken();
     const callbackUrl = `${getAppUrl()}/api/auth/github/callback`;
@@ -22,6 +28,6 @@ export async function GET(request: Request) {
     response.headers.append("Set-Cookie", buildTransientCookie(OAUTH_STATE_COOKIE_NAME, state, 600));
     return response;
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "GitHub OAuth could not start." }, { status: 503 });
+    return redirectToLoginError(request, error instanceof Error ? error.message : "github_start_failed");
   }
 }

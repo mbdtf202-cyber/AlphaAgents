@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { agents, submissionImportSchema, type AgentRecord } from "@openclaw/alpha-agents-core";
 
 import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";
+import { enforceRateLimit, getClientIp } from "../../../../lib/server/rate-limit";
 
 function slugFromSourceUrl(sourceUrl: string): string {
   try {
@@ -87,6 +88,7 @@ function importFromSampleAgent(match: AgentRecord, sourceKind: string, sourceUrl
 
 export async function POST(request: Request) {
   try {
+    await enforceRateLimit("import-ip", getClientIp(request));
     const parsed = await parseRequestWithSchema(request, submissionImportSchema);
     const slug = slugFromSourceUrl(parsed.sourceUrl);
     const sampleMatch =

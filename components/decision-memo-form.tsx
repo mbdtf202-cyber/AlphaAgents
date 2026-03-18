@@ -1,11 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import type { Locale, ShortlistRecord } from "@openclaw/alpha-agents-core";
 
 export function DecisionMemoForm({ locale, shortlists }: { locale: Locale; shortlists: ShortlistRecord[] }) {
   const [status, setStatus] = useState<string>("");
+
+  if (shortlists.length === 0) {
+    return (
+      <section className="surface-panel grid gap-4 rounded-[2rem] p-6">
+        <p className="text-xs uppercase tracking-[0.22em] text-copper-700">{locale === "en" ? "Evaluation brief" : "Evaluation Brief"}</p>
+        <h2 className="font-display text-3xl text-ink-950">{locale === "en" ? "Create a profile list first" : "先创建 Profile List"}</h2>
+        <p className="text-base leading-8 text-ink-700">
+          {locale === "en"
+            ? "Evaluation briefs depend on a saved shortlist. Build one first, then return here to turn it into a recommendation."
+            : "Evaluation Brief 依赖已保存的 Profile List。请先创建列表，再回来生成建议。"}
+        </p>
+        <Link href="/workspace/shortlists" className="inline-flex rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-parchment">
+          {locale === "en" ? "Open profile lists" : "打开 Profile List"}
+        </Link>
+      </section>
+    );
+  }
 
   async function handleSubmit(formData: FormData) {
     const payload = {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { hashToken } from "../../../lib/server/auth";
 import { createMemorySession, getMemoryState, resetMemoryState } from "../../../lib/server/memory-store";
+import { resetRateLimiters } from "../../../lib/server/rate-limit";
 import { DELETE, POST } from "./route";
 
 function buildRequest(method: "POST" | "DELETE", body: Record<string, unknown>, rawSessionToken?: string) {
@@ -20,6 +21,7 @@ describe("/api/follows", () => {
     process.env.ALPHA_AGENTS_STORAGE = "memory";
     (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     resetMemoryState();
+    resetRateLimiters();
   });
 
   it("creates and removes a follow edge for the current actor", async () => {

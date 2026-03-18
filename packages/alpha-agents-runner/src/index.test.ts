@@ -12,6 +12,7 @@ describe("alpha-agents runner", () => {
 
   it("returns a demo benchmark artifact bundle", () => {
     const run = runDemoBenchmark({
+      requestId: "benchmark-request-1",
       agentSlug: "swe-copilot-forge",
       suiteSlug: "coding-command",
       versionId: "ver-swe-copilot-forge-1-4-2",

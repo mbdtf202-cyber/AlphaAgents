@@ -7,6 +7,7 @@ import {
   requireConfiguredAuthForWrite,
 } from "../../../../../lib/server/auth";
 import { getAppUrl, getGitHubConfig } from "../../../../../lib/server/env";
+import { getPreferredWorkspacePathFromRequest } from "../../../../../lib/server/preferences";
 import { getRepositoryBundle } from "../../../../../lib/server/repositories";
 
 function readCookie(request: Request, name: string): string | undefined {
@@ -73,14 +74,15 @@ export async function GET(request: Request) {
     }
 
     const bundle = await getRepositoryBundle();
-    const { rawSessionToken } = await bundle.authRepository.upsertGitHubAccount({
+    const { actor, rawSessionToken } = await bundle.authRepository.upsertGitHubAccount({
       providerAccountId: String(githubUser.id),
       email: primaryEmail,
       githubHandle: githubUser.login,
       profile: githubUser,
     });
 
-    const response = NextResponse.redirect(new URL("/workspace", request.url));
+    const workspaceRedirect = getPreferredWorkspacePathFromRequest(request, actor.role);
+    const response = NextResponse.redirect(new URL(workspaceRedirect, request.url));
     response.headers.append("Set-Cookie", clearTransientCookie(OAUTH_STATE_COOKIE_NAME));
     response.headers.append("Set-Cookie", buildSessionCookie(rawSessionToken, new Date(Date.now() + 1000 * 60 * 60 * 24 * 14)));
     return response;

@@ -5,28 +5,11 @@ on:
   push:
     branches:
       - main
+      - codex/**
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: alpha_agents
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres -d alpha_agents"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alpha_agents
-      ALPHA_AGENTS_STORAGE: memory
-      ALPHA_AGENTS_AUTH_SECRET: ci-secret
     steps:
       - uses: actions/checkout@v4
 
@@ -48,11 +31,156 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
+      - name: Unit Tests
         run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: alpha_agents
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d alpha_agents"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/alpha_agents
+      ALPHA_AGENTS_STORAGE: postgres
+      ALPHA_AGENTS_AUTH_SECRET: ci-secret
+      ALPHA_AGENTS_APP_URL: http://localhost:3100
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+      GITHUB_CLIENT_ID: ci-github-client
+      GITHUB_CLIENT_SECRET: ci-github-secret
+      POSTMARK_SERVER_TOKEN: ci-postmark-token
+      POSTMARK_FROM_EMAIL: noreply@example.com
+      POSTMARK_MESSAGE_STREAM: outbound
+      SENTRY_DSN: https://public@example.ingest.sentry.io/1
+      SENTRY_ENVIRONMENT: ci
+      SENTRY_RELEASE: ci-${{ github.sha }}
+      ALPHA_AGENTS_ENABLE_TEST_MAILER: true
+      ALPHA_AGENTS_DISABLE_RATE_LIMITS: true
+      ALPHA_AGENTS_FORCE_INSECURE_COOKIES: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate
+        run: pnpm db:migrate
+
+      - name: Integration Tests
+        run: pnpm test:integration
 
       - name: Coverage
         run: pnpm test:coverage
 
+  e2e:
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+      - postgres-integration
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: alpha_agents
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d alpha_agents"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/alpha_agents
+      ALPHA_AGENTS_STORAGE: postgres
+      ALPHA_AGENTS_AUTH_SECRET: ci-secret
+      ALPHA_AGENTS_APP_URL: http://localhost:3100
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+      GITHUB_CLIENT_ID: ci-github-client
+      GITHUB_CLIENT_SECRET: ci-github-secret
+      POSTMARK_SERVER_TOKEN: ci-postmark-token
+      POSTMARK_FROM_EMAIL: noreply@example.com
+      POSTMARK_MESSAGE_STREAM: outbound
+      SENTRY_DSN: https://public@example.ingest.sentry.io/1
+      SENTRY_ENVIRONMENT: ci
+      SENTRY_RELEASE: ci-${{ github.sha }}
+      ALPHA_AGENTS_ENABLE_TEST_MAILER: true
+      PLAYWRIGHT_BASE_URL: http://localhost:3100
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Migrate
+        run: pnpm db:migrate
+
       - name: Build
         run: pnpm build
+
+      - name: Start Web
+        run: pnpm start > /tmp/alpha-agents-web.log 2>&1 &
+
+      - name: Start Worker
+        run: pnpm worker:benchmarks > /tmp/alpha-agents-worker.log 2>&1 &
+
+      - name: Wait For Readiness
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3100/api/readyz > /tmp/readyz.json; then
+              cat /tmp/readyz.json
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/alpha-agents-web.log || true
+          cat /tmp/alpha-agents-worker.log || true
+          exit 1
+
+      - name: Browser Smoke
+        run: pnpm test:e2e
+
+      - name: Print Web Log On Failure
+        if: failure()
+        run: cat /tmp/alpha-agents-web.log || true
+
+      - name: Print Worker Log On Failure
+        if: failure()
+        run: cat /tmp/alpha-agents-worker.log || true

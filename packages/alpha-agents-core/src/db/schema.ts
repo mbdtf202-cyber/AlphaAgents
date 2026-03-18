@@ -1,4 +1,4 @@
-import { customType, index, integer, jsonb, numeric, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { bigint, customType, index, integer, jsonb, numeric, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 const vector = customType<{ data: number[] }>({
@@ -255,12 +255,19 @@ export const benchmarkRequestsTable = pgTable(
       .notNull(),
     objective: text("objective"),
     status: varchar("status", { length: 32 }).default("queued").notNull(),
+    queueJobId: varchar("queue_job_id", { length: 255 }),
     queuedAt: timestamp("queued_at", { withTimezone: true }).defaultNow().notNull(),
     startedAt: timestamp("started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    failureReason: text("failure_reason"),
     ...timestamps,
   },
-  (table) => [index("alpha_agents_benchmark_request_version_idx").on(table.agentVersionId), index("alpha_agents_benchmark_request_status_idx").on(table.status)],
+  (table) => [
+    index("alpha_agents_benchmark_request_version_idx").on(table.agentVersionId),
+    index("alpha_agents_benchmark_request_status_idx").on(table.status),
+    index("alpha_agents_benchmark_request_queue_job_idx").on(table.queueJobId),
+  ],
 );
 
 export const benchmarkArtifactsTable = pgTable("alpha_agents_benchmark_artifacts", {
@@ -294,6 +301,30 @@ export const benchmarkScorecards = pgTable("alpha_agents_benchmark_scorecards", 
   domainFit: integer("domain_fit").notNull(),
   ...timestamps,
 });
+
+export const serviceHeartbeatsTable = pgTable(
+  "alpha_agents_service_heartbeats",
+  {
+    id: varchar("id", { length: 191 }).primaryKey(),
+    serviceName: varchar("service_name", { length: 120 }).notNull(),
+    instanceId: varchar("instance_id", { length: 120 }).notNull(),
+    status: varchar("status", { length: 32 }).default("ok").notNull(),
+    lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true }).defaultNow().notNull(),
+    metadata: jsonb("metadata").default(sql`'{}'::jsonb`).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_service_heartbeat_service_idx").on(table.serviceName), index("alpha_agents_service_heartbeat_last_seen_idx").on(table.lastHeartbeatAt)],
+);
+
+export const rateLimitBucketsTable = pgTable(
+  "alpha_agents_rate_limit_buckets",
+  {
+    key: varchar("key", { length: 191 }).primaryKey(),
+    points: integer("points").notNull(),
+    expire: bigint("expire", { mode: "number" }),
+  },
+  (table) => [index("alpha_agents_rate_limit_expire_idx").on(table.expire)],
+);
 
 export const verifiedInstallsTable = pgTable("alpha_agents_verified_installs", {
   id: uuid("id").defaultRandom().primaryKey(),

@@ -4,6 +4,7 @@ import { publishInputSchema } from "@openclaw/alpha-agents-core";
 
 import { assertRole, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../../../lib/server/http";
+import { enforceAuthenticatedWriteRateLimit } from "../../../../../lib/server/rate-limit";
 import { getRepositoryBundle } from "../../../../../lib/server/repositories";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -11,6 +12,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
     assertRole(actor, ["builder", "admin"]);
+    await enforceAuthenticatedWriteRateLimit(request, actor);
     const { id: agentSlug } = await params;
     const parsed = await parseRequestWithSchema(request, publishInputSchema);
     const bundle = await getRepositoryBundle();

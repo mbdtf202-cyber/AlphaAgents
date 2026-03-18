@@ -25,3 +25,13 @@ export class ConfigurationError extends Error {
     this.name = "ConfigurationError";
   }
 }
+
+export class RateLimitError extends Error {
+  retryAfterSeconds: number;
+
+  constructor(message = "Too many requests.", retryAfterSeconds = 60) {
+    super(message);
+    this.name = "RateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}

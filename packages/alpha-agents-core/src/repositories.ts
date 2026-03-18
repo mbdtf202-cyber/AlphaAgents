@@ -60,6 +60,7 @@ export interface BenchmarkRepository {
   listQueuedRequests(): Promise<BenchmarkRequestRecord[]>;
   claimQueuedRequest(requestId: string): Promise<BenchmarkRequestRecord | undefined>;
   completeRequest(requestId: string, artifactBundle: BenchmarkRequestRecord["artifactBundle"]): Promise<BenchmarkRequestRecord>;
+  failRequest(requestId: string, failureReason: string): Promise<BenchmarkRequestRecord>;
 }
 
 export interface CatalogRepository {

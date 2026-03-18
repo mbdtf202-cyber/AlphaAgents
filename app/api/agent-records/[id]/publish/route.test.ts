@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { hashToken } from "../../../../../lib/server/auth";
 import { createMemorySession, getMemoryState, resetMemoryState } from "../../../../../lib/server/memory-store";
+import { resetRateLimiters } from "../../../../../lib/server/rate-limit";
 import { POST } from "./route";
 
 describe("POST /api/agent-records/[id]/publish", () => {
@@ -9,6 +10,7 @@ describe("POST /api/agent-records/[id]/publish", () => {
     process.env.ALPHA_AGENTS_STORAGE = "memory";
     (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     resetMemoryState();
+    resetRateLimiters();
   });
 
   it("creates or updates a moderation case for version publish review", async () => {

@@ -5,6 +5,7 @@ import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 import { getCurrentLocale } from "../lib/locale";
 import { getServerSession } from "../lib/server/auth";
+import { getPreferredWorkspacePath } from "../lib/server/preferences";
 import { siteName, siteTagline } from "../lib/site";
 import "./globals.css";
 
@@ -45,6 +46,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getCurrentLocale();
   const session = await getServerSession();
+  const workspaceHref = session ? await getPreferredWorkspacePath(session.role) : "/workspace";
 
   return (
     <html
@@ -52,7 +54,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`${fraunces.variable} ${plusJakartaSans.variable} ${notoSansSc.variable} ${notoSerifSc.variable}`}
     >
       <body>
-        <SiteHeader locale={locale} session={session} />
+        <SiteHeader locale={locale} session={session} workspaceHref={workspaceHref} />
         {children}
         <SiteFooter locale={locale} />
       </body>

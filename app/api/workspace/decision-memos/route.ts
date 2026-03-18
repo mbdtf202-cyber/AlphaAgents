@@ -6,6 +6,7 @@ import { decisionMemoInputSchema } from "@openclaw/alpha-agents-core";
 
 import { assertRole, requireConfiguredAuthForWrite, requireSessionFromRequest } from "../../../../lib/server/auth";
 import { errorResponse, parseRequestWithSchema } from "../../../../lib/server/http";
+import { enforceAuthenticatedWriteRateLimit } from "../../../../lib/server/rate-limit";
 import { getRepositoryBundle } from "../../../../lib/server/repositories";
 
 export async function POST(request: Request) {
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
     requireConfiguredAuthForWrite();
     const actor = await requireSessionFromRequest(request);
     assertRole(actor, ["buyer", "admin"]);
+    await enforceAuthenticatedWriteRateLimit(request, actor);
     const parsed = await parseRequestWithSchema(request, decisionMemoInputSchema);
     const bundle = await getRepositoryBundle();
     const memo = await bundle.shortlistRepository.createDecisionMemo(actor, {

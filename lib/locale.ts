@@ -4,11 +4,12 @@ import { cookies, headers } from "next/headers";
 
 import type { Locale } from "@openclaw/alpha-agents-core";
 
+import { LOCALE_COOKIE_NAME } from "./preferences";
 import { defaultLocale, supportedLocales } from "./site";
 
 export async function getCurrentLocale(): Promise<Locale> {
   const cookieStore = await cookies();
-  const cookieLocale = cookieStore.get("alpha-agents-locale")?.value as Locale | undefined;
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value as Locale | undefined;
   if (cookieLocale && supportedLocales.includes(cookieLocale)) {
     return cookieLocale;
   }

@@ -11,6 +11,10 @@ import { AuthError, ConfigurationError, ForbiddenError } from "./errors";
 export const SESSION_COOKIE_NAME = "alpha_agents_session";
 export const OAUTH_STATE_COOKIE_NAME = "alpha_agents_oauth_state";
 
+function shouldUseSecureCookies() {
+  return process.env.NODE_ENV === "production" && process.env.ALPHA_AGENTS_FORCE_INSECURE_COOKIES !== "true";
+}
+
 export function hashToken(token: string): string {
   return createHash("sha256").update(`${getAuthSecret()}:${token}`).digest("hex");
 }
@@ -20,22 +24,22 @@ export function generateOpaqueToken() {
 }
 
 export function buildSessionCookie(token: string, expiresAt: Date) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = shouldUseSecureCookies() ? "; Secure" : "";
   return `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Expires=${expiresAt.toUTCString()}${secure}`;
 }
 
 export function clearSessionCookie() {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = shouldUseSecureCookies() ? "; Secure" : "";
   return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
 }
 
 export function buildTransientCookie(name: string, value: string, maxAgeSeconds: number) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = shouldUseSecureCookies() ? "; Secure" : "";
   return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure}`;
 }
 
 export function clearTransientCookie(name: string) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = shouldUseSecureCookies() ? "; Secure" : "";
   return `${name}=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
 }
 

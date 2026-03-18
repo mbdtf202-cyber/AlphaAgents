@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { hashToken } from "../../../lib/server/auth";
 import { createMemorySession, resetMemoryState } from "../../../lib/server/memory-store";
+import { resetRateLimiters } from "../../../lib/server/rate-limit";
 import { POST } from "./route";
 
 function buildReviewRequest(body: Record<string, unknown>, rawSessionToken?: string) {
@@ -41,6 +42,7 @@ describe("POST /api/reviews", () => {
     process.env.ALPHA_AGENTS_STORAGE = "memory";
     (process.env as Record<string, string | undefined>).NODE_ENV = "test";
     resetMemoryState();
+    resetRateLimiters();
   });
 
   it("rejects unauthenticated review writes", async () => {

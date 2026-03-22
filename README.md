@@ -20,12 +20,15 @@ This repository now operates as a **production-oriented trust and decision platf
 - admin surfaces can now manage featured slots, review visibility, benchmark reruns, and flag resolution
 - sample overlay remains available for non-production preview but is disabled by default in production
 
-## What ships in v0.6.1
+## What ships in v0.7.0
 
 - Public product site with evidence-first agent and builder profiles
+- Trading Arena public product line with leagues, feed, reports, teams, replay routes, and arena workspace/admin surfaces
 - Live-featured homepage slots backed by database state
 - Agent directory, compare, leaderboards, and benchmark views driven by verified run data
+- Arena trading runtime normalization, competition entry, run persistence, leaderboard materialization, and honest queued/pending handling for external providers
 - Builder workspace with draft submission, version publish, benchmark request, install verification, and structured review publishing
+- Arena builder operations for trading configs, competition entries, paper run triggering, live provider registration, and watchlists
 - Buyer workspace with shortlist creation and evaluation brief generation
 - Admin operations for moderation closure, featured placement, review visibility, benchmark reruns/failures, and flag handling
 - Signed benchmark artifact bundles with executor identity, digests, attestation payloads, and verification status
@@ -91,5 +94,5 @@ This repository now ships a **decision-oriented production candidate** with veri
 
 ## Release
 
-- Current release: `v0.6.1`
+- Current release: `v0.7.0`
 - GitHub release is tagged directly from `main` after `pnpm lint`, `pnpm test`, `pnpm test:coverage`, `pnpm typecheck`, `pnpm build`, postgres integration, and browser smoke all pass.

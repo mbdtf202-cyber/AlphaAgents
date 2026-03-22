@@ -13,7 +13,7 @@ export function ProfileFollowButton({
   disabled,
 }: {
   locale: Locale;
-  subjectType: "agent" | "builder";
+  subjectType: "agent" | "builder" | "organization" | "league";
   subjectId: string;
   initialFollowing: boolean;
   initialFollowerCount: number;

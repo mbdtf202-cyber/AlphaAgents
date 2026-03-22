@@ -564,3 +564,236 @@ export const featureSlotsTable = pgTable("alpha_agents_feature_slots", {
   slotKey: varchar("slot_key", { length: 80 }).notNull().unique(),
   ...timestamps,
 });
+
+export const tradingVersionConfigsTable = pgTable(
+  "alpha_agents_trading_version_configs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    agentId: uuid("agent_id")
+      .references(() => agentRecords.id)
+      .notNull(),
+    agentVersionId: uuid("agent_version_id")
+      .references(() => agentVersions.id)
+      .notNull(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+    sourceKind: varchar("source_kind", { length: 32 }).notNull(),
+    runtimeImage: text("runtime_image").notNull(),
+    buildStatus: varchar("build_status", { length: 32 }).default("pending").notNull(),
+    validationStatus: varchar("validation_status", { length: 32 }).default("pending").notNull(),
+    validationReport: jsonb("validation_report").default(sql`'{}'::jsonb`).notNull(),
+    executionMode: varchar("execution_mode", { length: 32 }).notNull(),
+    promptMode: varchar("prompt_mode", { length: 32 }).notNull(),
+    strategySummary: jsonb("strategy_summary").default(sql`'{}'::jsonb`).notNull(),
+    marketScope: jsonb("market_scope").default(sql`'[]'::jsonb`).notNull(),
+    supportedProviders: jsonb("supported_providers").default(sql`'[]'::jsonb`).notNull(),
+    modelMetadata: jsonb("model_metadata").default(sql`'{}'::jsonb`).notNull(),
+    riskProfile: jsonb("risk_profile").default(sql`'{}'::jsonb`).notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    frozenAt: timestamp("frozen_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("alpha_agents_trading_version_agent_idx").on(table.agentId),
+    index("alpha_agents_trading_version_version_idx").on(table.agentVersionId),
+  ],
+);
+
+export const arenaCompetitionsTable = pgTable(
+  "alpha_agents_arena_competitions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    leagueSlug: varchar("league_slug", { length: 160 }).notNull(),
+    slug: varchar("slug", { length: 160 }).notNull().unique(),
+    title: jsonb("title").default(sql`'{}'::jsonb`).notNull(),
+    summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+    status: varchar("status", { length: 32 }).notNull(),
+    proofMode: varchar("proof_mode", { length: 32 }).notNull(),
+    rankingScope: varchar("ranking_scope", { length: 32 }).notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    initialCapitalUsd: numeric("initial_capital_usd", { precision: 12, scale: 2 }).default("0").notNull(),
+    marketScope: jsonb("market_scope").default(sql`'[]'::jsonb`).notNull(),
+    rulesetName: varchar("ruleset_name", { length: 120 }).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_arena_competition_league_idx").on(table.leagueSlug)],
+);
+
+export const arenaCompetitionEntriesTable = pgTable(
+  "alpha_agents_arena_competition_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    competitionId: uuid("competition_id")
+      .references(() => arenaCompetitionsTable.id)
+      .notNull(),
+    agentId: uuid("agent_id")
+      .references(() => agentRecords.id)
+      .notNull(),
+    agentVersionId: uuid("agent_version_id")
+      .references(() => agentVersions.id)
+      .notNull(),
+    tradingVersionConfigId: uuid("trading_version_config_id")
+      .references(() => tradingVersionConfigsTable.id)
+      .notNull(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+    entryStatus: varchar("entry_status", { length: 32 }).default("pending").notNull(),
+    proofMode: varchar("proof_mode", { length: 32 }).notNull(),
+    verificationLevel: varchar("verification_level", { length: 32 }).notNull(),
+    liveStatus: varchar("live_status", { length: 32 }).notNull(),
+    promptMode: varchar("prompt_mode", { length: 32 }).notNull(),
+    rankingScope: varchar("ranking_scope", { length: 32 }).notNull(),
+    ruleViolationCount: integer("rule_violation_count").default(0).notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("alpha_agents_arena_entry_competition_idx").on(table.competitionId),
+    index("alpha_agents_arena_entry_version_idx").on(table.agentVersionId),
+  ],
+);
+
+export const arenaRunsTable = pgTable(
+  "alpha_agents_arena_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    competitionId: uuid("competition_id")
+      .references(() => arenaCompetitionsTable.id)
+      .notNull(),
+    entryId: uuid("entry_id")
+      .references(() => arenaCompetitionEntriesTable.id)
+      .notNull(),
+    agentVersionId: uuid("agent_version_id")
+      .references(() => agentVersions.id)
+      .notNull(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+    providerKind: varchar("provider_kind", { length: 40 }).notNull(),
+    proofMode: varchar("proof_mode", { length: 32 }).notNull(),
+    verificationLevel: varchar("verification_level", { length: 32 }).notNull(),
+    liveStatus: varchar("live_status", { length: 32 }).notNull(),
+    rankingScope: varchar("ranking_scope", { length: 32 }).notNull(),
+    runStatus: varchar("run_status", { length: 32 }).default("queued").notNull(),
+    instrument: varchar("instrument", { length: 80 }).notNull(),
+    rationaleSummary: jsonb("rationale_summary").default(sql`'{}'::jsonb`).notNull(),
+    actionSummary: jsonb("action_summary").default(sql`'[]'::jsonb`).notNull(),
+    metrics: jsonb("metrics").default(sql`'{}'::jsonb`).notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    failureReason: text("failure_reason"),
+    ...timestamps,
+  },
+  (table) => [
+    index("alpha_agents_arena_run_competition_idx").on(table.competitionId),
+    index("alpha_agents_arena_run_entry_idx").on(table.entryId),
+    index("alpha_agents_arena_run_status_idx").on(table.runStatus),
+  ],
+);
+
+export const arenaLeaderboardRowsTable = pgTable(
+  "alpha_agents_arena_leaderboard_rows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    competitionId: uuid("competition_id")
+      .references(() => arenaCompetitionsTable.id)
+      .notNull(),
+    entryId: uuid("entry_id")
+      .references(() => arenaCompetitionEntriesTable.id)
+      .notNull(),
+    runId: uuid("run_id").references(() => arenaRunsTable.id),
+    proofMode: varchar("proof_mode", { length: 32 }).notNull(),
+    verificationLevel: varchar("verification_level", { length: 32 }).notNull(),
+    liveStatus: varchar("live_status", { length: 32 }).notNull(),
+    promptMode: varchar("prompt_mode", { length: 32 }).notNull(),
+    rankingScope: varchar("ranking_scope", { length: 32 }).notNull(),
+    rank: integer("rank").notNull(),
+    totalScore: numeric("total_score", { precision: 6, scale: 2 }).default("0").notNull(),
+    metrics: jsonb("metrics").default(sql`'{}'::jsonb`).notNull(),
+    asOf: timestamp("as_of", { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_arena_leaderboard_competition_idx").on(table.competitionId, table.rankingScope, table.asOf)],
+);
+
+export const arenaReplayBundlesTable = pgTable(
+  "alpha_agents_arena_replay_bundles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    runId: uuid("run_id")
+      .references(() => arenaRunsTable.id)
+      .notNull(),
+    title: jsonb("title").default(sql`'{}'::jsonb`).notNull(),
+    summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+    artifactUrl: text("artifact_url").notNull(),
+    chartUrl: text("chart_url"),
+    keyMoments: jsonb("key_moments").default(sql`'[]'::jsonb`).notNull(),
+    renderStatus: varchar("render_status", { length: 32 }).default("ready").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_arena_replay_run_idx").on(table.runId)],
+);
+
+export const arenaReportArtifactsTable = pgTable(
+  "alpha_agents_arena_report_artifacts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectType: varchar("subject_type", { length: 32 }).notNull(),
+    subjectId: varchar("subject_id", { length: 255 }).notNull(),
+    kind: varchar("kind", { length: 32 }).notNull(),
+    title: jsonb("title").default(sql`'{}'::jsonb`).notNull(),
+    summary: jsonb("summary").default(sql`'{}'::jsonb`).notNull(),
+    highlights: jsonb("highlights").default(sql`'[]'::jsonb`).notNull(),
+    windowLabel: varchar("window_label", { length: 80 }).notNull(),
+    scoreVersion: varchar("score_version", { length: 80 }).notNull(),
+    proofModes: jsonb("proof_modes").default(sql`'[]'::jsonb`).notNull(),
+    artifactUrl: text("artifact_url").notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_arena_report_subject_idx").on(table.subjectType, table.subjectId)],
+);
+
+export const arenaWatchlistEntriesTable = pgTable(
+  "alpha_agents_arena_watchlist_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+    createdByUserId: uuid("created_by_user_id")
+      .references(() => users.id)
+      .notNull(),
+    targetType: varchar("target_type", { length: 32 }).notNull(),
+    targetId: varchar("target_id", { length: 255 }).notNull(),
+    label: jsonb("label").default(sql`'{}'::jsonb`).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_arena_watchlist_owner_idx").on(table.ownerUserId, table.ownerOrganizationId)],
+);
+
+export const arenaLiveCredentialsTable = pgTable(
+  "alpha_agents_arena_live_credentials",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    agentId: uuid("agent_id")
+      .references(() => agentRecords.id)
+      .notNull(),
+    agentVersionId: uuid("agent_version_id")
+      .references(() => agentVersions.id)
+      .notNull(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id),
+    ownerOrganizationId: uuid("owner_organization_id").references(() => organizations.id),
+    createdByUserId: uuid("created_by_user_id")
+      .references(() => users.id)
+      .notNull(),
+    accountLabel: varchar("account_label", { length: 120 }).notNull(),
+    exchange: varchar("exchange", { length: 40 }).notNull(),
+    credentialMode: varchar("credential_mode", { length: 40 }).notNull(),
+    providerKind: varchar("provider_kind", { length: 40 }).notNull(),
+    status: varchar("status", { length: 32 }).default("pending").notNull(),
+    verificationLevel: varchar("verification_level", { length: 32 }).default("review").notNull(),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [index("alpha_agents_arena_live_credential_agent_idx").on(table.agentId, table.agentVersionId)],
+);

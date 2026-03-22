@@ -233,6 +233,38 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
         </section>
 
         <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
+          <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Trading arena" : "交易竞技场"}</h2>
+          <p className="mt-3 max-w-[64ch] text-lg leading-8 text-ink-700">
+            {locale === "en"
+              ? "Arena data sits beside benchmark credentials: normalized runtime configs, active competition entries, proof-mode-separated runs, and report artifacts."
+              : "竞技场数据与 benchmark 凭证并列展示：归一化运行时配置、活跃报名、按 proof mode 分层的 runs，以及报告工件。"}
+          </p>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {(agent.arena?.leaderboard ?? []).map((entry) => (
+              <article key={entry.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+                <div className="text-xs uppercase tracking-[0.18em] text-copper-700">
+                  #{entry.rank} · {entry.proofMode} · {entry.liveStatus}
+                </div>
+                <div className="mt-3 text-2xl font-semibold text-ink-950">{entry.totalScore}</div>
+                <p className="mt-2 text-sm text-ink-700">
+                  {locale === "en" ? "Return" : "收益"} {entry.netReturnPct}% · {locale === "en" ? "Drawdown" : "回撤"} {entry.maxDrawdownPct}%
+                </p>
+              </article>
+            ))}
+            {(agent.arena?.reports ?? []).map((report) => (
+              <article key={report.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+                <div className="text-xs uppercase tracking-[0.18em] text-copper-700">{report.kind}</div>
+                <h3 className="mt-3 text-2xl font-semibold text-ink-950">{resolveText(report.title, locale)}</h3>
+                <p className="mt-3 text-base leading-8 text-ink-700">{resolveText(report.summary, locale)}</p>
+                <a href={`/reports/${report.id}`} className="mt-4 inline-flex text-sm font-semibold text-ink-700 underline-offset-4 hover:underline">
+                  {locale === "en" ? "Open report" : "查看报告"}
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
           <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Verified benchmark evidence" : "已验证 benchmark 证据"}</h2>
           <p className="mt-3 max-w-[64ch] text-lg leading-8 text-ink-700">
             {locale === "en"

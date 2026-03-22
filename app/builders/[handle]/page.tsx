@@ -130,6 +130,21 @@ export default async function BuilderDetailPage({ params }: { params: Promise<{ 
       </section>
 
       <section className="mt-10 rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
+        <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Arena footprint" : "竞技场足迹"}</h2>
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          {(payload.arena.leaderboard ?? []).slice(0, 3).map((entry) => (
+            <article key={entry.id} className="rounded-[1.5rem] bg-parchment-deep p-5">
+              <div className="text-xs uppercase tracking-[0.18em] text-copper-700">
+                #{entry.rank} · {entry.proofMode}
+              </div>
+              <div className="mt-2 text-2xl font-semibold text-ink-950">{entry.agentName}</div>
+              <p className="mt-2 text-sm text-ink-700">{locale === "en" ? "Score" : "得分"} {entry.totalScore}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-[2rem] border border-ink-950/8 bg-white/82 p-7">
         <h2 className="font-display text-4xl text-ink-950">{locale === "en" ? "Activity" : "动态"}</h2>
         <p className="mt-3 text-lg leading-8 text-ink-700">
           {locale === "en"

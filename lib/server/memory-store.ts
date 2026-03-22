@@ -1,6 +1,23 @@
 import { randomUUID } from "node:crypto";
 
 import type {
+  ArenaCompetition,
+  ArenaCompetitionEntry,
+  ArenaFeedItem,
+  ArenaLeague,
+  ArenaLeaderboardEntry,
+  ArenaLiveCredential,
+  ArenaReportArtifact,
+  ArenaReplayArtifact,
+  ArenaRun,
+  ArenaWatchlistEntry,
+  TradingVersionConfig,
+} from "@openclaw/alpha-agents-arena-core";
+import {
+  arenaCompetitions,
+  arenaLeagues,
+} from "@openclaw/alpha-agents-arena-core";
+import type {
   ActorRole,
   AgentRecord,
   AgentSubmissionRecord,
@@ -86,6 +103,17 @@ export interface MemoryState {
   moderationCases: ModerationCase[];
   submissions: AgentSubmissionRecord[];
   benchmarkRequests: BenchmarkRequestRecord[];
+  arenaLeagues: ArenaLeague[];
+  arenaCompetitions: ArenaCompetition[];
+  arenaTradingVersionConfigs: TradingVersionConfig[];
+  arenaEntries: ArenaCompetitionEntry[];
+  arenaRuns: ArenaRun[];
+  arenaLeaderboards: ArenaLeaderboardEntry[];
+  arenaReplays: ArenaReplayArtifact[];
+  arenaReports: ArenaReportArtifact[];
+  arenaFeed: ArenaFeedItem[];
+  arenaLiveCredentials: ArenaLiveCredential[];
+  arenaWatchlist: ArenaWatchlistEntry[];
   auditLogs: AuditLogRecord[];
 }
 
@@ -152,6 +180,17 @@ function createInitialState(): MemoryState {
     moderationCases: moderationCases.map((item) => ({ ...item })),
     submissions: [],
     benchmarkRequests: [],
+    arenaLeagues: arenaLeagues.map((item) => ({ ...item })),
+    arenaCompetitions: arenaCompetitions.map((item) => ({ ...item })),
+    arenaTradingVersionConfigs: [],
+    arenaEntries: [],
+    arenaRuns: [],
+    arenaLeaderboards: [],
+    arenaReplays: [],
+    arenaReports: [],
+    arenaFeed: [],
+    arenaLiveCredentials: [],
+    arenaWatchlist: [],
     auditLogs: [],
   };
 }

@@ -7,10 +7,13 @@ export const defaultLocale: Locale = "en";
 export const supportedLocales: Locale[] = ["en", "zh-CN"];
 
 export const publicNavigation = [
-  { href: "/", label: { en: "Product", "zh-CN": "产品" } },
+  { href: "/", label: { en: "Home", "zh-CN": "首页" } },
+  { href: "/arena", label: { en: "Arena", "zh-CN": "竞技场" } },
+  { href: "/leagues", label: { en: "Leagues", "zh-CN": "联赛" } },
+  { href: "/leaderboards", label: { en: "Leaderboards", "zh-CN": "榜单" } },
   { href: "/agents", label: { en: "Agents", "zh-CN": "Agents" } },
-  { href: "/builders", label: { en: "Builders", "zh-CN": "Builders" } },
-  { href: "/benchmarks", label: { en: "Credentials", "zh-CN": "凭证" } },
-  { href: "/for-builders", label: { en: "For Builders", "zh-CN": "面向 Builder" } },
-  { href: "/for-teams", label: { en: "For Teams", "zh-CN": "面向团队" } },
+  { href: "/feed", label: { en: "Feed", "zh-CN": "动态" } },
+  { href: "/reports", label: { en: "Reports", "zh-CN": "报告" } },
+  { href: "/teams", label: { en: "Teams", "zh-CN": "团队" } },
+  { href: "/docs", label: { en: "Docs", "zh-CN": "文档" } },
 ];

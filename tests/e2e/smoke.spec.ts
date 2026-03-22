@@ -57,3 +57,19 @@ test("builder smoke path covers publish, install verification, follow, and bench
     )
     .toContain("completed");
 });
+
+test("arena public pages and builder arena workspace render", async ({ page }) => {
+  await page.goto("/arena");
+  await expect(page.getByText("Trading Arena").first()).toBeVisible();
+
+  await page.goto("/leagues/crypto-perps-main-arena");
+  await expect(page.getByText("Crypto Perps Main Arena")).toBeVisible();
+
+  await page.goto("/reports/report-swe-agent-card");
+  await expect(page.getByText("SWE Copilot Forge performance card")).toBeVisible();
+
+  await loginWithMagicLinkVerify(page, "builder");
+  await page.goto("/workspace/arena");
+  await expect(page.getByText("Arena operations")).toBeVisible();
+  await expect(page.getByText("Normalize a trading runtime")).toBeVisible();
+});

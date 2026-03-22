@@ -10,6 +10,7 @@ export interface WorkspaceNavItem {
 
 const commonItems: WorkspaceNavItem[] = [
   { href: "/workspace", label: { en: "Overview", "zh-CN": "概览" } },
+  { href: "/workspace/arena", label: { en: "Arena", "zh-CN": "竞技场" } },
   { href: "/workspace/benchmarks", label: { en: "Credentials", "zh-CN": "凭证" } },
   { href: "/workspace/reviews", label: { en: "Reputation", "zh-CN": "信誉" } },
   { href: "/workspace/settings", label: { en: "Settings", "zh-CN": "设置" } },

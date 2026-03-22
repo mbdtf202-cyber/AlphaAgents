@@ -13,7 +13,26 @@ import {
   type RelationshipEdge,
   type SessionActor,
 } from "@openclaw/alpha-agents-core";
+import type { ArenaWatchlistEntry } from "@openclaw/alpha-agents-arena-core";
 
+import {
+  getArenaAgentView,
+  getArenaBuilderView,
+  getArenaHomeView,
+  getArenaLeagueBySlug,
+  getArenaReplayByRunId,
+  getArenaReportById,
+  getArenaTeamBySlug,
+  listArenaEntriesForActor,
+  listArenaFeedItems,
+  listArenaLeagues,
+  listArenaLiveCredentialsForActor,
+  listArenaReports,
+  listArenaTeams,
+  listArenaTradingVersionConfigsForActor,
+  listArenaRunsForActor,
+  listArenaWatchlistForActor,
+} from "./arena-store";
 import { buildLeaderboardsFromAgents, filterAgents } from "./catalog";
 import { getStorageMode } from "./env";
 import { getReadCatalog, getRepositoryBundle } from "./repositories";
@@ -82,12 +101,16 @@ export async function getAgentPageData(slug: string, versionId?: string, actor?:
   }
   const withFollowState = { ...agent, following: isFollowing(actor, catalog.relationships, "agent", agent.id) };
   if (!versionId) {
-    return withFollowState;
+    return {
+      ...withFollowState,
+      arena: await getArenaAgentView(slug),
+    };
   }
   return {
     ...withFollowState,
     versions: withFollowState.versions.filter((version) => version.id === versionId),
     reviews: withFollowState.reviews.filter((review) => review.versionId === versionId),
+    arena: await getArenaAgentView(slug),
   };
 }
 
@@ -109,6 +132,7 @@ export async function getBuilderPageData(handle: string, actor?: SessionActor | 
     builder: builderWithFollowState,
     publishedAgents,
     reviews,
+    arena: await getArenaBuilderView(handle),
   };
 }
 
@@ -163,6 +187,54 @@ export async function getLeaderboardsPageData() {
   return buildLeaderboards(catalog.agents);
 }
 
+export async function getArenaPageData() {
+  const catalog = await getReadCatalog();
+  return getArenaHomeView(catalog.organizations, catalog.relationships);
+}
+
+export async function getLeaguesPageData() {
+  return listArenaLeagues();
+}
+
+export async function getLeaguePageData(slug: string) {
+  return getArenaLeagueBySlug(slug);
+}
+
+export async function getFeedPageData() {
+  return listArenaFeedItems();
+}
+
+export async function getReportsPageData() {
+  return listArenaReports();
+}
+
+export async function getReportPageData(reportId: string) {
+  return getArenaReportById(reportId);
+}
+
+export async function getReplayPageData(runId: string) {
+  return getArenaReplayByRunId(runId);
+}
+
+export async function getTeamsPageData() {
+  const catalog = await getReadCatalog();
+  return listArenaTeams(catalog.organizations, catalog.relationships);
+}
+
+export async function getTeamPageData(slug: string, actor?: SessionActor | null) {
+  const catalog = await getReadCatalog();
+  const payload = await getArenaTeamBySlug(slug, catalog.organizations, catalog.relationships);
+  if (!payload) {
+    return undefined;
+  }
+  return {
+    ...payload,
+    following: actor
+      ? isFollowing(actor, catalog.relationships, "organization", payload.organization.id)
+      : false,
+  };
+}
+
 export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
   const bundle = await getRepositoryBundle();
   const [submissions, builderAgents, installs, reviews, shortlists, decisionMemos, benchmarkRequests, moderationCases, relationships] =
@@ -177,6 +249,13 @@ export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
       bundle.moderationRepository.listModerationCases(actor),
       bundle.relationshipRepository.listRelationships(),
     ]);
+  const [arenaTradingConfigs, arenaEntries, arenaRuns, arenaLiveCredentials, arenaWatchlist] = await Promise.all([
+    listArenaTradingVersionConfigsForActor(actor),
+    listArenaEntriesForActor(actor),
+    listArenaRunsForActor(actor),
+    listArenaLiveCredentialsForActor(actor),
+    listArenaWatchlistForActor(actor),
+  ]);
 
   return {
     actor,
@@ -188,6 +267,11 @@ export async function getWorkspaceData(actor: SessionActor, locale: Locale) {
     decisionMemos,
     benchmarkRequests,
     moderationCases,
+    arenaTradingConfigs,
+    arenaEntries,
+    arenaRuns,
+    arenaLiveCredentials,
+    arenaWatchlist,
     followingCount: relationships.filter((edge) => edge.type === "follows" && edge.fromType === "user" && edge.fromId === actor.userId).length,
     reviewHighlights: reviews.map((review) => ({
       ...review,

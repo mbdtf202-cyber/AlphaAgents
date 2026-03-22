@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import { arenaCompetitions, arenaReports, arenaRuns } from "@openclaw/alpha-agents-arena-core";
 import {
   agents as sampleAgents,
   benchmarkSuites,
@@ -30,6 +31,7 @@ import {
   type MembershipRole,
   type ModerationCase,
   type ModerationRepository,
+  type OrganizationProfile,
   type PublicMetricsSummary,
   type RelationshipEdge,
   type RelationshipRepository,
@@ -135,6 +137,7 @@ export interface RepositoryBundle {
 interface PublicCatalog {
   agents: AgentProfileView[];
   builders: BuilderProfileView[];
+  organizations: OrganizationProfile[];
   relationships: RelationshipEdge[];
   metrics: PublicMetricsSummary;
 }
@@ -182,6 +185,7 @@ function buildSampleCatalog(): PublicCatalog {
   return {
     agents: sortAgentProfiles(hydrated.agents),
     builders: sortBuilderProfiles(hydrated.builders),
+    organizations: sampleOrganizations,
     relationships: sampleRelationshipEdges,
     metrics: {
       liveAgentCount: 0,
@@ -189,6 +193,9 @@ function buildSampleCatalog(): PublicCatalog {
       liveReviewCount: 0,
       liveBenchmarkRunCount: 0,
       sampleAgentCount: sampleAgents.length,
+      liveArenaRunCount: arenaRuns.length,
+      activeCompetitionCount: arenaCompetitions.filter((item) => item.status === "running").length,
+      publishedArenaReportCount: arenaReports.length,
     },
   };
 }
@@ -243,6 +250,7 @@ function buildMemoryPublicCatalog(state = getMemoryState()): PublicCatalog {
   return {
     agents: sortAgentProfiles(hydrated.agents),
     builders: sortBuilderProfiles(hydrated.builders),
+    organizations: state.organizations,
     relationships: state.relationships,
     metrics: {
       liveAgentCount: mergedAgents.filter((item) => item.provenance?.dataMode === "live").length,
@@ -250,6 +258,9 @@ function buildMemoryPublicCatalog(state = getMemoryState()): PublicCatalog {
       liveReviewCount: state.reviews.filter((item) => item.provenance?.dataMode === "live").length,
       liveBenchmarkRunCount: state.benchmarkRequests.filter((item) => item.status === "completed").length,
       sampleAgentCount: sampleAgents.length,
+      liveArenaRunCount: state.arenaRuns.length,
+      activeCompetitionCount: state.arenaCompetitions.filter((item) => item.status === "running").length,
+      publishedArenaReportCount: state.arenaReports.length,
     },
   };
 }
@@ -1416,6 +1427,7 @@ async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
   return {
     agents: sortAgentProfiles(hydrated.agents),
     builders: sortBuilderProfiles(hydrated.builders),
+    organizations: sampleOrganizationsForCatalog,
     relationships: [...sampleRelationshipEdgesForCatalog, ...liveRelationships],
     metrics: {
       liveAgentCount: Number(metricsRows[0][0]?.count ?? 0),
@@ -1423,6 +1435,9 @@ async function buildPostgresPublicCatalog(): Promise<PublicCatalog> {
       liveReviewCount: Number(metricsRows[2][0]?.count ?? 0),
       liveBenchmarkRunCount: Number(metricsRows[3][0]?.count ?? 0),
       sampleAgentCount: overlayEnabled ? sampleAgents.length : 0,
+      liveArenaRunCount: arenaRuns.length,
+      activeCompetitionCount: arenaCompetitions.filter((item) => item.status === "running").length,
+      publishedArenaReportCount: arenaReports.length,
     },
   };
 }
@@ -2902,6 +2917,11 @@ export async function getRepositoryBundle(): Promise<RepositoryBundle> {
 }
 
 export async function getReadCatalog() {
+  const isBuildPhase =
+    process.env.NEXT_PHASE === "phase-production-build" || process.env.__NEXT_PRIVATE_BUILD_WORKER === "true" || process.env.npm_lifecycle_event === "build";
+  if (isBuildPhase) {
+    return buildSampleCatalog();
+  }
   const mode = getStorageMode();
   if (mode === "sample") {
     return buildSampleCatalog();
@@ -2910,6 +2930,7 @@ export async function getReadCatalog() {
   return {
     agents: await bundle.agentRepository.listPublicAgents(),
     builders: await bundle.catalogRepository.listBuilders(),
+    organizations: buildSampleCatalog().organizations,
     relationships: await bundle.relationshipRepository.listRelationships(),
     metrics: await bundle.catalogRepository.getPublicMetricsSummary(),
   };

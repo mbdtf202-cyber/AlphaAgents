@@ -1,0 +1,16 @@
+{
+  "name": "@openclaw/alpha-agents-arena-core",
+  "version": "0.7.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@openclaw/alpha-agents-core": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}

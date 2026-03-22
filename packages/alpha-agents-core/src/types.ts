@@ -5,7 +5,7 @@ export type ActorRole = "buyer" | "builder" | "admin";
 export type MembershipRole = "member" | "manager" | "owner";
 export type BenchmarkRequestStatus = "queued" | "running" | "completed" | "failed";
 export type DecisionState = "hold" | "pilot" | "rollout" | "reject";
-export type ProfileSubjectType = "agent" | "builder" | "organization";
+export type ProfileSubjectType = "agent" | "builder" | "organization" | "league";
 export type RelationshipNodeType = ProfileSubjectType | "user";
 export type BenchmarkVerificationStatus = "pending" | "verified" | "invalid";
 export type ReviewVisibilityStatus = "visible" | "hidden";
@@ -619,6 +619,9 @@ export interface PublicMetricsSummary {
   liveReviewCount: number;
   liveBenchmarkRunCount: number;
   sampleAgentCount: number;
+  liveArenaRunCount?: number;
+  activeCompetitionCount?: number;
+  publishedArenaReportCount?: number;
 }
 
 export interface AuditLogRecord {

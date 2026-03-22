@@ -27,11 +27,15 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <div className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ink-500">{locale === "en" ? "Explore" : "浏览"}</p>
           <div className="flex flex-col gap-3 text-sm text-ink-700">
+            <Link href="/arena">Arena</Link>
+            <Link href="/leagues">{locale === "en" ? "Leagues" : "联赛"}</Link>
+            <Link href="/feed">{locale === "en" ? "Feed" : "动态"}</Link>
+            <Link href="/reports">{locale === "en" ? "Reports" : "报告"}</Link>
+            <Link href="/teams">{locale === "en" ? "Teams" : "团队"}</Link>
             <Link href="/agents">Agents</Link>
             <Link href="/builders">Builders</Link>
             <Link href="/benchmarks">{locale === "en" ? "Credentials" : "凭证"}</Link>
-            <Link href="/leaderboards">{locale === "en" ? "Leaderboards" : "榜单"}</Link>
-            <Link href="/compare">{locale === "en" ? "Compare" : "比较"}</Link>
+            <Link href="/docs">{locale === "en" ? "Docs" : "文档"}</Link>
           </div>
         </div>
         <div className="space-y-3">
@@ -40,7 +44,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             <Link href="/for-builders">{locale === "en" ? "Builder guide" : "Builder 指南"}</Link>
             <Link href="/for-teams">{locale === "en" ? "Team workflow" : "团队工作流"}</Link>
             <Link href="/workspace">{locale === "en" ? "Workspace" : "工作台"}</Link>
-            <Link href="/admin/moderation">{locale === "en" ? "Admin preview" : "后台预览"}</Link>
+            <Link href="/workspace/arena">{locale === "en" ? "Arena operations" : "竞技场操作"}</Link>
+            <Link href="/admin/arena">{locale === "en" ? "Arena admin" : "竞技场后台"}</Link>
           </div>
         </div>
       </div>

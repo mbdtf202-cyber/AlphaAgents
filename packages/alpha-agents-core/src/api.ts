@@ -84,7 +84,7 @@ export const compareInputSchema = z.object({
 });
 
 export const followProfileSchema = z.object({
-  subjectType: z.enum(["agent", "builder"]),
+  subjectType: z.enum(["agent", "builder", "organization", "league"]),
   subjectId: z.string().min(1),
 });
 

@@ -125,6 +125,29 @@ export function isSampleOverlayEnabled(): boolean {
   return !isProductionRuntime();
 }
 
+export function isArenaPublicEnabled(): boolean {
+  const configured = trimEnv("ARENA_PUBLIC_ENABLED");
+  if (configured === "true") {
+    return true;
+  }
+  if (configured === "false") {
+    return false;
+  }
+  return true;
+}
+
+export function isArenaLiveEnabled(): boolean {
+  return trimEnv("ARENA_LIVE_ENABLED") !== "false";
+}
+
+export function isArenaManagedKeysEnabled(): boolean {
+  return trimEnv("ARENA_MANAGED_KEYS_ENABLED") !== "false";
+}
+
+export function isArenaUserAgentEnabled(): boolean {
+  return trimEnv("ARENA_USER_AGENT_ENABLED") !== "false";
+}
+
 export function validateRuntimeConfig(target: RuntimeTarget) {
   const storageMode = getStorageMode();
   const errors: string[] = [];

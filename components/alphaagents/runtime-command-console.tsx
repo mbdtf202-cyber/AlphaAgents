@@ -37,6 +37,17 @@ type CommandDefinition = {
   enabled?: (snapshot: RuntimeSnapshot) => boolean;
 };
 
+type WorkflowDefinition = {
+  label: string;
+  enabled?: (snapshot: RuntimeSnapshot) => boolean;
+  steps: Array<{
+    commandName: string;
+    actorRole: "buyer" | "seller" | "operator";
+    payload: (snapshot: RuntimeSnapshot) => Record<string, unknown>;
+    expectedVersion?: (snapshot: RuntimeSnapshot) => number;
+  }>;
+};
+
 export function RuntimeCommandConsole({ mode }: { mode: Mode }) {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [busy, setBusy] = useState(false);
@@ -47,6 +58,7 @@ export function RuntimeCommandConsole({ mode }: { mode: Mode }) {
   }, []);
 
   const commandDefs = useMemo(() => createCommandDefinitions(mode), [mode]);
+  const workflowDefs = useMemo(() => createWorkflowDefinitions(mode), [mode]);
 
   async function refreshSnapshot() {
     const response = await fetch("/api/runtime-state", { cache: "no-store" });
@@ -69,18 +81,41 @@ export function RuntimeCommandConsole({ mode }: { mode: Mode }) {
     if (!snapshot) return;
     setBusy(true);
     try {
-      const response = await fetch("/api/commands", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          commandName: definition.commandName,
-          actorRole: definition.actorRole,
-          expectedVersion: definition.expectedVersion?.(snapshot),
-          payload: definition.payload(snapshot)
-        })
+      const result = await postCommand({
+        commandName: definition.commandName,
+        actorRole: definition.actorRole,
+        expectedVersion: definition.expectedVersion?.(snapshot),
+        payload: definition.payload(snapshot)
       });
-      const result = (await response.json()) as CommandResult;
       setLastResult(result);
+      await refreshSnapshot();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runWorkflow(definition: WorkflowDefinition) {
+    if (!snapshot) return;
+    setBusy(true);
+    try {
+      let currentSnapshot = snapshot;
+      let last: CommandResult | null = null;
+      for (const step of definition.steps) {
+        const result = await postCommand({
+          commandName: step.commandName,
+          actorRole: step.actorRole,
+          expectedVersion: step.expectedVersion?.(currentSnapshot),
+          payload: step.payload(currentSnapshot)
+        });
+        last = result;
+        if (!result.ok) {
+          setLastResult(result);
+          await refreshSnapshot();
+          return;
+        }
+        currentSnapshot = await fetchSnapshot();
+      }
+      setLastResult(last);
       await refreshSnapshot();
     } finally {
       setBusy(false);
@@ -119,6 +154,22 @@ export function RuntimeCommandConsole({ mode }: { mode: Mode }) {
         Delivery `{latest.deliveryId ?? "-"}`.
       </div>
       <div className="aa-button-row" style={{ marginTop: 12 }}>
+        {workflowDefs.map((definition) => {
+          const enabled = snapshot ? definition.enabled?.(snapshot) ?? true : false;
+          return (
+            <button
+              key={definition.label}
+              className="aa-button"
+              type="button"
+              disabled={busy || !enabled}
+              onClick={() => void runWorkflow(definition)}
+            >
+              {definition.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="aa-button-row" style={{ marginTop: 12 }}>
         {commandDefs.map((definition) => {
           const enabled = snapshot ? definition.enabled?.(snapshot) ?? true : false;
           return (
@@ -154,6 +205,25 @@ export function RuntimeCommandConsole({ mode }: { mode: Mode }) {
       </pre>
     </div>
   );
+
+  async function fetchSnapshot() {
+    const response = await fetch("/api/runtime-state", { cache: "no-store" });
+    return (await response.json()) as RuntimeSnapshot;
+  }
+
+  async function postCommand(input: {
+    commandName: string;
+    actorRole: "buyer" | "seller" | "operator";
+    expectedVersion?: number;
+    payload: Record<string, unknown>;
+  }) {
+    const response = await fetch("/api/commands", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    });
+    return (await response.json()) as CommandResult;
+  }
 }
 
 function createCommandDefinitions(mode: Mode): CommandDefinition[] {
@@ -342,6 +412,174 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
       enabled: (snapshot) => ["released", "partially_released", "refunded"].includes(snapshot.orders.at(-1)?.orderStatus ?? "")
     }
   ];
+}
+
+function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
+  if (mode === "quick-order") {
+    return [
+      {
+        label: "Run Buyer Intake Flow",
+        steps: [
+          {
+            commandName: "rfp.create",
+            actorRole: "buyer",
+            payload: () => ({
+              sku: "cross_border_competitor_topic_pack",
+              packageTier: "trial",
+              category: "US TikTok Shop sensitive-skin skincare",
+              market: "US",
+              channels: ["tiktok_shop_public"],
+              language: "zh-CN analysis with English source labels",
+              budgetAmountMinor: 198000,
+              currency: "CNY",
+              deliverableFormat: ["pdf", "csv"]
+            }),
+            expectedVersion: () => 0
+          },
+          {
+            commandName: "rfp.publish",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              rfpId: snapshot.rfps.at(-1)?.id,
+              acceptanceTemplateId: "acceptance_template_trial_v1",
+              competitorsOrDiscoveryRule: "Use 5 named competitors",
+              prohibitedSources: ["production_account_login", "paid_account", "private_group", "ad_account", "fund_movement"],
+              deadlineAt: "2026-05-10T18:00:00+08:00"
+            }),
+            expectedVersion: (snapshot) => snapshot.rfps.at(-1)?.version ?? 1
+          },
+          {
+            commandName: "proposal.submit",
+            actorRole: "seller",
+            payload: (snapshot) => ({
+              rfpId: snapshot.rfps.at(-1)?.id,
+              sellerId: "seller_harbor_growth_sandbox",
+              agentId: "agent_mira_competitor_intel_sandbox",
+              priceAmountMinor: 198000,
+              deliveryHours: 48,
+              includedScope: ["5 competitors", "15 topic ideas"],
+              evidenceStandard: "Every key claim maps to evidence",
+              responsibleOwner: "project-owner@harbor-growth.example",
+              capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+            })
+          },
+          {
+            commandName: "proposal.accept",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              proposalId: snapshot.proposals.at(-1)?.id,
+              termsSnapshot: "trial_v1_terms"
+            })
+          }
+        ],
+        enabled: (snapshot) => snapshot.orders.length === 0
+      }
+    ];
+  }
+
+  if (mode === "order-workspace") {
+    return [
+      {
+        label: "Advance Order To Accepted",
+        steps: [
+          {
+            commandName: "escrow.fund",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              orderId: snapshot.orders.at(-1)?.id,
+              paymentRef: "sandbox_payment_ref_001",
+              receivedAt: "2026-05-08T20:00:00+08:00",
+              receivedBy: "user_finance_sandbox_001"
+            })
+          },
+          {
+            commandName: "permission.approve",
+            actorRole: "operator",
+            payload: (snapshot) => ({
+              grantId: snapshot.grants.at(-1)?.id,
+              toolAllowlist: ["read_public_url", "write_generated_artifact"],
+              expiresAt: "2026-05-10T18:00:00+08:00",
+              approvalReason: "trial lane"
+            })
+          },
+          {
+            commandName: "run.start",
+            actorRole: "seller",
+            payload: (snapshot) => ({
+              orderId: snapshot.orders.at(-1)?.id,
+              permissionGrantIds: [snapshot.grants.at(-1)?.id]
+            })
+          },
+          {
+            commandName: "delivery.submit",
+            actorRole: "seller",
+            payload: (snapshot) => ({
+              orderId: snapshot.orders.at(-1)?.id,
+              executionRunIds: [snapshot.runs.at(-1)?.id],
+              artifactRefs: ["ev_sandbox_delivery_pdf_001"],
+              evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
+              criteriaMapping: ["competitor_coverage"],
+              knownLimitations: ["sandbox only"]
+            })
+          },
+          {
+            commandName: "delivery.qa_pass",
+            actorRole: "operator",
+            payload: (snapshot) => ({
+              deliveryPackageId: snapshot.deliveries.at(-1)?.id,
+              qaChecklistId: "qa_trial_001",
+              sampledFacts: ["fact_01"]
+            })
+          },
+          {
+            commandName: "acceptance.accept",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              orderId: snapshot.orders.at(-1)?.id,
+              deliveryPackageId: snapshot.deliveries.at(-1)?.id,
+              criteriaConfirmations: ["competitor_coverage", "evidence_traceability", "topic_actionability"],
+              criteriaScores: {
+                competitor_coverage: 20,
+                evidence_traceability: 25,
+                topic_actionability: 20
+              },
+              decisionReason: "buyer accepted"
+            })
+          }
+        ],
+        enabled: (snapshot) => snapshot.orders.length > 0 && !["accepted", "released"].includes(snapshot.orders.at(-1)?.orderStatus ?? "")
+      },
+      {
+        label: "Close Accepted Order",
+        steps: [
+          {
+            commandName: "escrow.release",
+            actorRole: "operator",
+            payload: (snapshot) => ({
+              orderId: snapshot.orders.at(-1)?.id,
+              releaseReason: "accepted",
+              financeEvidenceRef: "ev_sandbox_delivery_pdf_001"
+            })
+          },
+          {
+            commandName: "rating.submit",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              orderId: snapshot.orders.at(-1)?.id,
+              subjectType: "agent",
+              subjectId: "agent_mira_competitor_intel_sandbox",
+              agentVersion: "1.0.0",
+              ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+              deliveryOutcome: "accepted"
+            })
+          }
+        ],
+        enabled: (snapshot) => (snapshot.orders.at(-1)?.acceptanceStatus ?? "") === "accepted"
+      }
+    ];
+  }
+
+  return [];
 }
 
 function getLatestHandles(snapshot: RuntimeSnapshot | null) {

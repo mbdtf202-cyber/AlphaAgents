@@ -1,6 +1,7 @@
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, SectionCard } from "../../components/alphaagents/blocks";
 import { getProviderProofModel } from "../../lib/alphaagents/view-models";
+import Link from "next/link";
 
 export default function ProviderProofPage() {
   const model = getProviderProofModel();
@@ -32,6 +33,11 @@ export default function ProviderProofPage() {
               ))}
             </div>
             <p className="aa-meta">{app.installBoundary}</p>
+            <div className="aa-button-row" style={{ marginTop: 12 }}>
+              <Link className="aa-button" href={`/agent-apps/${app.slug}`}>
+                Open Agent App Detail
+              </Link>
+            </div>
           </SectionCard>
         ) : null}
       </div>

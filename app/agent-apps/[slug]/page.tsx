@@ -15,7 +15,7 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
   const runtimeSnapshot = getRuntimeSnapshot();
 
   return (
-    <AppShell shell={model.shell} currentPath="/provider-proof">
+    <AppShell shell={model.shell} currentPath="/agent-apps">
       <div className="aa-grid aa-grid-2">
         <SectionCard title={model.app.name} subtitle={`${model.app.legalEntity} / Agent App detail`}>
           <div>
@@ -66,6 +66,22 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
             ]}
           />
         </SectionCard>
+        <SectionCard title="Delivery, usage, and acceptance preview" subtitle="Agent App detail must show what a buyer receives, what runtime proof is emitted, and how acceptance is judged.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Preview" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Sample package", value: model.sampleEvidence.packageId },
+              { label: "Acceptance proof types", value: model.app.acceptanceProof.join(", ") },
+              { label: "Runtime evidence outcome", value: model.sampleEvidence.ledger.ledgerStatus },
+              { label: "Acceptance result", value: model.sampleEvidence.snapshot.ui.orderDto.acceptanceStatus },
+              { label: "Procurement safety", value: "sample_only + sandbox_verified" }
+            ]}
+          />
+          <CommandPreview command={"alphaagents evidence show --json\nalphaagents rating submit --json"} />
+        </SectionCard>
         <SectionCard title="Install, usage, and exit proof" subtitle="Agent App subscription still emits live install, usage evidence, and exit records.">
           <DataTable
             columns={[
@@ -106,6 +122,21 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
               rows={model.relatedListings}
             />
           )}
+        </SectionCard>
+        <SectionCard title="Permissions, deployment, and rollback boundaries" subtitle="App purchase review must include runtime callbacks, exit paths, and blocked authority boundaries.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Boundary" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Runtime callbacks", value: Object.values(model.app.runtimeCallbacks).join(", ") },
+              { label: "Exit mechanisms", value: model.app.exitMechanisms.join(", ") },
+              { label: "Responsibility chain", value: model.app.responsibilityChain.join(", ") },
+              { label: "Blocked by platform rules", value: "payment bypass, acceptance bypass, evidence bypass" },
+              { label: "Deployment path", value: "platform-governed App run with exportable evidence" }
+            ]}
+          />
         </SectionCard>
         <RuntimeCommandConsole mode="agent-app" initialSnapshot={runtimeSnapshot} />
       </div>

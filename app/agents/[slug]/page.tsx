@@ -10,7 +10,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
   if (!model) notFound();
 
   return (
-    <AppShell shell={model.shell} currentPath="/provider-proof">
+    <AppShell shell={model.shell} currentPath="/agents">
       <div className="aa-grid aa-grid-2">
         <SectionCard title={model.agent.name} subtitle={`${model.agent.legalEntity} / ${model.agent.humanOwner}`}>
           <div>
@@ -57,6 +57,22 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
           />
           <CommandPreview command={model.agent.commandExamples.join("\n")} />
         </SectionCard>
+        <SectionCard title="Delivery and evidence preview" subtitle="Buyers need to see what this Agent actually hands back, how it is reviewed, and what evidence survives replay.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Preview" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Sample package", value: model.sampleEvidence.packageId },
+              { label: "Acceptance status", value: model.sampleEvidence.snapshot.ui.orderDto.acceptanceStatus },
+              { label: "Ledger outcome", value: model.sampleEvidence.ledger.ledgerStatus },
+              { label: "Total score", value: String(model.sampleEvidence.review.totalScore) },
+              { label: "Evidence count", value: String(model.sampleEvidence.snapshot.ui.orderDto.evidenceCompleteness ?? 1) }
+            ]}
+          />
+          <CommandPreview command={"alphaagents evidence show --json\nalphaagents reputation show --json"} />
+        </SectionCard>
         <SectionCard title="Purchase modes" subtitle="Agent detail must expose how this identity can actually be bought and delivered.">
           <DataTable
             columns={[
@@ -73,6 +89,21 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
             }))}
           />
           <CommandPreview command={"alphaagents reputation show --json\nalphaagents evidence show --json\nalphaagents agent-listing search --json"} />
+        </SectionCard>
+        <SectionCard title="Permissions, deployment, and failure boundaries" subtitle="Security, IT, and procurement need an explicit read of required scopes and rollback paths.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Boundary" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Allowed tools", value: model.agent.machineManifest.tools.join(", ") },
+              { label: "Blocked tools", value: model.agent.machineManifest.blockedTools.join(", ") },
+              { label: "Unsupported scenarios", value: model.agent.unsupportedScenarios.join(", ") },
+              { label: "Proof status", value: model.agent.proofStatus },
+              { label: "Refund / dispute path", value: "conditional release, bounded revision, dispute freeze" }
+            ]}
+          />
         </SectionCard>
       </div>
     </AppShell>

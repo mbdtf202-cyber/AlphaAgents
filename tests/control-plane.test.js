@@ -37,6 +37,10 @@ test("catalog control-plane commands return structured results", () => {
 test("agent app and program commands use their canonical actor roles", () => {
   const actorMap = {
     "buyer-org.setup": "buyer",
+    "custom-project.request": "buyer",
+    "custom-project.confirm-milestone": "operator",
+    "custom-project.submit-uat": "seller",
+    "custom-project.create-change-order": "buyer",
     "agent-app.install": "buyer",
     "agent-app.record-usage": "buyer",
     "agent-app.exit": "buyer",

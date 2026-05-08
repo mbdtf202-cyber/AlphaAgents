@@ -25,6 +25,10 @@ for (const key of Object.keys(contract.statuses)) {
 
 const requiredCommands = [
   "buyer-org.setup",
+  "custom-project.request",
+  "custom-project.confirm-milestone",
+  "custom-project.submit-uat",
+  "custom-project.create-change-order",
   "agent-app.install",
   "agent-app.record-usage",
   "agent-app.exit",
@@ -70,6 +74,7 @@ const requiredDtos = [
   "EvidenceExportDto",
   "EvidenceDeletionDto",
   "BuyerOrgProfileDto",
+  "CustomProjectDto",
   "AgentAppInstallDto",
   "AgentAppUsageDto",
   "ProgramWorkspaceDto",
@@ -123,6 +128,10 @@ for (const dto of requiredDtos) {
 
 const requiredBranchEvents = [
   "BuyerOrgSetupUpdated",
+  "CustomProjectRequested",
+  "CustomProjectMilestoneConfirmed",
+  "CustomProjectUatSubmitted",
+  "CustomProjectChangeOrderCreated",
   "AgentAppInstalled",
   "AgentAppUsageRecorded",
   "AgentAppExited",

@@ -188,6 +188,7 @@ type CommandResult<TEvent, TDto> = CommandSuccess<TEvent, TDto> | CommandFailure
 对应命令边界也必须机器可读并与 UI/API/CLI 对齐：
 
 - `buyer-org.setup` 只更新买方组织签约、付款、验收和 scope acknowledgement 相关字段，不得直接改写订单终态。
+- `custom-project.request`、`custom-project.confirm-milestone`、`custom-project.submit-uat`、`custom-project.create-change-order` 只维护定制 Agent 项目的 intake、里程碑、UAT 和变更单状态，不得绕过订单、证据、验收、财务和声誉链。
 - `agent-app.install`、`agent-app.record-usage`、`agent-app.exit` 只维护 Agent App 安装/使用/退出记录，不能绕过订单、证据、验收、财务和声誉链。
 - `program.allocate-credit`、`program.record-drawdown`、`program.update-qbr` 只更新 ProgramWorkspace 投影与 program event，不得直接改写 EscrowOrder、AcceptanceReview 或 ReputationEvent。
 

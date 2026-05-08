@@ -5,6 +5,7 @@ import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
 import { createTempStateFile, resetRuntimeState } from "../lib/alphaagents/runtime-state.js";
 import {
   getAgentAppDetailModel,
+  getCustomAgentModel,
   getProgramOpsModel,
   getRiskFinanceModel
 } from "../lib/alphaagents/view-models.js";
@@ -227,4 +228,71 @@ test("risk finance model exposes live runtime finance rows", () => {
   assert.ok(model.runtimeGrants.length >= 1);
   assert.equal(model.runtimeOrders[0].ledgerStatus, "escrowed");
   assert.ok(model.runtimeEvents.some((entry) => entry.eventName === "EscrowFunded"));
+});
+
+test("custom agent model reflects intake, milestone, UAT, and change order runtime state", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const intake = executeRuntimeCommand(
+    "custom-project.request",
+    runtimeEnvelope(
+      "buyer",
+      {
+        projectId: "custom_project_northstar_launch_001",
+        buyerOrgId: "org_demo_001",
+        projectTitle: "NorthStar launch workflow agent",
+        categoryId: "custom_agent_app",
+        targetOutcome: "launch-ready managed workflow agent with buyer UAT",
+        requestedBy: "user_demo_buyer_owner"
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(intake.ok, true);
+
+  const milestone = executeRuntimeCommand(
+    "custom-project.confirm-milestone",
+    runtimeEnvelope("operator", {
+      projectId: intake.dto.id,
+      milestoneId: "milestone_design_freeze_001",
+      milestoneName: "Design freeze",
+      dueAt: "2026-05-20T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(milestone.ok, true);
+
+  const uat = executeRuntimeCommand(
+    "custom-project.submit-uat",
+    runtimeEnvelope("seller", {
+      projectId: intake.dto.id,
+      milestoneId: "milestone_design_freeze_001",
+      executionSummary: "sandbox UAT flow completed",
+      evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+    }),
+    { stateFile }
+  );
+  assert.equal(uat.ok, true);
+
+  const change = executeRuntimeCommand(
+    "custom-project.create-change-order",
+    runtimeEnvelope("buyer", {
+      projectId: intake.dto.id,
+      changeOrderId: "change_scope_001",
+      requestedChange: "add private deployment checklist",
+      impactSummary: "one extra review cycle"
+    }),
+    { stateFile }
+  );
+  assert.equal(change.ok, true);
+
+  const model = getCustomAgentModel({ stateFile });
+
+  assert.equal(model.runtimeProjects.length, 1);
+  assert.equal(model.runtimeProjects[0].projectStatus, "change_requested");
+  assert.equal(model.runtimeProjects[0].milestones.length, 1);
+  assert.equal(model.runtimeProjects[0].uatStatus, "submitted");
+  assert.equal(model.runtimeProjects[0].changeOrders.length, 1);
 });

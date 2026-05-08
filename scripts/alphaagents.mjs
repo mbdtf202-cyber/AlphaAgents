@@ -42,6 +42,10 @@ if (command === "evidence show") {
 }
 
 const commandMap = {
+  "custom-project request": "custom-project.request",
+  "custom-project confirm-milestone": "custom-project.confirm-milestone",
+  "custom-project submit-uat": "custom-project.submit-uat",
+  "custom-project create-change-order": "custom-project.create-change-order",
   "agent-app install": "agent-app.install",
   "agent-app record-usage": "agent-app.record-usage",
   "agent-app exit": "agent-app.exit",
@@ -86,6 +90,9 @@ const commandMap = {
 };
 
 const actorRoleMap = {
+  "custom-project.confirm-milestone": "operator",
+  "custom-project.submit-uat": "seller",
+  "custom-project.create-change-order": "buyer",
   "program.allocate-credit": "operator",
   "program.record-drawdown": "operator",
   "program.update-qbr": "operator",
@@ -133,6 +140,10 @@ if (contractCommand) {
 console.error("Unsupported command. Try:");
 console.error("  node scripts/alphaagents.mjs runtime reset");
 console.error("  node scripts/alphaagents.mjs runtime snapshot");
+console.error("  node scripts/alphaagents.mjs custom-project request");
+console.error("  node scripts/alphaagents.mjs custom-project confirm-milestone");
+console.error("  node scripts/alphaagents.mjs custom-project submit-uat");
+console.error("  node scripts/alphaagents.mjs custom-project create-change-order");
 console.error("  node scripts/alphaagents.mjs agent-app install");
 console.error("  node scripts/alphaagents.mjs agent-app record-usage");
 console.error("  node scripts/alphaagents.mjs agent-app exit");

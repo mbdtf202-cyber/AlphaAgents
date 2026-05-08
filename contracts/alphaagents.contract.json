@@ -108,6 +108,8 @@
     "appInstallStatus": ["active", "exited"],
     "appUsageStatus": ["recorded"],
     "programQbrStatus": ["not_started", "in_progress", "ready_for_review"],
+    "customProjectStatus": ["intake_submitted", "milestone_confirmed", "uat_submitted", "change_requested"],
+    "customProjectUatStatus": ["not_started", "submitted"],
     "rfpStatus": ["draft", "published", "quoting", "selected", "ordered", "cancelled"],
     "proposalStatus": ["submitted", "selected", "declined", "expired", "withdrawn"],
     "orderStatus": ["created", "funded", "in_progress", "delivery_submitted", "ready_for_acceptance", "revision_requested", "disputed", "resolved", "accepted", "released", "partially_released", "refunded", "closed"],
@@ -179,6 +181,50 @@
       "successEvents": ["BuyerOrgSetupUpdated"],
       "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
       "responseDto": "BuyerOrgProfileDto"
+    },
+    "custom-project.request": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["projectId", "buyerOrgId", "projectTitle", "categoryId", "targetOutcome", "requestedBy"],
+      "requiredScopes": ["buyer:orders.write"],
+      "successEvents": ["CustomProjectRequested"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "CustomProjectDto"
+    },
+    "custom-project.confirm-milestone": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["projectId", "milestoneId", "milestoneName", "dueAt"],
+      "requiredScopes": ["operator:acceptance.write"],
+      "successEvents": ["CustomProjectMilestoneConfirmed"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "CustomProjectDto"
+    },
+    "custom-project.submit-uat": {
+      "mutates": true,
+      "actorRoles": ["seller", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "any",
+      "payloadRequired": ["projectId", "milestoneId", "executionSummary", "evidenceRefs"],
+      "requiredScopes": ["seller:deliveries.write", "runtime:deliveries.write"],
+      "successEvents": ["CustomProjectUatSubmitted"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED", "EVIDENCE_NOT_VISIBLE"],
+      "responseDto": "CustomProjectDto"
+    },
+    "custom-project.create-change-order": {
+      "mutates": true,
+      "actorRoles": ["buyer", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "any",
+      "payloadRequired": ["projectId", "changeOrderId", "requestedChange", "impactSummary"],
+      "requiredScopes": ["buyer:acceptance.write", "operator:acceptance.write"],
+      "successEvents": ["CustomProjectChangeOrderCreated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "CustomProjectDto"
     },
     "agent-app.install": {
       "mutates": true,
@@ -566,6 +612,7 @@
   },
   "dtoSchemas": {
     "BuyerOrgProfileDto": ["id", "lifecycleStage", "requesterUserId", "acceptanceOwnerUserId", "financeContactUserId", "authorizedPayerId", "signerIds", "invoiceReadiness", "scopeAcknowledgement", "version"],
+    "CustomProjectDto": ["id", "tenantId", "buyerOrgId", "projectTitle", "categoryId", "targetOutcome", "requestedBy", "projectStatus", "uatStatus", "milestones", "changeOrders", "version"],
     "AgentAppInstallDto": ["id", "tenantId", "buyerOrgId", "appId", "usageMode", "authorizedBy", "installStatus", "version"],
     "AgentAppUsageDto": ["id", "tenantId", "installId", "appId", "usageSummary", "evidenceRefs", "usageStatus", "version"],
     "ProgramWorkspaceDto": ["id", "buyerOrgId", "activeCreditMinor", "backlogValueMinor", "renewalBlockers", "qbrStatus"],
@@ -583,6 +630,10 @@
   },
   "eventPayloadSchemas": {
     "BuyerOrgSetupUpdated": ["buyerOrgId", "invoiceReadiness", "scopeAcknowledgement"],
+    "CustomProjectRequested": ["projectId", "projectStatus"],
+    "CustomProjectMilestoneConfirmed": ["projectId", "milestoneId"],
+    "CustomProjectUatSubmitted": ["projectId", "milestoneId"],
+    "CustomProjectChangeOrderCreated": ["projectId", "changeOrderId"],
     "AgentAppInstalled": ["installId", "appId"],
     "AgentAppUsageRecorded": ["usageRunId", "installId"],
     "AgentAppExited": ["installId", "exitReason"],

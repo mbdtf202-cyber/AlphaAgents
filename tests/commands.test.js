@@ -69,3 +69,52 @@ test("dispute.open returns disputed order state", () => {
   assert.equal(result.dto.orderStatus, "disputed");
   assert.equal(result.dto.acceptanceStatus, "disputed");
 });
+
+test("agent-app install and usage commands return structured AaaS lifecycle data", () => {
+  const install = runCommand(
+    "agent-app.install",
+    createDemoEnvelope("buyer", {
+      appId: "agent_app_harbor_growth_workbench",
+      buyerOrgId: "org_demo_001",
+      authorizedBy: "user_demo_buyer_owner",
+      usageMode: "subscription"
+    })
+  );
+  assert.equal(install.ok, true);
+  assert.equal(install.dto.installStatus, "active");
+
+  const usage = runCommand(
+    "agent-app.record-usage",
+    createDemoEnvelope("buyer", {
+      installId: "app_install_demo_001",
+      appId: "agent_app_harbor_growth_workbench",
+      usageSummary: "weekly content sync completed with buyer-safe evidence",
+      evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+    })
+  );
+  assert.equal(usage.ok, true);
+  assert.equal(usage.dto.usageStatus, "recorded");
+});
+
+test("program ops commands return credit and qbr mutations", () => {
+  const allocate = runCommand(
+    "program.allocate-credit",
+    createDemoEnvelope("operator", {
+      programId: "program_northstar_growth_001",
+      creditAmountMinor: 320000,
+      reason: "quarterly top-up"
+    })
+  );
+  assert.equal(allocate.ok, true);
+  assert.equal(allocate.dto.activeCreditMinor, 2120000);
+
+  const qbr = runCommand(
+    "program.update-qbr",
+    createDemoEnvelope("operator", {
+      programId: "program_northstar_growth_001",
+      qbrStatus: "ready_for_review"
+    })
+  );
+  assert.equal(qbr.ok, true);
+  assert.equal(qbr.dto.qbrStatus, "ready_for_review");
+});

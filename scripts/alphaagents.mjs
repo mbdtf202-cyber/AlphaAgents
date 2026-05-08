@@ -42,6 +42,12 @@ if (command === "evidence show") {
 }
 
 const commandMap = {
+  "agent-app install": "agent-app.install",
+  "agent-app record-usage": "agent-app.record-usage",
+  "agent-app exit": "agent-app.exit",
+  "program allocate-credit": "program.allocate-credit",
+  "program record-drawdown": "program.record-drawdown",
+  "program update-qbr": "program.update-qbr",
   "agent-category create": "agent-category create",
   "agent-category update": "agent-category update",
   "agent-category archive": "agent-category archive",
@@ -80,6 +86,9 @@ const commandMap = {
 };
 
 const actorRoleMap = {
+  "program.allocate-credit": "operator",
+  "program.record-drawdown": "operator",
+  "program.update-qbr": "operator",
   "agent-category create": "operator",
   "agent-category update": "operator",
   "agent-category archive": "operator",
@@ -124,10 +133,16 @@ if (contractCommand) {
 console.error("Unsupported command. Try:");
 console.error("  node scripts/alphaagents.mjs runtime reset");
 console.error("  node scripts/alphaagents.mjs runtime snapshot");
+console.error("  node scripts/alphaagents.mjs agent-app install");
+console.error("  node scripts/alphaagents.mjs agent-app record-usage");
+console.error("  node scripts/alphaagents.mjs agent-app exit");
 console.error("  node scripts/alphaagents.mjs agent-category list");
 console.error("  node scripts/alphaagents.mjs agent-category create");
 console.error("  node scripts/alphaagents.mjs agent-listing search");
 console.error("  node scripts/alphaagents.mjs agent-listing publish");
+console.error("  node scripts/alphaagents.mjs program allocate-credit");
+console.error("  node scripts/alphaagents.mjs program record-drawdown");
+console.error("  node scripts/alphaagents.mjs program update-qbr");
 console.error("  node scripts/alphaagents.mjs rfp create");
 console.error("  node scripts/alphaagents.mjs rfp publish");
 console.error("  node scripts/alphaagents.mjs proposal submit");

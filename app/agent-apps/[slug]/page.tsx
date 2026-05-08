@@ -1,13 +1,18 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 
 import { AppShell } from "../../../components/alphaagents/shell";
 import { Chip, CommandPreview, DataTable, SectionCard } from "../../../components/alphaagents/blocks";
+import { RuntimeCommandConsole } from "../../../components/alphaagents/runtime-command-console";
 import { getAgentAppDetailModel } from "../../../lib/alphaagents/view-models";
+import { getRuntimeSnapshot } from "../../../lib/alphaagents/runtime-queries";
 
 export default async function AgentAppDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const model = getAgentAppDetailModel(slug);
   if (!model) notFound();
+  const runtimeSnapshot = getRuntimeSnapshot();
 
   return (
     <AppShell shell={model.shell} currentPath="/provider-proof">
@@ -41,6 +46,33 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
           />
           <CommandPreview command={"alphaagents run start --json\nalphaagents delivery submit --json\nalphaagents rating submit --json"} />
         </SectionCard>
+        <SectionCard title="Install, usage, and exit proof" subtitle="Agent App subscription still emits live install, usage evidence, and exit records.">
+          <DataTable
+            columns={[
+              { key: "metric", label: "Metric" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { metric: "Active installs", value: String(model.activeInstallCount) },
+              { metric: "Latest install status", value: model.latestInstall?.installStatus ?? "none" },
+              { metric: "Usage proof runs", value: String(model.runtimeUsageRuns.length) },
+              { metric: "Exit mechanism count", value: String(model.app.exitMechanisms.length) }
+            ]}
+          />
+          {model.runtimeInstalls.length === 0 ? (
+            <p className="aa-meta">No live app installs yet. Use the runtime control plane to create install, usage, and exit proof.</p>
+          ) : (
+            <DataTable
+              columns={[
+                { key: "id", label: "Install" },
+                { key: "usageMode", label: "Usage mode" },
+                { key: "installStatus", label: "Status" },
+                { key: "version", label: "Version" }
+              ]}
+              rows={model.runtimeInstalls}
+            />
+          )}
+        </SectionCard>
         <SectionCard title="Related listings" subtitle="Agent App uses the same listing and transaction surfaces as any other supply type.">
           {model.relatedListings.length === 0 ? (
             <p className="aa-meta">No dedicated listing yet. The app still inherits the shared AaaS contract.</p>
@@ -55,6 +87,7 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
             />
           )}
         </SectionCard>
+        <RuntimeCommandConsole mode="agent-app" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>
   );

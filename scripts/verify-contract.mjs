@@ -24,6 +24,13 @@ for (const key of Object.keys(contract.statuses)) {
 }
 
 const requiredCommands = [
+  "buyer-org.setup",
+  "agent-app.install",
+  "agent-app.record-usage",
+  "agent-app.exit",
+  "program.allocate-credit",
+  "program.record-drawdown",
+  "program.update-qbr",
   "rfp.create",
   "rfp.publish",
   "rfp.cancel",
@@ -62,6 +69,10 @@ const requiredDtos = [
   "EvidenceDto",
   "EvidenceExportDto",
   "EvidenceDeletionDto",
+  "BuyerOrgProfileDto",
+  "AgentAppInstallDto",
+  "AgentAppUsageDto",
+  "ProgramWorkspaceDto",
   "ReputationDto",
   "ReputationSummaryDto"
 ];
@@ -111,6 +122,13 @@ for (const dto of requiredDtos) {
 }
 
 const requiredBranchEvents = [
+  "BuyerOrgSetupUpdated",
+  "AgentAppInstalled",
+  "AgentAppUsageRecorded",
+  "AgentAppExited",
+  "ProgramCreditAllocated",
+  "ProgramCreditDrawdownRecorded",
+  "ProgramQbrUpdated",
   "RevisionRequested",
   "DisputeOpened",
   "DisputeResolved",

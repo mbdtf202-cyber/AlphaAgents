@@ -33,3 +33,22 @@ test("catalog control-plane commands return structured results", () => {
     assert.ok(Array.isArray(result.events));
   }
 });
+
+test("agent app and program commands use their canonical actor roles", () => {
+  const actorMap = {
+    "buyer-org.setup": "buyer",
+    "agent-app.install": "buyer",
+    "agent-app.record-usage": "buyer",
+    "agent-app.exit": "buyer",
+    "program.allocate-credit": "operator",
+    "program.record-drawdown": "operator",
+    "program.update-qbr": "operator"
+  };
+
+  for (const [commandName, actorRole] of Object.entries(actorMap)) {
+    const result = runCommand(commandName, createDemoEnvelope(actorRole, buildSamplePayload(commandName)));
+    assert.equal(result.ok, true, commandName);
+    assert.ok(result.dto);
+    assert.ok(Array.isArray(result.events));
+  }
+});

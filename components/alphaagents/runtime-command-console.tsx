@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 type RuntimeSnapshot = {
   categories: Array<{ categoryId: string; categoryStatus: string; version: number }>;
   listings: Array<{ listingId: string; listingStatus: string; version: number }>;
+  programWorkspaces: Array<{ id: string; activeCreditMinor: number; backlogValueMinor: number; qbrStatus: string }>;
+  appInstalls: Array<{ id: string; appId: string; installStatus: string; usageMode: string; version: number }>;
+  appUsageRuns: Array<{ id: string; installId: string; appId: string; usageStatus: string; version: number }>;
   rfps: Array<{ id: string; rfpStatus: string; version: number }>;
   proposals: Array<{ id: string; proposalStatus: string; version: number; rfpId: string }>;
   orders: Array<{ id: string; orderStatus: string; ledgerStatus: string; acceptanceStatus: string; version: number }>;
@@ -16,7 +19,7 @@ type RuntimeSnapshot = {
   events: Array<{ id: string; eventName: string; recordedAt: string }>;
 };
 
-type Mode = "catalog-admin" | "quick-order" | "order-workspace";
+type Mode = "catalog-admin" | "quick-order" | "order-workspace" | "agent-app" | "program-ops" | "risk-finance";
 
 type CommandResult = {
   ok: boolean;
@@ -198,6 +201,12 @@ export function RuntimeCommandConsole({
         {" "}
         listings {snapshot?.listings.length ?? 0},
         {" "}
+        installs {snapshot?.appInstalls.length ?? 0},
+        {" "}
+        app runs {snapshot?.appUsageRuns.length ?? 0},
+        {" "}
+        programs {snapshot?.programWorkspaces.length ?? 0},
+        {" "}
         rfps {snapshot?.rfps.length ?? 0},
         {" "}
         proposals {snapshot?.proposals.length ?? 0},
@@ -311,6 +320,120 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           termsSnapshot: "trial_v1_terms"
         }),
         enabled: (snapshot) => Boolean(snapshot.proposals.at(-1))
+      }
+    ];
+  }
+
+  if (mode === "agent-app") {
+    return [
+      {
+        label: "Install App",
+        commandName: "agent-app.install",
+        actorRole: "buyer",
+        payload: () => ({
+          appId: "agent_app_harbor_growth_workbench",
+          buyerOrgId: "org_demo_001",
+          authorizedBy: "user_demo_buyer_owner",
+          usageMode: "subscription"
+        }),
+        expectedVersion: () => 0
+      },
+      {
+        label: "Record Usage Proof",
+        commandName: "agent-app.record-usage",
+        actorRole: "buyer",
+        payload: (snapshot) => ({
+          installId: snapshot.appInstalls.at(-1)?.id,
+          appId: "agent_app_harbor_growth_workbench",
+          usageSummary: "weekly content sync completed with buyer-safe evidence",
+          evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+        }),
+        enabled: (snapshot) => snapshot.appInstalls.at(-1)?.installStatus === "active"
+      },
+      {
+        label: "Exit App",
+        commandName: "agent-app.exit",
+        actorRole: "buyer",
+        payload: (snapshot) => ({
+          installId: snapshot.appInstalls.at(-1)?.id,
+          exitReason: "quarterly review complete"
+        }),
+        enabled: (snapshot) => Boolean(snapshot.appInstalls.at(-1))
+      }
+    ];
+  }
+
+  if (mode === "program-ops") {
+    return [
+      {
+        label: "Allocate Credit",
+        commandName: "program.allocate-credit",
+        actorRole: "operator",
+        payload: () => ({
+          programId: "program_northstar_growth_001",
+          creditAmountMinor: 320000,
+          reason: "quarterly top-up"
+        })
+      },
+      {
+        label: "Record Drawdown",
+        commandName: "program.record-drawdown",
+        actorRole: "operator",
+        payload: () => ({
+          programId: "program_northstar_growth_001",
+          drawdownMinor: 120000,
+          reason: "managed delivery batch 01"
+        })
+      },
+      {
+        label: "Update QBR",
+        commandName: "program.update-qbr",
+        actorRole: "operator",
+        payload: () => ({
+          programId: "program_northstar_growth_001",
+          qbrStatus: "ready_for_review"
+        })
+      }
+    ];
+  }
+
+  if (mode === "risk-finance") {
+    return [
+      {
+        label: "Approve Latest Grant",
+        commandName: "permission.approve",
+        actorRole: "operator",
+        payload: (snapshot) => ({
+          grantId: snapshot.grants.at(-1)?.id,
+          toolAllowlist: ["read_public_url", "write_generated_artifact"],
+          expiresAt: "2026-05-10T18:00:00+08:00",
+          approvalReason: "risk review cleared"
+        }),
+        enabled: (snapshot) => Boolean(snapshot.grants.at(-1))
+      },
+      {
+        label: "Partial Release Latest Order",
+        commandName: "escrow.partial-release",
+        actorRole: "operator",
+        payload: (snapshot) => ({
+          orderId: snapshot.orders.at(-1)?.id,
+          releaseAmountMinor: 140000,
+          refundAmountMinor: 58000,
+          decisionRef: "decision_dispute_001"
+        }),
+        enabled: (snapshot) => ["resolved", "accepted", "disputed"].includes(snapshot.orders.at(-1)?.orderStatus ?? "")
+      },
+      {
+        label: "Refund Latest Order",
+        commandName: "escrow.refund",
+        actorRole: "operator",
+        payload: (snapshot) => ({
+          orderId: snapshot.orders.at(-1)?.id,
+          refundAmountMinor: 198000,
+          refundReason: "critical breach",
+          financeEvidenceRef: "ev_sandbox_dispute_001"
+        }),
+        enabled: (snapshot) => Boolean(snapshot.orders.at(-1))
       }
     ];
   }
@@ -581,6 +704,82 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
           }
         ],
         enabled: (snapshot) => (snapshot.orders.at(-1)?.acceptanceStatus ?? "") === "accepted"
+      }
+    ];
+  }
+
+  if (mode === "agent-app") {
+    return [
+      {
+        label: "Run Agent App Proof Loop",
+        steps: [
+          {
+            commandName: "agent-app.install",
+            actorRole: "buyer",
+            payload: () => ({
+              appId: "agent_app_harbor_growth_workbench",
+              buyerOrgId: "org_demo_001",
+              authorizedBy: "user_demo_buyer_owner",
+              usageMode: "subscription"
+            }),
+            expectedVersion: () => 0
+          },
+          {
+            commandName: "agent-app.record-usage",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              installId: snapshot.appInstalls.at(-1)?.id,
+              appId: "agent_app_harbor_growth_workbench",
+              usageSummary: "weekly content sync completed with buyer-safe evidence",
+              evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+            })
+          },
+          {
+            commandName: "agent-app.exit",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              installId: snapshot.appInstalls.at(-1)?.id,
+              exitReason: "quarterly review complete"
+            })
+          }
+        ],
+        enabled: (snapshot) => snapshot.appUsageRuns.length === 0
+      }
+    ];
+  }
+
+  if (mode === "program-ops") {
+    return [
+      {
+        label: "Run Program Credit Cycle",
+        steps: [
+          {
+            commandName: "program.allocate-credit",
+            actorRole: "operator",
+            payload: () => ({
+              programId: "program_northstar_growth_001",
+              creditAmountMinor: 320000,
+              reason: "quarterly top-up"
+            })
+          },
+          {
+            commandName: "program.record-drawdown",
+            actorRole: "operator",
+            payload: () => ({
+              programId: "program_northstar_growth_001",
+              drawdownMinor: 120000,
+              reason: "managed delivery batch 01"
+            })
+          },
+          {
+            commandName: "program.update-qbr",
+            actorRole: "operator",
+            payload: () => ({
+              programId: "program_northstar_growth_001",
+              qbrStatus: "ready_for_review"
+            })
+          }
+        ]
       }
     ];
   }

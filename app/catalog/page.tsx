@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { getCatalogModel } from "../../lib/alphaagents/view-models";
+import Link from "next/link";
 
 export default function CatalogPage() {
   const model = getCatalogModel();
@@ -22,6 +23,20 @@ export default function CatalogPage() {
               </Chip>
             ))}
           </div>
+        </SectionCard>
+        <SectionCard title="Catalog-to-transaction" subtitle="Catalog entries must convert into standard orders, App subscriptions, or program lanes.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Route" },
+              { key: "contractMode", label: "Commercial mode" },
+              { key: "supportType", label: "Supply type" },
+              { key: "action", label: "Action" }
+            ]}
+            rows={model.featuredActions.map((action) => ({
+              ...action,
+              action: <Link href={action.path}>Open</Link>
+            }))}
+          />
         </SectionCard>
 
         <SectionCard title="Listings" subtitle="Every listing carries category, proof, price, SLA, capacity, and risk.">

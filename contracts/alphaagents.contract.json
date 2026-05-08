@@ -104,6 +104,10 @@
     }
   ],
   "statuses": {
+    "buyerLifecycleStage": ["anonymous_visitor", "trial_lead", "org_setup", "trial_paid", "accepted_trial", "repeat_buyer", "poc_program", "annual_order_credit_customer", "churn_risk"],
+    "appInstallStatus": ["active", "exited"],
+    "appUsageStatus": ["recorded"],
+    "programQbrStatus": ["not_started", "in_progress", "ready_for_review"],
     "rfpStatus": ["draft", "published", "quoting", "selected", "ordered", "cancelled"],
     "proposalStatus": ["submitted", "selected", "declined", "expired", "withdrawn"],
     "orderStatus": ["created", "funded", "in_progress", "delivery_submitted", "ready_for_acceptance", "revision_requested", "disputed", "resolved", "accepted", "released", "partially_released", "refunded", "closed"],
@@ -165,6 +169,83 @@
     "reputation:read"
   ],
   "commands": {
+    "buyer-org.setup": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["buyerOrgId", "requesterUserId", "acceptanceOwnerUserId", "financeContactUserId", "authorizedPayerId", "signerIds", "invoiceReadiness", "scopeAcknowledgement"],
+      "requiredScopes": ["buyer:orders.write"],
+      "successEvents": ["BuyerOrgSetupUpdated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "BuyerOrgProfileDto"
+    },
+    "agent-app.install": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["appId", "buyerOrgId", "authorizedBy", "usageMode"],
+      "requiredScopes": ["buyer:orders.write"],
+      "successEvents": ["AgentAppInstalled"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "AgentAppInstallDto"
+    },
+    "agent-app.record-usage": {
+      "mutates": true,
+      "actorRoles": ["buyer", "seller", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "any",
+      "payloadRequired": ["installId", "appId", "usageSummary", "evidenceRefs"],
+      "requiredScopes": ["buyer:orders.write", "runtime:runs.write"],
+      "successEvents": ["AgentAppUsageRecorded"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED", "EVIDENCE_NOT_VISIBLE"],
+      "responseDto": "AgentAppUsageDto"
+    },
+    "agent-app.exit": {
+      "mutates": true,
+      "actorRoles": ["buyer", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "any",
+      "payloadRequired": ["installId", "exitReason"],
+      "requiredScopes": ["buyer:orders.write", "operator:acceptance.write"],
+      "successEvents": ["AgentAppExited"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentAppInstallDto"
+    },
+    "program.allocate-credit": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["programId", "creditAmountMinor", "reason"],
+      "requiredScopes": ["finance:ledger.write"],
+      "successEvents": ["ProgramCreditAllocated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "ProgramWorkspaceDto"
+    },
+    "program.record-drawdown": {
+      "mutates": true,
+      "actorRoles": ["operator", "buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "any",
+      "payloadRequired": ["programId", "drawdownMinor", "reason"],
+      "requiredScopes": ["finance:ledger.write", "buyer:orders.write"],
+      "successEvents": ["ProgramCreditDrawdownRecorded"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "ProgramWorkspaceDto"
+    },
+    "program.update-qbr": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["programId", "qbrStatus"],
+      "requiredScopes": ["operator:acceptance.write"],
+      "successEvents": ["ProgramQbrUpdated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "ProgramWorkspaceDto"
+    },
     "rfp.create": {
       "mutates": true,
       "actorRoles": ["buyer"],
@@ -484,6 +565,10 @@
     }
   },
   "dtoSchemas": {
+    "BuyerOrgProfileDto": ["id", "lifecycleStage", "requesterUserId", "acceptanceOwnerUserId", "financeContactUserId", "authorizedPayerId", "signerIds", "invoiceReadiness", "scopeAcknowledgement", "version"],
+    "AgentAppInstallDto": ["id", "tenantId", "buyerOrgId", "appId", "usageMode", "authorizedBy", "installStatus", "version"],
+    "AgentAppUsageDto": ["id", "tenantId", "installId", "appId", "usageSummary", "evidenceRefs", "usageStatus", "version"],
+    "ProgramWorkspaceDto": ["id", "buyerOrgId", "activeCreditMinor", "backlogValueMinor", "renewalBlockers", "qbrStatus"],
     "RfpDto": ["id", "tenantId", "rfpStatus", "packageTier", "category", "market", "budgetAmountMinor", "currency", "version"],
     "ProposalDto": ["id", "tenantId", "proposalStatus", "rfpId", "sellerId", "agentId", "priceAmountMinor", "currency", "version"],
     "OrderDto": ["id", "tenantId", "rfpId", "proposalId", "buyerOrgId", "sellerId", "agentId", "orderStatus", "ledgerStatus", "acceptanceStatus", "amountMinor", "currency", "nextAction", "evidenceCompleteness", "qaSummary", "cliPreview", "version"],
@@ -497,6 +582,13 @@
     "ReputationSummaryDto": ["subjectId", "subjectType", "averageRating", "reviewCount", "disputeRate", "onTimeRate", "version"]
   },
   "eventPayloadSchemas": {
+    "BuyerOrgSetupUpdated": ["buyerOrgId", "invoiceReadiness", "scopeAcknowledgement"],
+    "AgentAppInstalled": ["installId", "appId"],
+    "AgentAppUsageRecorded": ["usageRunId", "installId"],
+    "AgentAppExited": ["installId", "exitReason"],
+    "ProgramCreditAllocated": ["programId", "creditAmountMinor"],
+    "ProgramCreditDrawdownRecorded": ["programId", "drawdownMinor"],
+    "ProgramQbrUpdated": ["programId", "qbrStatus"],
     "RfpDraftCreated": ["rfpId", "rfpStatus", "packageTier"],
     "RfpPublished": ["rfpId", "rfpStatus", "acceptanceTemplateId"],
     "RfpCancelled": ["rfpId", "rfpStatus", "cancelReason"],

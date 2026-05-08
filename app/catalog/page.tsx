@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { getCatalogModel } from "../../lib/alphaagents/view-models";

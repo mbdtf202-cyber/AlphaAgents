@@ -1,10 +1,14 @@
+export const dynamic = "force-dynamic";
+
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, CommandPreview, SectionCard } from "../../components/alphaagents/blocks";
 import { RuntimeCommandConsole } from "../../components/alphaagents/runtime-command-console";
 import { getQuickOrderModel } from "../../lib/alphaagents/view-models";
+import { getRuntimeSnapshot } from "../../lib/alphaagents/runtime-queries";
 
 export default function QuickOrderPage() {
   const model = getQuickOrderModel();
+  const runtimeSnapshot = getRuntimeSnapshot();
   return (
     <AppShell shell={model.shell} currentPath="/quick-order">
       <div className="aa-grid aa-grid-2">
@@ -36,7 +40,7 @@ export default function QuickOrderPage() {
             </ul>
           )}
         </SectionCard>
-        <RuntimeCommandConsole mode="quick-order" />
+        <RuntimeCommandConsole mode="quick-order" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>
   );

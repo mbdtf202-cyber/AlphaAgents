@@ -1,10 +1,14 @@
+export const dynamic = "force-dynamic";
+
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { RuntimeCommandConsole } from "../../components/alphaagents/runtime-command-console";
 import { getOrderWorkspaceModel } from "../../lib/alphaagents/view-models";
+import { getRuntimeSnapshot } from "../../lib/alphaagents/runtime-queries";
 
 export default function OrderWorkspacePage() {
   const model = getOrderWorkspaceModel();
+  const runtimeSnapshot = getRuntimeSnapshot();
   return (
     <AppShell shell={model.shell} currentPath="/order-workspace">
       <div className="aa-grid aa-grid-2">
@@ -50,7 +54,7 @@ export default function OrderWorkspacePage() {
             />
           )}
         </SectionCard>
-        <RuntimeCommandConsole mode="order-workspace" />
+        <RuntimeCommandConsole mode="order-workspace" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>
   );

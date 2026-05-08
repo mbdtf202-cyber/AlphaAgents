@@ -48,8 +48,14 @@ type WorkflowDefinition = {
   }>;
 };
 
-export function RuntimeCommandConsole({ mode }: { mode: Mode }) {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+export function RuntimeCommandConsole({
+  mode,
+  initialSnapshot = null
+}: {
+  mode: Mode;
+  initialSnapshot?: RuntimeSnapshot | null;
+}) {
+  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(initialSnapshot);
   const [busy, setBusy] = useState(false);
   const [lastResult, setLastResult] = useState<CommandResult | null>(null);
 

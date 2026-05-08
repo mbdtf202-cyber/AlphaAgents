@@ -1,10 +1,14 @@
+export const dynamic = "force-dynamic";
+
 import { AppShell } from "../../components/alphaagents/shell";
 import { CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { RuntimeCommandConsole } from "../../components/alphaagents/runtime-command-console";
 import { getCatalogAdminModel } from "../../lib/alphaagents/view-models";
+import { getRuntimeSnapshot } from "../../lib/alphaagents/runtime-queries";
 
 export default function CatalogAdminPage() {
   const model = getCatalogAdminModel();
+  const runtimeSnapshot = getRuntimeSnapshot();
   const primaryAgentLabel = model.agent ? `${model.agent.name} / version ${model.agent.version}` : "No primary passport loaded";
   return (
     <AppShell shell={model.shell} currentPath="/catalog-admin">
@@ -32,7 +36,7 @@ export default function CatalogAdminPage() {
           </p>
           <CommandPreview command={"alphaagents agent-passport update --json\nalphaagents agent-listing publish --json"} />
         </SectionCard>
-        <RuntimeCommandConsole mode="catalog-admin" />
+        <RuntimeCommandConsole mode="catalog-admin" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>
   );

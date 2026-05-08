@@ -28,6 +28,9 @@ export default function QuickOrderPage() {
           <CommandPreview command={model.commandPreview} />
         </SectionCard>
         <SectionCard title="Runtime RFP drafts" subtitle="RFP state now comes from the mutable runtime control plane.">
+          {!model.buyerReady ? (
+            <p className="aa-meta">Buyer org setup is incomplete. Finish requester, acceptance owner, finance contact, payer, signer, invoice readiness, and scope acknowledgment first.</p>
+          ) : null}
           {model.runtimeRfps.length === 0 ? (
             <p className="aa-meta">No runtime RFP yet. Use CLI or `/api/commands` to create one.</p>
           ) : (
@@ -40,7 +43,13 @@ export default function QuickOrderPage() {
             </ul>
           )}
         </SectionCard>
-        <RuntimeCommandConsole mode="quick-order" initialSnapshot={runtimeSnapshot} />
+        {model.buyerReady ? (
+          <RuntimeCommandConsole mode="quick-order" initialSnapshot={runtimeSnapshot} />
+        ) : (
+          <SectionCard title="Purchase Gate" tone="warning" subtitle="Quick Order stays blocked until buyer setup is complete.">
+            <p className="aa-meta">Complete Buyer Org Setup before running the trial intake flow.</p>
+          </SectionCard>
+        )}
       </div>
     </AppShell>
   );

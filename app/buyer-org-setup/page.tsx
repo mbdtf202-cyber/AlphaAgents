@@ -1,5 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, SectionCard } from "../../components/alphaagents/blocks";
+import { BuyerOrgSetupForm } from "../../components/alphaagents/buyer-org-setup-form";
 import { getBuyerOrgSetupModel } from "../../lib/alphaagents/view-models";
 
 export default function BuyerOrgSetupPage() {
@@ -22,6 +25,7 @@ export default function BuyerOrgSetupPage() {
           ))}
           <Chip tone="warning">High-risk purchases blocked until these stay green</Chip>
         </SectionCard>
+        {model.buyer ? <BuyerOrgSetupForm initialProfile={model.buyer} /> : null}
       </div>
     </AppShell>
   );

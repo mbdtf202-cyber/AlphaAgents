@@ -5,6 +5,7 @@ import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
 import { createTempStateFile, resetRuntimeState } from "../lib/alphaagents/runtime-state.js";
 import {
   getAgentAppDetailModel,
+  getBuyerOrgSetupModel,
   getCustomAgentModel,
   getProgramOpsModel,
   getRiskFinanceModel
@@ -295,4 +296,42 @@ test("custom agent model reflects intake, milestone, UAT, and change order runti
   assert.equal(model.runtimeProjects[0].milestones.length, 1);
   assert.equal(model.runtimeProjects[0].uatStatus, "submitted");
   assert.equal(model.runtimeProjects[0].changeOrders.length, 1);
+});
+
+test("buyer org model requires procurement signability fields for high-risk readiness", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const updated = executeRuntimeCommand(
+    "buyer-org.setup",
+    runtimeEnvelope("buyer", {
+      buyerOrgId: "org_demo_001",
+      requesterUserId: "user_demo_buyer_owner",
+      acceptanceOwnerUserId: "user_demo_acceptance_owner",
+      financeContactUserId: "user_demo_finance_owner",
+      legalContactUserId: "user_demo_legal_owner",
+      authorizedPayerId: "payer_demo_001",
+      signerIds: ["signer_demo_001"],
+      invoiceReadiness: "ready",
+      scopeAcknowledgement: "accepted",
+      contractingEntity: "NorthStar Beauty LLC",
+      collectionEntity: "AlphaAgents Platform Ops LLC",
+      invoiceIssuer: "AlphaAgents Platform Ops LLC",
+      refundRemitter: "AlphaAgents Platform Ops LLC",
+      subprocessors: ["Harbor Growth Studio"]
+    }),
+    { stateFile }
+  );
+  assert.equal(updated.ok, true);
+
+  const model = getBuyerOrgSetupModel({ stateFile });
+  assert.equal(model.readiness.find((entry) => entry.label === "Authority chain")?.status, "Pass");
+  assert.equal(model.readiness.find((entry) => entry.label === "Invoice readiness")?.status, "ready");
+  assert.equal(model.readiness.find((entry) => entry.label === "Scope acknowledgement")?.status, "accepted");
+  assert.equal(model.readiness.find((entry) => entry.label === "Contracting entity")?.status, "Pass");
+  assert.equal(model.readiness.find((entry) => entry.label === "Collection entity")?.status, "Pass");
+  assert.equal(model.readiness.find((entry) => entry.label === "Invoice issuer")?.status, "Pass");
+  assert.equal(model.readiness.find((entry) => entry.label === "Refund remitter")?.status, "Pass");
+  assert.equal(model.readiness.find((entry) => entry.label === "Legal contact")?.status, "Pass");
+  assert.equal(model.readiness.find((entry) => entry.label === "Subprocessors")?.status, "Pass");
 });

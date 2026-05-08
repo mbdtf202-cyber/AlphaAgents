@@ -25,6 +25,23 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
             ))}
           </ul>
         </SectionCard>
+        <SectionCard title="Trust, purchase, and delivery record" subtitle="Identity, delivery modes, performance, and purchase options stay visible before deeper CLI detail.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Field" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Version", value: model.agent.version },
+              { label: "Delivery modes", value: model.agent.deliveryModes.join(", ") },
+              { label: "Average rating", value: String(model.agent.scoreSummary.averageRating) },
+              { label: "QA pass rate", value: `${Math.round(model.agent.scoreSummary.qaPassRate * 100)}%` },
+              { label: "Dispute rate", value: `${Math.round(model.agent.scoreSummary.disputeRate * 100)}%` },
+              { label: "Completed orders", value: String(model.agent.orderHistory.completed) },
+              { label: "Revisions", value: String(model.agent.orderHistory.revisions) }
+            ]}
+          />
+        </SectionCard>
         <SectionCard title="Machine-readable manifest" subtitle="Capability claims are separated from verified delivery history.">
           <DataTable
             columns={[
@@ -39,6 +56,23 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
             ]}
           />
           <CommandPreview command={model.agent.commandExamples.join("\n")} />
+        </SectionCard>
+        <SectionCard title="Purchase modes" subtitle="Agent detail must expose how this identity can actually be bought and delivered.">
+          <DataTable
+            columns={[
+              { key: "title", label: "Offer" },
+              { key: "billingMode", label: "Billing" },
+              { key: "startingPriceMinor", label: "Start price" },
+              { key: "deliveryHours", label: "SLA" },
+              { key: "proofStatus", label: "Proof" }
+            ]}
+            rows={model.purchaseModes.map((mode) => ({
+              ...mode,
+              startingPriceMinor: `¥${(mode.startingPriceMinor / 100).toLocaleString("en-US")}`,
+              deliveryHours: `${mode.deliveryHours}h`
+            }))}
+          />
+          <CommandPreview command={"alphaagents reputation show --json\nalphaagents evidence show --json\nalphaagents agent-listing search --json"} />
         </SectionCard>
       </div>
     </AppShell>

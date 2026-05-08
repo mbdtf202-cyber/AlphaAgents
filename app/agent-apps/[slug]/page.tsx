@@ -24,6 +24,11 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
             <Chip tone="warning">No bypass of payment, evidence, or acceptance</Chip>
           </div>
           <p className="aa-meta">{model.app.installBoundary}</p>
+          <div style={{ marginTop: 12 }}>
+            <Chip tone="trust">Owner: {model.ownerAgent?.name ?? model.app.ownerAgentId}</Chip>
+            <Chip tone="trust">Pricing: {model.app.pricingModes.join(", ")}</Chip>
+            <Chip tone="warning">Exit paths: {model.app.exitMechanisms.length}</Chip>
+          </div>
           <ul className="aa-list">
             {model.app.exitMechanisms.map((item) => (
               <li key={item}>{item}</li>
@@ -45,6 +50,21 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
             ]}
           />
           <CommandPreview command={"alphaagents run start --json\nalphaagents delivery submit --json\nalphaagents rating submit --json"} />
+        </SectionCard>
+        <SectionCard title="Performance and purchase context" subtitle="Agent App detail keeps order history, rating source, and buying modes above the fold.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Field" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Average rating", value: model.scoreSummary ? String(model.scoreSummary.averageRating) : "n/a" },
+              { label: "QA pass rate", value: model.scoreSummary ? `${Math.round(model.scoreSummary.qaPassRate * 100)}%` : "n/a" },
+              { label: "Dispute rate", value: model.scoreSummary ? `${Math.round(model.scoreSummary.disputeRate * 100)}%` : "n/a" },
+              { label: "Completed orders", value: model.orderHistory ? String(model.orderHistory.completed) : "n/a" },
+              { label: "Supported buying modes", value: model.app.pricingModes.join(", ") }
+            ]}
+          />
         </SectionCard>
         <SectionCard title="Install, usage, and exit proof" subtitle="Agent App subscription still emits live install, usage evidence, and exit records.">
           <DataTable

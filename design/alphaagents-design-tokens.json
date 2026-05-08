@@ -1,0 +1,88 @@
+{
+  "brand": {
+    "mark": "ledger-passport",
+    "personality": ["procurement-grade", "operational", "verifiable", "calm intelligence"]
+  },
+  "color": {
+    "bgPage": "#F6F7F9",
+    "bgSurface": "#FFFFFF",
+    "borderSubtle": "#DDE2E8",
+    "textPrimary": "#111827",
+    "textSecondary": "#5B6472",
+    "actionPrimary": "#1F6FEB",
+    "trust": "#0F766E",
+    "warning": "#B45309",
+    "danger": "#B42318",
+    "success": "#15803D",
+    "commandBg": "#0F172A",
+    "commandText": "#E5E7EB"
+  },
+  "semanticState": {
+    "trust": {"bg": "#ECFDF5", "border": "#A7F3D0", "text": "#065F46"},
+    "warning": {"bg": "#FFFBEB", "border": "#FCD34D", "text": "#92400E"},
+    "danger": {"bg": "#FEF3F2", "border": "#FDA29B", "text": "#991B1B"},
+    "info": {"bg": "#EFF6FF", "border": "#BFDBFE", "text": "#1D4ED8"},
+    "neutral": {"bg": "#F8FAFC", "border": "#CBD5E1", "text": "#334155"}
+  },
+  "font": {
+    "sans": "Inter, PingFang SC, Microsoft YaHei, Noto Sans CJK SC, system-ui, sans-serif",
+    "mono": "ui-monospace, SFMono-Regular, Menlo, monospace",
+    "tabular": true
+  },
+  "fontSize": {
+    "pageTitle": 24,
+    "sectionTitle": 18,
+    "body": 14,
+    "bodyLarge": 16,
+    "caption": 12,
+    "command": 13
+  },
+  "space": {
+    "unit": 4,
+    "pageDesktop": 24,
+    "pageMobile": 16,
+    "section": 24,
+    "field": 16,
+    "toolbar": 8
+  },
+  "radius": {
+    "sm": 4,
+    "md": 6,
+    "lg": 8
+  },
+  "shadow": {
+    "surface": "0 1px 2px rgba(16,24,40,.06)",
+    "popover": "0 12px 24px rgba(16,24,40,.12)",
+    "modal": "0 20px 48px rgba(16,24,40,.18)"
+  },
+  "focus": {
+    "ring": "0 0 0 3px rgba(31,111,235,.24)"
+  },
+  "zIndex": {
+    "sticky": 20,
+    "drawer": 40,
+    "modal": 60,
+    "toast": 80
+  },
+  "layout": {
+    "breakpoints": {
+      "mobile": 390,
+      "tablet": 1024,
+      "desktop": 1440
+    },
+    "sidebarDesktop": 240,
+    "sidebarCollapsed": 72,
+    "rightRail": 320,
+    "gridColumns": 12,
+    "gridGap": 16
+  },
+  "chart": {
+    "palette": ["#1F6FEB", "#0F766E", "#B45309", "#B42318", "#334155", "#6D28D9"]
+  },
+  "export": {
+    "pdfHeaderHeight": 56,
+    "watermarkOpacity": 0.08,
+    "printBackground": "#FFFFFF",
+    "printText": "#111827"
+  }
+}

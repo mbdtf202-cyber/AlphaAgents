@@ -8,179 +8,79 @@ on:
       - codex/**
 
 jobs:
-  validate:
+  docs-and-positioning:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.23.0
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit Tests
-        run: pnpm test
-
-      - name: Build
-        run: pnpm build
-
-  postgres-integration:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_DB: alpha_agents
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres -d alpha_agents"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      NODE_ENV: test
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/alpha_agents
-      ALPHA_AGENTS_STORAGE: postgres
-      ALPHA_AGENTS_AUTH_SECRET: ci-secret
-      ALPHA_AGENTS_APP_URL: http://localhost:3100
-      NEXT_PUBLIC_APP_URL: http://localhost:3100
-      GITHUB_CLIENT_ID: ci-github-client
-      GITHUB_CLIENT_SECRET: ci-github-secret
-      POSTMARK_SERVER_TOKEN: ci-postmark-token
-      POSTMARK_FROM_EMAIL: noreply@example.com
-      POSTMARK_MESSAGE_STREAM: outbound
-      SENTRY_DSN: https://public@example.ingest.sentry.io/1
-      SENTRY_ENVIRONMENT: ci
-      SENTRY_RELEASE: ci-${{ github.sha }}
-      ALPHA_AGENTS_ENABLE_TEST_MAILER: true
-      ALPHA_AGENTS_DISABLE_RATE_LIMITS: true
-      ALPHA_AGENTS_FORCE_INSECURE_COOKIES: true
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.23.0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Migrate
-        run: pnpm db:migrate
-
-      - name: Integration Tests
-        run: pnpm test:integration
-
-      - name: Coverage
-        run: pnpm test:coverage
-
-  e2e:
-    runs-on: ubuntu-latest
-    needs:
-      - validate
-      - postgres-integration
-    services:
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_DB: alpha_agents
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres -d alpha_agents"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      NODE_ENV: test
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/alpha_agents
-      ALPHA_AGENTS_STORAGE: postgres
-      ALPHA_AGENTS_AUTH_SECRET: ci-secret
-      ALPHA_AGENTS_APP_URL: http://localhost:3100
-      NEXT_PUBLIC_APP_URL: http://localhost:3100
-      GITHUB_CLIENT_ID: ci-github-client
-      GITHUB_CLIENT_SECRET: ci-github-secret
-      POSTMARK_SERVER_TOKEN: ci-postmark-token
-      POSTMARK_FROM_EMAIL: noreply@example.com
-      POSTMARK_MESSAGE_STREAM: outbound
-      SENTRY_DSN: https://public@example.ingest.sentry.io/1
-      SENTRY_ENVIRONMENT: ci
-      SENTRY_RELEASE: ci-${{ github.sha }}
-      ALPHA_AGENTS_ENABLE_TEST_MAILER: true
-      PLAYWRIGHT_BASE_URL: http://localhost:3100
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.23.0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Migrate
-        run: pnpm db:migrate
-
-      - name: Build
-        run: pnpm build
-
-      - name: Start Web
-        run: pnpm start > /tmp/alpha-agents-web.log 2>&1 &
-
-      - name: Start Worker
-        run: pnpm worker:benchmarks > /tmp/alpha-agents-worker.log 2>&1 &
-
-      - name: Wait For Readiness
+      - name: Required documents exist
         run: |
-          for _ in {1..30}; do
-            if curl -fsS http://localhost:3100/api/readyz > /tmp/readyz.json; then
-              cat /tmp/readyz.json
-              exit 0
-            fi
-            sleep 2
+          test -s README.md
+          test -s docs/product-design.md
+          test -s docs/acceptance.md
+          test -s docs/frontend-visual-design.md
+          test -s docs/mvp-strategy-operating-model.md
+          test -s docs/procurement-pack.md
+          test -s docs/engineering-contract.md
+          test -s docs/market-validation-pack.md
+          test -s docs/poc-war-room-runbook.md
+          test -s docs/buyer-seller-order-pack.md
+          test -s docs/evidence-room-index.md
+          test -s docs/breakpoints-and-layout.md
+          test -s docs/table-column-priority.md
+          test -s contracts/alphaagents.contract.json
+          test -s scripts/verify-all.mjs
+          test -s scripts/verify-contract.mjs
+          test -s scripts/verify-evidence-package.mjs
+          test -s scripts/verify-visual-system.mjs
+          test -s scripts/verify-business-readiness.mjs
+          test -s design/alphaagents-design-tokens.json
+          test -s design/brand/ledger-passport-mark.svg
+          test -s design/visual-fixtures/orders.json
+          test -s design/visual-masters/alphaagents-visual-master.html
+          test -s evidence-packages/AA-SANDBOX-TRIAL-001/00-order-summary.md
+          test -s evidence-packages/AA-SANDBOX-TRIAL-001/09-evidence-index.csv
+          test -s evidence-packages/AA-SANDBOX-TRIAL-001/16-cli-api-ui-snapshots.json
+
+      - name: Product positioning is present
+        run: |
+          grep -F "高价值 Agent 按单托管交付平台" README.md
+          grep -F "Agent Native" README.md
+          grep -F "跨境电商竞品监控与内容选题情报包" README.md
+          grep -F "CLI / API / UI / Runtime 一致性" docs/product-design.md
+          grep -F "Agent 原生" docs/acceptance.md
+          grep -F "CLI 必须对齐一切" docs/acceptance.md
+          grep -F "Trial / Standard / Pro" docs/frontend-visual-design.md
+          grep -F "PoC SOW" docs/procurement-pack.md
+          grep -F "CommandEnvelope" docs/engineering-contract.md
+          grep -F "30 个目标账户清单" docs/market-validation-pack.md
+          grep -F "D-7 到 D+30 总控表" docs/poc-war-room-runbook.md
+          grep -F "完整填好的 Standard 首单样例" docs/buyer-seller-order-pack.md
+          node scripts/verify-all.mjs
+
+      - name: Old product direction is not active
+        run: |
+          : > /tmp/alphaagents-grep.log
+          old_slug="alpha-agents-""ar""ena"
+          old_crypto="crypto-""pe""rps"
+          old_project="open-prompt-""proving-""ground"
+          old_worker="worker:bench""ma""rks"
+          old_executor="ALPHA_AGENTS_""EXECUTOR""_ID"
+          old_verifier="ALPHA_AGENTS_""BENCH""MARK_VERIFIER_ID"
+          old_bucket="OBJECT_STORAGE_BUCKET=alpha-agents-""ar""ena"
+          for token in "$old_slug" "$old_crypto" "$old_project" "$old_worker" "$old_executor" "$old_verifier" "$old_bucket"; do
+            grep -RniF "$token" README.md docs .github .env.example >> /tmp/alphaagents-grep.log || true
           done
-          cat /tmp/alpha-agents-web.log || true
-          cat /tmp/alpha-agents-worker.log || true
-          exit 1
+          if test -s /tmp/alphaagents-grep.log; then
+            cat /tmp/alphaagents-grep.log
+            exit 1
+          fi
 
-      - name: Browser Smoke
-        run: pnpm test:e2e
-
-      - name: Print Web Log On Failure
-        if: failure()
-        run: cat /tmp/alpha-agents-web.log || true
-
-      - name: Print Worker Log On Failure
-        if: failure()
-        run: cat /tmp/alpha-agents-worker.log || true
+      - name: Old generated artifacts are absent
+        run: |
+          test ! -e .old-runtime-artifacts
+          test ! -e .next

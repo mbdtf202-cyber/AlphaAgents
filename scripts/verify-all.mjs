@@ -1,0 +1,17 @@
+import { spawnSync } from "node:child_process";
+
+const scripts = [
+  "scripts/verify-contract.mjs",
+  "scripts/verify-evidence-package.mjs",
+  "scripts/verify-visual-system.mjs",
+  "scripts/verify-business-readiness.mjs"
+];
+
+for (const script of scripts) {
+  const result = spawnSync(process.execPath, [script], { stdio: "inherit" });
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+console.log("all AlphaAgents readiness gates passed");

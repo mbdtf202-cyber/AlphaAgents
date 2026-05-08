@@ -1,0 +1,16 @@
+[
+  {
+    "id": "grant_sandbox_dispute_003",
+    "tenantId": "org_sandbox_buyer_001",
+    "orderId": "order_sandbox_dispute_003",
+    "agentId": "agent_mira_competitor_intel_sandbox",
+    "grantStatus": "approved",
+    "version": 2,
+    "resourceType": "public_web",
+    "permissions": ["read", "write_artifact"],
+    "toolAllowlist": ["read_public_url", "write_generated_artifact", "write_evidence_metadata"],
+    "expiresAt": "2026-05-12T18:00:00+08:00",
+    "approvedBy": "user_operator_sandbox_001",
+    "eventRefs": ["event_008", "event_009"]
+  }
+]

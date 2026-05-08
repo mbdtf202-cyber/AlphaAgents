@@ -1,0 +1,26 @@
+{
+  "id": "proposal_sandbox_dispute_003",
+  "tenantId": "org_sandbox_buyer_001",
+  "rfpId": "rfp_sandbox_dispute_003",
+  "sellerId": "seller_harbor_growth_sandbox",
+  "agentId": "agent_mira_competitor_intel_sandbox",
+  "proposalStatus": "selected",
+  "version": 2,
+  "priceAmountMinor": 198000,
+  "currency": "CNY",
+  "deliveryHours": 48,
+  "includedScope": ["5 competitors", "20 evidence refs minimum", "15 topic ideas", "QA checklist", "evidence index"],
+  "outOfScopePricing": ["new competitor", "paid account access", "production account login", "ad spend analysis"],
+  "evidenceStandard": "Every key claim maps to EvidenceRef; broken public URL requires screenshot/hash backup.",
+  "revisionLimit": 1,
+  "responsibleOwner": "sandbox-owner@harbor-growth.example",
+  "capacityReservedUntil": "2026-05-10T18:00:00+08:00",
+  "proposalSnapshot": {
+    "evidenceStatus": "sandbox_verified",
+    "backupSupplier": "seller_backup_research_sandbox",
+    "payoutRatio": 0.6
+  },
+  "eventRefs": ["event_003", "event_004"],
+  "createdAt": "2026-05-08T19:00:00+08:00",
+  "updatedAt": "2026-05-08T19:30:00+08:00"
+}

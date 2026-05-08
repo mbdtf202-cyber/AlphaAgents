@@ -1,0 +1,56 @@
+{
+  "ui": {
+    "orderDto": {
+      "id": "order_sandbox_revision_002",
+      "tenantId": "org_sandbox_buyer_001",
+      "orderStatus": "closed",
+      "ledgerStatus": "released",
+      "acceptanceStatus": "accepted",
+      "amountMinor": 198000,
+      "currency": "CNY",
+      "nextAction": {
+        "actorRole": "buyer",
+        "command": "alphaagents reputation show",
+        "reason": "order complete and reputation published"
+      },
+      "evidenceCompleteness": 1,
+      "version": 9
+    }
+  },
+  "cli": {
+    "orderDto": {
+      "id": "order_sandbox_revision_002",
+      "tenantId": "org_sandbox_buyer_001",
+      "orderStatus": "closed",
+      "ledgerStatus": "released",
+      "acceptanceStatus": "accepted",
+      "amountMinor": 198000,
+      "currency": "CNY",
+      "nextAction": {
+        "actorRole": "buyer",
+        "command": "alphaagents reputation show",
+        "reason": "order complete and reputation published"
+      },
+      "evidenceCompleteness": 1,
+      "version": 9
+    }
+  },
+  "api": {
+    "orderDto": {
+      "id": "order_sandbox_revision_002",
+      "tenantId": "org_sandbox_buyer_001",
+      "orderStatus": "closed",
+      "ledgerStatus": "released",
+      "acceptanceStatus": "accepted",
+      "amountMinor": 198000,
+      "currency": "CNY",
+      "nextAction": {
+        "actorRole": "buyer",
+        "command": "alphaagents reputation show",
+        "reason": "order complete and reputation published"
+      },
+      "evidenceCompleteness": 1,
+      "version": 9
+    }
+  }
+}

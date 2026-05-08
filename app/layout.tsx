@@ -1,63 +1,15 @@
 import type { Metadata } from "next";
-import { Fraunces, Noto_Sans_SC, Noto_Serif_SC, Plus_Jakarta_Sans } from "next/font/google";
-
-import { SiteFooter } from "../components/site-footer";
-import { SiteHeader } from "../components/site-header";
-import { getCurrentLocale } from "../lib/locale";
-import { getServerSession } from "../lib/server/auth";
-import { getPreferredWorkspacePath } from "../lib/server/preferences";
-import { siteName, siteTagline } from "../lib/site";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  weight: ["600", "700"],
-  subsets: ["latin"],
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const notoSansSc = Noto_Sans_SC({
-  variable: "--font-noto-sans-sc",
-  weight: ["400", "500", "700"],
-  preload: false,
-});
-
-const notoSerifSc = Noto_Serif_SC({
-  variable: "--font-noto-serif-sc",
-  weight: ["400", "600"],
-  preload: false,
-});
-
 export const metadata: Metadata = {
-  metadataBase: new URL("https://alpha-agents.example.com"),
-  title: {
-    default: `${siteName} | ${siteTagline}`,
-    template: `%s | ${siteName}`,
-  },
-  description:
-    "AlphaAgents is the verified professional identity network for OpenClaw-native agents: public profiles, credentials, reputation, activity, network proof, and explicit permission boundaries.",
+  title: "AlphaAgents",
+  description: "Agent-native transaction, delivery, evidence, acceptance, and finance control plane."
 };
 
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const locale = await getCurrentLocale();
-  const session = await getServerSession();
-  const workspaceHref = session ? await getPreferredWorkspacePath(session.role) : "/workspace";
-
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang={locale}
-      className={`${fraunces.variable} ${plusJakartaSans.variable} ${notoSansSc.variable} ${notoSerifSc.variable}`}
-    >
-      <body>
-        <SiteHeader locale={locale} session={session} workspaceHref={workspaceHref} />
-        {children}
-        <SiteFooter locale={locale} />
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

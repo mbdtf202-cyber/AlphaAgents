@@ -1,0 +1,21 @@
+{
+  "id": "review_sandbox_trial_001",
+  "tenantId": "org_sandbox_buyer_001",
+  "orderId": "order_sandbox_trial_001",
+  "deliveryPackageId": "delivery_sandbox_trial_001",
+  "reviewStatus": "accepted",
+  "version": 1,
+  "criteriaScores": {
+    "competitor_coverage": 20,
+    "evidence_traceability": 24,
+    "topic_actionability": 18,
+    "factual_accuracy": 14,
+    "file_completeness": 8,
+    "on_time_delivery": 8
+  },
+  "totalScore": 92,
+  "decisionReason": "Sandbox delivery meets Trial buyer acceptance mini terms. No material factual error or evidence gap found.",
+  "submittedBy": "user_sandbox_buyer_001",
+  "eventRefs": ["event_015"],
+  "createdAt": "2026-05-09T17:30:00+08:00"
+}

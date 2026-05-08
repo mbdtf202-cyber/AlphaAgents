@@ -1,183 +1,71 @@
-name: Release
+name: Release Readiness
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
-    inputs:
-      image_tag:
-        description: "Optional image tag override"
-        required: false
-        type: string
-
-env:
-  REGISTRY: ghcr.io
 
 jobs:
-  build-and-push:
+  readiness:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      image_ref: ${{ steps.image_ref.outputs.ref }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
+      - uses: actions/setup-node@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 22
 
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}
-          tags: |
-            type=ref,event=tag
-            type=sha
-
-      - id: image_ref
+      - name: Documentation baseline
         run: |
-          image_repo="$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
-          if [[ -n "${{ inputs.image_tag }}" ]]; then
-            tag="${{ inputs.image_tag }}"
-          else
-            tag="${GITHUB_REF_NAME}"
-          fi
-          echo "ref=ghcr.io/${image_repo}:${tag}" >> "${GITHUB_OUTPUT}"
+          test -s README.md
+          test -s docs/product-design.md
+          test -s docs/acceptance.md
+          test -s docs/frontend-visual-design.md
+          test -s docs/mvp-strategy-operating-model.md
+          test -s docs/procurement-pack.md
+          test -s docs/engineering-contract.md
+          test -s docs/market-validation-pack.md
+          test -s docs/poc-war-room-runbook.md
+          test -s docs/buyer-seller-order-pack.md
+          test -s docs/evidence-room-index.md
+          test -s docs/breakpoints-and-layout.md
+          test -s docs/table-column-priority.md
+          test -s contracts/alphaagents.contract.json
+          test -s design/alphaagents-design-tokens.json
+          test -s design/visual-masters/alphaagents-visual-master.html
+          test -s evidence-packages/AA-SANDBOX-TRIAL-001/00-order-summary.md
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ steps.image_ref.outputs.ref }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  github-release:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    permissions:
-      contents: write
-    steps:
-      - uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          tag_name: ${{ github.ref_name }}
-
-  prepare-production-deploy:
-    runs-on: ubuntu-latest
-    needs:
-      - build-and-push
-      - github-release
-    outputs:
-      should_deploy: ${{ steps.readiness.outputs.should_deploy }}
-    steps:
-      - id: readiness
-        env:
-          PROD_SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-          PROD_SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
-          PROD_APP_DIR: ${{ secrets.PROD_APP_DIR }}
-          GHCR_PAT: ${{ secrets.GHCR_PAT }}
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Agent-native and CLI alignment baseline
         run: |
-          missing=()
-          for key in PROD_SSH_HOST PROD_SSH_PRIVATE_KEY PROD_SSH_USER PROD_APP_DIR GHCR_PAT GHCR_USERNAME APP_DOMAIN DATABASE_URL; do
-            if [[ -z "${!key}" ]]; then
-              missing+=("$key")
-            fi
+          grep -F "Agent Native" README.md
+          grep -F "CLI Alignment" README.md
+          grep -F "跨境电商竞品监控与内容选题情报包" README.md
+          grep -F "alphaagents rfp publish" README.md
+          grep -F "alphaagents rating submit" README.md
+          grep -F "Trial / Standard / Pro" docs/frontend-visual-design.md
+          grep -F "PoC SOW" docs/procurement-pack.md
+          grep -F "CommandEnvelope" docs/engineering-contract.md
+          grep -F "30 个目标账户清单" docs/market-validation-pack.md
+          grep -F "D-7 到 D+30 总控表" docs/poc-war-room-runbook.md
+          grep -F "完整填好的 Standard 首单样例" docs/buyer-seller-order-pack.md
+          node scripts/verify-all.mjs
+
+      - name: Block old release path
+        run: |
+          : > /tmp/alphaagents-release-grep.log
+          old_slug="alpha-agents-""ar""ena"
+          old_crypto="crypto-""pe""rps"
+          old_project="open-prompt-""proving-""ground"
+          old_worker="worker:bench""ma""rks"
+          old_executor="ALPHA_AGENTS_""EXECUTOR""_ID"
+          old_verifier="ALPHA_AGENTS_""BENCH""MARK_VERIFIER_ID"
+          old_bucket="OBJECT_STORAGE_BUCKET=alpha-agents-""ar""ena"
+          for token in "$old_slug" "$old_crypto" "$old_project" "$old_worker" "$old_executor" "$old_verifier" "$old_bucket"; do
+            grep -RniF "$token" README.md docs .github .env.example >> /tmp/alphaagents-release-grep.log || true
           done
-
-          if (( ${#missing[@]} > 0 )); then
-            echo "Production deploy skipped because required secrets are missing: ${missing[*]}"
-            echo "should_deploy=false" >> "${GITHUB_OUTPUT}"
-          else
-            echo "Production deploy is enabled."
-            echo "should_deploy=true" >> "${GITHUB_OUTPUT}"
+          if test -s /tmp/alphaagents-release-grep.log; then
+            cat /tmp/alphaagents-release-grep.log
+            exit 1
           fi
 
-  deploy-production:
-    runs-on: ubuntu-latest
-    needs:
-      - build-and-push
-      - github-release
-      - prepare-production-deploy
-    environment: production
-    if: ${{ needs.prepare-production-deploy.outputs.should_deploy == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-
-      - name: Upload deployment assets
-        env:
-          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
-          SSH_USER: ${{ secrets.PROD_SSH_USER }}
-          APP_DIR: ${{ secrets.PROD_APP_DIR }}
+      - name: Ready for implementation release planning
         run: |
-          ssh -p "${SSH_PORT}" -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" "mkdir -p ${APP_DIR}/deploy ${APP_DIR}/scripts"
-          scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no deploy/Caddyfile "${SSH_USER}@${SSH_HOST}:${APP_DIR}/deploy/Caddyfile"
-          scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no deploy/docker-compose.prod.yml "${SSH_USER}@${SSH_HOST}:${APP_DIR}/deploy/docker-compose.prod.yml"
-          scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no scripts/deploy-vm.sh "${SSH_USER}@${SSH_HOST}:${APP_DIR}/scripts/deploy-vm.sh"
-
-      - name: Write production env and deploy
-        env:
-          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
-          SSH_USER: ${{ secrets.PROD_SSH_USER }}
-          APP_DIR: ${{ secrets.PROD_APP_DIR }}
-          IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-          GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          ALPHA_AGENTS_AUTH_SECRET: ${{ secrets.ALPHA_AGENTS_AUTH_SECRET }}
-          ALPHA_AGENTS_APP_URL: ${{ secrets.ALPHA_AGENTS_APP_URL }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
-          POSTMARK_SERVER_TOKEN: ${{ secrets.POSTMARK_SERVER_TOKEN }}
-          POSTMARK_FROM_EMAIL: ${{ secrets.POSTMARK_FROM_EMAIL }}
-          POSTMARK_MESSAGE_STREAM: ${{ secrets.POSTMARK_MESSAGE_STREAM }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          SENTRY_ENVIRONMENT: production
-          SENTRY_RELEASE: ${{ github.ref_name }}
-          ALPHA_AGENTS_EXECUTOR_ID: ${{ secrets.ALPHA_AGENTS_EXECUTOR_ID }}
-          ALPHA_AGENTS_EXECUTOR_KEY_ID: ${{ secrets.ALPHA_AGENTS_EXECUTOR_KEY_ID }}
-          ALPHA_AGENTS_EXECUTOR_ATTESTATION_SECRET: ${{ secrets.ALPHA_AGENTS_EXECUTOR_ATTESTATION_SECRET }}
-          ALPHA_AGENTS_BENCHMARK_VERIFIER_ID: ${{ secrets.ALPHA_AGENTS_BENCHMARK_VERIFIER_ID }}
-        run: |
-          ssh -p "${SSH_PORT}" -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" "cat > ${APP_DIR}/.env <<'EOF'
-          ALPHA_AGENTS_STORAGE=postgres
-          ALPHA_AGENTS_ENABLE_SAMPLE_OVERLAY=false
-          DATABASE_URL=${DATABASE_URL}
-          ALPHA_AGENTS_AUTH_SECRET=${ALPHA_AGENTS_AUTH_SECRET}
-          ALPHA_AGENTS_APP_URL=${ALPHA_AGENTS_APP_URL}
-          NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-          GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-          GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-          POSTMARK_SERVER_TOKEN=${POSTMARK_SERVER_TOKEN}
-          POSTMARK_FROM_EMAIL=${POSTMARK_FROM_EMAIL}
-          POSTMARK_MESSAGE_STREAM=${POSTMARK_MESSAGE_STREAM}
-          SENTRY_DSN=${SENTRY_DSN}
-          SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}
-          SENTRY_RELEASE=${SENTRY_RELEASE}
-          ALPHA_AGENTS_EXECUTOR_ID=${ALPHA_AGENTS_EXECUTOR_ID}
-          ALPHA_AGENTS_EXECUTOR_KEY_ID=${ALPHA_AGENTS_EXECUTOR_KEY_ID}
-          ALPHA_AGENTS_EXECUTOR_ATTESTATION_SECRET=${ALPHA_AGENTS_EXECUTOR_ATTESTATION_SECRET}
-          ALPHA_AGENTS_BENCHMARK_VERIFIER_ID=${ALPHA_AGENTS_BENCHMARK_VERIFIER_ID}
-          EOF"
-          ssh -p "${SSH_PORT}" -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" "chmod +x ${APP_DIR}/scripts/deploy-vm.sh && APP_DIR=${APP_DIR} ALPHA_AGENTS_IMAGE=${IMAGE_REF} GHCR_USERNAME=${GHCR_USERNAME} GHCR_TOKEN=${GHCR_TOKEN} APP_DOMAIN=${APP_DOMAIN} ${APP_DIR}/scripts/deploy-vm.sh"
+          echo "Release packaging is intentionally disabled until the new agent-native transaction MVP exists."

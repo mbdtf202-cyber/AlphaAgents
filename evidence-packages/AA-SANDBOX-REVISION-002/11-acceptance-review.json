@@ -1,0 +1,23 @@
+{
+  "id": "review_sandbox_revision_002",
+  "tenantId": "org_sandbox_buyer_001",
+  "orderId": "order_sandbox_revision_002",
+  "deliveryPackageId": "delivery_sandbox_revision_002",
+  "reviewStatus": "accepted",
+  "version": 1,
+  "criteriaScores": {
+    "competitor_coverage": 20,
+    "evidence_traceability": 24,
+    "topic_actionability": 18,
+    "factual_accuracy": 14,
+    "file_completeness": 8,
+    "on_time_delivery": 8
+  },
+  "totalScore": 92,
+  "decisionReason": "Buyer requested one bounded revision, revised package passed QA, then buyer accepted.",
+  "submittedBy": "user_sandbox_buyer_001",
+  "eventRefs": [
+    "event_017"
+  ],
+  "createdAt": "2026-05-09T17:30:00+08:00"
+}

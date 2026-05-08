@@ -5,6 +5,8 @@ dist
 coverage
 .env
 .env.*
+!.env.example
+.old-runtime-artifacts
 output
 playwright-report
 test-results

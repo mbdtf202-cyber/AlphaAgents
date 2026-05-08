@@ -1,0 +1,29 @@
+{
+  "orders": [
+    {"orderId": "order_001", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "created", "ledgerStatus": "not_funded", "amountMinor": 198000, "nextAction": "confirm payment", "badge": "Awaiting payment"},
+    {"orderId": "order_002", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "funded", "ledgerStatus": "escrowed", "amountMinor": 198000, "nextAction": "start run", "badge": "Escrowed"},
+    {"orderId": "order_003", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "in_progress", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "monitor run", "badge": "Running"},
+    {"orderId": "order_004", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "delivery_submitted", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "QA review", "badge": "QA pending"},
+    {"orderId": "order_005", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "ready_for_acceptance", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "buyer accept", "badge": "Ready"},
+    {"orderId": "order_006", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "revision_requested", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "seller fix", "badge": "Revision"},
+    {"orderId": "order_007", "buyer": "Pacific Beauty", "packageTier": "trial", "orderStatus": "disputed", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "add evidence", "badge": "Disputed"},
+    {"orderId": "order_008", "buyer": "Pacific Beauty", "packageTier": "trial", "orderStatus": "partially_released", "ledgerStatus": "partially_released", "amountMinor": 198000, "nextAction": "submit rating", "badge": "Partial release"},
+    {"orderId": "order_009", "buyer": "Pacific Beauty", "packageTier": "trial", "orderStatus": "refunded", "ledgerStatus": "refunded", "amountMinor": 198000, "nextAction": "export refund record", "badge": "Refunded"},
+    {"orderId": "order_010", "buyer": "NorthStar Beauty", "packageTier": "trial", "orderStatus": "closed", "ledgerStatus": "released", "amountMinor": 198000, "nextAction": "view reputation", "badge": "Closed"},
+    {"orderId": "order_011", "buyer": "Aster Beauty", "packageTier": "standard", "orderStatus": "ready_for_acceptance", "ledgerStatus": "locked", "amountMinor": 680000, "nextAction": "accept or revise", "badge": "Ready"},
+    {"orderId": "order_012", "buyer": "Aster Beauty", "packageTier": "standard", "orderStatus": "delivery_submitted", "ledgerStatus": "locked", "amountMinor": 680000, "nextAction": "QA pending", "badge": "QA pending"},
+    {"orderId": "order_013", "buyer": "Glow Agency", "packageTier": "standard", "orderStatus": "created", "ledgerStatus": "not_funded", "amountMinor": 680000, "nextAction": "invoice missing", "badge": "Invoice missing"},
+    {"orderId": "order_014", "buyer": "Glow Agency", "packageTier": "standard", "orderStatus": "funded", "ledgerStatus": "escrowed", "amountMinor": 680000, "nextAction": "permission blocked", "badge": "Risk blocked"},
+    {"orderId": "order_015", "buyer": "Glow Agency", "packageTier": "standard", "orderStatus": "in_progress", "ledgerStatus": "locked", "amountMinor": 680000, "nextAction": "CLI mismatch", "badge": "CLI mismatch"},
+    {"orderId": "order_016", "buyer": "Cora Beauty", "packageTier": "trial", "orderStatus": "ready_for_acceptance", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "evidence gap", "badge": "Evidence gap"},
+    {"orderId": "order_017", "buyer": "Cora Beauty", "packageTier": "trial", "orderStatus": "revision_requested", "ledgerStatus": "locked", "amountMinor": 198000, "nextAction": "seller SLA overdue", "badge": "Overdue"},
+    {"orderId": "order_018", "buyer": "Lumen Beauty", "packageTier": "standard", "orderStatus": "disputed", "ledgerStatus": "locked", "amountMinor": 680000, "nextAction": "operator decision", "badge": "Disputed"},
+    {"orderId": "order_019", "buyer": "Lumen Beauty", "packageTier": "standard", "orderStatus": "released", "ledgerStatus": "released", "amountMinor": 680000, "nextAction": "rating", "badge": "Released"},
+    {"orderId": "order_020", "buyer": "Mira Agency", "packageTier": "pro", "orderStatus": "partially_released", "ledgerStatus": "partially_released", "amountMinor": 1800000, "nextAction": "export decision", "badge": "Partial release"}
+  ],
+  "agents": [
+    {"agentId": "agent_001", "name": "Mira Competitor Intel Agent", "qaPassRate": 0.91, "capacity": 3, "risk": "verified"},
+    {"agentId": "agent_002", "name": "Harbor Beauty Evidence Agent", "qaPassRate": 0.88, "capacity": 0, "risk": "capacity_full"},
+    {"agentId": "agent_003", "name": "Signal Claim Review Agent", "qaPassRate": 0.84, "capacity": 2, "risk": "manual_review"}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "review_sandbox_dispute_003",
+  "tenantId": "org_sandbox_buyer_001",
+  "orderId": "order_sandbox_dispute_003",
+  "deliveryPackageId": "delivery_sandbox_dispute_003",
+  "reviewStatus": "disputed",
+  "version": 1,
+  "criteriaScores": {
+    "competitor_coverage": 20,
+    "evidence_traceability": 24,
+    "topic_actionability": 18,
+    "factual_accuracy": 14,
+    "file_completeness": 8,
+    "on_time_delivery": 8
+  },
+  "totalScore": 78,
+  "decisionReason": "Buyer accepted evidence coverage but disputed actionability of several topic hooks.",
+  "submittedBy": "user_sandbox_buyer_001",
+  "eventRefs": [
+    "event_015"
+  ],
+  "createdAt": "2026-05-09T17:30:00+08:00",
+  "disputeReason": "Seven topics required extra buyer-side rewriting."
+}

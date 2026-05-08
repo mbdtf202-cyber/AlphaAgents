@@ -1,0 +1,16 @@
+{
+  "id": "run_sandbox_dispute_003",
+  "tenantId": "org_sandbox_buyer_001",
+  "orderId": "order_sandbox_dispute_003",
+  "agentId": "agent_mira_competitor_intel_sandbox",
+  "runStatus": "succeeded",
+  "version": 4,
+  "inputRefs": ["ev_sandbox_buyer_brief_001"],
+  "permissionGrantIds": ["grant_sandbox_dispute_003"],
+  "startedAt": "2026-05-09T09:00:00+08:00",
+  "endedAt": "2026-05-09T15:30:00+08:00",
+  "costUsageMinor": 3800,
+  "toolCallRefs": ["tool_call_sandbox_001", "tool_call_sandbox_002", "tool_call_sandbox_003"],
+  "outputRefs": ["ev_sandbox_delivery_pdf_001", "ev_sandbox_topics_csv_001", "ev_sandbox_evidence_index_001"],
+  "eventRefs": ["event_010", "event_011", "event_012"]
+}

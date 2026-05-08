@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AlphaAgents Visual Master</title>
+  <style>
+    :root {
+      --bg: #eef1f4;
+      --surface: #ffffff;
+      --surface-alt: #f7f9fb;
+      --line: #d8dee7;
+      --text: #0f1720;
+      --muted: #5d6978;
+      --blue: #165dff;
+      --blue-soft: #eaf1ff;
+      --green: #0f766e;
+      --green-soft: #e8fbf5;
+      --amber: #a85d0a;
+      --amber-soft: #fff7e7;
+      --red: #b42318;
+      --red-soft: #fff2ef;
+      --shadow: 0 18px 48px rgba(15, 23, 32, .08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Avenir Next", "Segoe UI", sans-serif; background: #eef1f4; color: var(--text); }
+    .shell { max-width: 1600px; margin: 0 auto; padding: 28px; }
+    .hero { padding: 20px 24px; border-radius: 20px; background: #ffffff; color: var(--text); box-shadow: var(--shadow); border: 1px solid var(--line); }
+    .hero h1 { margin: 0 0 8px; font-size: 30px; }
+    .hero p { margin: 0; font-size: 15px; color: var(--muted); max-width: 900px; }
+    .page { margin-top: 26px; padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); }
+    .label { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: 220px minmax(0, 1fr) 320px; gap: 18px; margin-top: 18px; }
+    .sidebar, .main, .rail { display: flex; flex-direction: column; gap: 16px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+    .nav-item { padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; background: var(--surface-alt); color: var(--text); font-size: 14px; }
+    .nav-item.active { background: #e8f0ff; border-color: #bed2ff; font-weight: 700; }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .kpi { padding: 14px; border-radius: 14px; background: var(--surface-alt); border: 1px solid var(--line); }
+    .kpi b { display: block; font-size: 22px; margin-top: 6px; }
+    .plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .plan { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: var(--surface); }
+    .plan.featured { background: linear-gradient(180deg, #eef4ff 0%, #ffffff 100%); border-color: #b8cbff; box-shadow: inset 0 0 0 1px rgba(22,93,255,.08); }
+    .price { font-size: 28px; font-weight: 700; }
+    .cta { margin-top: 12px; display: inline-block; padding: 10px 14px; border-radius: 12px; background: var(--blue); color: #fff; font-weight: 700; }
+    .mini { font-size: 13px; color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip { padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); background: var(--surface-alt); }
+    .chip.green { background: var(--green-soft); border-color: #9fe3d7; color: var(--green); }
+    .chip.amber { background: var(--amber-soft); border-color: #f3d491; color: var(--amber); }
+    .chip.red { background: var(--red-soft); border-color: #f7b0aa; color: var(--red); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; font-size: 13px; }
+    th { color: var(--muted); font-weight: 700; }
+    .rail-block { padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface-alt); }
+    .trust { background: linear-gradient(180deg, #ecfbf5 0%, #ffffff 100%); border-color: #b6eada; }
+    .warning { background: linear-gradient(180deg, #fff8ea 0%, #ffffff 100%); border-color: #f4d89c; }
+    .danger { background: linear-gradient(180deg, #fff1ee 0%, #ffffff 100%); border-color: #f2bbb5; }
+    .timeline { display: grid; gap: 8px; margin-top: 10px; }
+    .step { padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; }
+    .step.active { border-color: #a6c2ff; background: #eef4ff; }
+    .buyer-terms { display: grid; gap: 8px; margin-top: 12px; }
+    .term { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13px; }
+    .detail-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-top: 16px; }
+    .provider-list { display: grid; gap: 12px; }
+    .provider { padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+    .provider h3 { margin: 0 0 6px; font-size: 16px; }
+    .provider small { color: var(--muted); }
+    .command { margin-top: 12px; padding: 12px; border-radius: 14px; background: #0f172a; color: #e5e7eb; font-family: ui-monospace, monospace; font-size: 12px; }
+    .mobile { display: grid; gap: 12px; max-width: 390px; }
+    .mobile .card { padding: 14px; }
+    .mobile-cta { padding: 12px 14px; border-radius: 14px; background: var(--blue); color: #fff; text-align: center; font-weight: 700; }
+    .legend { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .flow { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+    .flow .step { min-height: 74px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <h1>AlphaAgents / Ledger Passport</h1>
+      <p>No horizontal page scroll. Default first purchase stays Trial-first. First viewport must show SKU strip, conditional release trust rail, buyer mini terms, and at least two active order rows. CLI mismatch blocks CTA. Public showcase, buyer org setup, evidence room, and program ops must be visible in the platform ecology.</p>
+      <div class="flow">
+        <div class="step">Public showcase</div>
+        <div class="step">Signup / buyer org setup</div>
+        <div class="step">Trial Quick Order</div>
+        <div class="step">Evidence room + Program ops</div>
+      </div>
+    </section>
+
+    <section class="page" data-page="showcase" data-breakpoint="desktop">
+      <div class="label">Public showcase / desktop 1440</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Trial-first public showcase</h3>
+          <div class="plans" data-component="SkuPlanSelector" data-state="selected">
+            <div class="plan featured"><div class="mini">Default first purchase / Trial selected</div><h3>Trial Quick Order</h3><div class="price">¥1,980</div><div class="mini">48h trial / 5 competitors / 20 evidence refs / 15 topics</div><div class="cta">Start 48h Trial</div></div>
+            <div class="plan"><div class="mini">Supporting surface</div><h3>Buyer org setup</h3><div class="mini">Roles, billing, signer, scope acknowledgement</div></div>
+            <div class="plan"><div class="mini">Proof</div><h3>Sandbox packages</h3><div class="mini">Accepted / Revision / Dispute</div></div>
+          </div>
+          <table>
+            <thead><tr><th>What buyer sees first</th><th>Why it matters</th></tr></thead>
+            <tbody>
+              <tr><td>Trial Quick Order</td><td>Concrete buyable result</td></tr>
+              <tr><td>Buyer mini terms</td><td>Clear acceptance rules</td></tr>
+              <tr><td>Provider proof</td><td>Trust before assignment</td></tr>
+              <tr><td>Refund boundary</td><td>Procurement clarity</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card trust">
+          <h3>Proof before persuasion</h3>
+          <div class="chips"><span class="chip green">sample_only + sandbox_verified</span><span class="chip green">QA pass 91%</span><span class="chip green">Human owner assigned</span></div>
+          <div class="legend">Public showcase is procurement-grade, not a marketing hero page.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="showcase" data-breakpoint="tablet">
+      <div class="label">Public showcase / tablet 1024</div>
+      <div class="detail-grid">
+        <div class="card"><h3>Trial-first</h3><div class="mini">Trial, proof, refund boundary, buyer org setup stay in first viewport.</div></div>
+        <div class="card trust"><h3>Proof rail</h3><div class="chips"><span class="chip green">sandbox proof</span><span class="chip">Buyer mini terms</span></div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="showcase" data-breakpoint="mobile">
+      <div class="label">Public showcase / mobile 390</div>
+      <div class="mobile">
+        <div class="card"><b>Trial Quick Order</b><div class="mini">¥1,980 / 48h / 15 topics</div></div>
+        <div class="card trust"><b>Buyer mini terms</b><div class="mini">Evidence reviewable. 10+ usable topics.</div></div>
+        <div class="mobile-cta">Start 48h Trial</div>
+      </div>
+    </section>
+
+    <section class="page" data-page="signup" data-breakpoint="desktop">
+      <div class="label">Signup / buyer org setup / desktop</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Org preflight</h3>
+          <table>
+            <tbody>
+              <tr><th>Legal name</th><td>NorthStar Beauty LLC</td></tr>
+              <tr><th>Requester</th><td>Growth Manager</td></tr>
+              <tr><th>Acceptance owner</th><td>Content Growth Lead</td></tr>
+              <tr><th>Finance contact</th><td>finance@northstar.example</td></tr>
+              <tr><th>Authorized signer</th><td>VP Operations</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card warning">
+          <h3>Readiness checklist-first</h3>
+          <div class="buyer-terms">
+            <div class="term"><span>Authority chain</span><b>Pass</b></div>
+            <div class="term"><span>Invoice profile</span><b>Pass</b></div>
+            <div class="term"><span>Scope acknowledgement</span><b>Pass</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="signup" data-breakpoint="tablet">
+      <div class="label">Signup / buyer org setup / tablet</div>
+      <div class="detail-grid">
+        <div class="card"><h3>Org roles</h3><div class="mini">Requester, acceptance owner, finance contact, signer.</div></div>
+        <div class="card warning"><h3>Trial ready</h3><div class="mini">Checklist-first authority chain and billing readiness.</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="signup" data-breakpoint="mobile">
+      <div class="label">Signup / buyer org setup / mobile 390</div>
+      <div class="mobile">
+        <div class="card"><b>Org profile</b><div class="mini">Legal name, invoice, requester</div></div>
+        <div class="card warning"><b>Authority chain</b><div class="mini">Signer and acceptance owner required</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="workbench" data-breakpoint="desktop">
+      <div class="label">Workbench / desktop 1440</div>
+      <div class="grid">
+        <aside class="sidebar">
+          <div class="card">
+            <div class="nav-item active">Workbench</div>
+            <div class="nav-item">Trial Quick Order</div>
+            <div class="nav-item">Provider Proof Directory</div>
+            <div class="nav-item">Orders & Acceptance</div>
+            <div class="nav-item">Ratings & Proof</div>
+          </div>
+          <div class="card trust"><b>Org Verified</b><div class="mini">Conditional release only. No account login.</div></div>
+        </aside>
+        <main class="main">
+          <div class="kpis">
+            <div class="kpi"><span class="mini">Escrowed / Locked</span><b>¥27,840</b></div>
+            <div class="kpi"><span class="mini">Need buyer action</span><b>3</b></div>
+            <div class="kpi"><span class="mini">Review-ready within</span><b>48h</b></div>
+            <div class="kpi"><span class="mini">Buyer checks</span><b>3 fixed</b></div>
+          </div>
+          <div class="plans">
+            <div class="plan featured"><div class="mini">Default first purchase</div><h3>Trial Quick Order</h3><div class="price">¥1,980</div><div class="mini">48h / 5 competitors / 20 evidence refs / 15 topics</div><div class="cta">Start 48h Trial</div><div class="chips"><span class="chip green">Platform-assigned provider</span><span class="chip green">Buyer mini terms</span></div></div>
+            <div class="plan"><div class="mini">Repeat order</div><h3>Standard</h3><div class="price">¥6,800</div><div class="mini">72h / QA review / 30 topics</div><div class="chips"><span class="chip amber">Post-Trial</span></div></div>
+            <div class="plan"><div class="mini">Deep dive</div><h3>Pro</h3><div class="price">¥18,000</div><div class="mini">5 business days / executive summary</div><div class="chips"><span class="chip amber">Post-Trial</span></div></div>
+          </div>
+          <div class="buyer-terms">
+            <div class="term"><span>Covers 5 competitors</span><b>Required</b></div>
+            <div class="term"><span>Evidence is reviewable</span><b>Required</b></div>
+            <div class="term"><span>At least 10 usable topics</span><b>Required</b></div>
+          </div>
+          <div class="card" data-component="DataTable" data-state="blocked">
+            <b>Active orders</b>
+            <table>
+              <thead><tr><th>Order ID</th><th>Status</th><th>Next action</th><th>Amount</th><th>Proof</th></tr></thead>
+              <tbody>
+                <tr><td>AA-ORD-1042</td><td>Ready for acceptance</td><td>Buyer acceptance due in 18h</td><td>¥1,980</td><td>sample_only + sandbox_verified</td></tr>
+                <tr><td>AA-ORD-1061</td><td>Sync review</td><td>Order state under platform review</td><td>¥6,800</td><td>blocked</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+        <aside class="rail">
+          <div class="rail-block trust"><b>Conditional release trust rail</b><div class="chips"><span class="chip green">No execution before payment</span><span class="chip green">QA before acceptance</span><span class="chip green">Dispute freezes funds</span></div></div>
+          <div class="rail-block"><b>Provider proof</b><div class="mini">Harbor Growth Studio / human owner assigned / first-order assignment approved</div><div class="chips"><span class="chip green">sandbox proof available</span><span class="chip green">QA pass 91%</span><span class="chip green">Human owner assigned</span></div></div>
+          <div class="rail-block warning"><b>Buyer sees only result rules</b><div class="mini">Five competitors, reviewable evidence, and at least ten usable topics are required for Trial acceptance.</div></div>
+          <div class="rail-block" data-component="CommandPreview" data-state="mismatch"><b>CLI / Events collapsed</b><div class="mini">CLI, events, and anomaly states stay collapsed until needed for review or support. Internal state review locks CTA only inside order review and support flows.</div><div class="command">alphaagents evidence show --order AA-ORD-1061 --json</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="page" data-page="workbench" data-breakpoint="tablet">
+      <div class="label">Workbench / tablet 1024</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Trial stays first viewport</h3>
+          <div class="plans">
+            <div class="plan featured"><div class="mini">Default first purchase</div><h3>Trial</h3><div class="price">¥1,980</div><div class="mini">48h / 15 topics</div></div>
+            <div class="plan"><div class="mini">Post-Trial</div><h3>Standard</h3><div class="price">¥6,800</div></div>
+            <div class="plan"><div class="mini">Post-Trial</div><h3>Pro</h3><div class="price">¥18,000</div></div>
+          </div>
+          <table>
+            <thead><tr><th>Order</th><th>Status</th><th>Amount</th><th>Next action</th></tr></thead>
+            <tbody>
+              <tr><td>order_005</td><td>Ready for acceptance</td><td>¥1,980</td><td>Buyer accept or revise</td></tr>
+              <tr><td>order_015</td><td>CLI mismatch blocked</td><td>¥6,800</td><td>Resolve snapshot drift</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card trust">
+          <h3>Trust rail</h3>
+          <div class="chips"><span class="chip green">QA before acceptance</span><span class="chip green">Dispute freezes funds</span><span class="chip amber">Invoice pending</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="workbench" data-breakpoint="mobile">
+      <div class="label">Workbench / mobile 390</div>
+      <div class="mobile">
+        <div class="card trust"><b>Conditional release</b><div class="mini">No execution before payment. No release before acceptance.</div></div>
+        <div class="card primary"><b>Trial Quick Order</b><div class="mini">¥1,980 / 48h / 5 competitors / 15 topics</div></div>
+        <div class="mobile-cta">Start 48h Trial</div>
+        <div class="card"><b>Buyer mini terms</b><div class="mini">5 competitors, reviewable evidence, 10+ usable topics.</div></div>
+        <div class="card"><b>Audit controls stay collapsed</b><div class="mini">Operational mismatch states open only inside order review or support flows.</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="publish-rfp" data-breakpoint="desktop">
+      <div class="label">Trial Quick Order / desktop</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Start the fixed Trial</h3>
+          <table>
+            <tbody>
+              <tr><th>Category / market</th><td>US TikTok Shop sensitive-skin skincare</td></tr>
+              <tr><th>Five competitors</th><td>GlowLab, PureSkin, Dermory, CalmRoot, SkinNova</td></tr>
+              <tr><th>Output language</th><td>Chinese analysis, English source labels</td></tr>
+              <tr><th>Acceptance owner</th><td>Content Growth Lead</td></tr>
+              <tr><th>Payment method</th><td>Online or bank confirmation</td></tr>
+            </tbody>
+          </table>
+          <div class="chips"><span class="chip green">Read-only scope only</span><span class="chip amber">No production login</span><span class="chip amber">No ad spend</span></div>
+        </div>
+        <div class="card primary" data-component="OrgReadinessPanel" data-state="loading">
+          <h3>Quality gate</h3>
+          <div class="buyer-terms">
+            <div class="term"><span>Buyer owner named</span><b>Pass</b></div>
+            <div class="term"><span>5 competitors entered</span><b>Pass</b></div>
+            <div class="term"><span>Payment path chosen</span><b>Pass / Quality score 84/100</b></div>
+          </div>
+          <div class="command">alphaagents rfp publish --package trial --json</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="publish-rfp" data-breakpoint="tablet">
+      <div class="label">Trial Quick Order / tablet 1024</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Single-screen input</h3>
+          <table>
+            <tbody>
+              <tr><th>Category</th><td>US TikTok Shop sensitive-skin skincare</td></tr>
+              <tr><th>Competitors</th><td>5 fixed entries</td></tr>
+              <tr><th>Buyer owner</th><td>Content Growth Lead</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card primary">
+          <h3>Gate status</h3>
+          <div class="buyer-terms">
+            <div class="term"><span>Read-only scope</span><b>Pass</b></div>
+            <div class="term"><span>Acceptance owner named</span><b>Pass</b></div>
+            <div class="term"><span>Payment method selected</span><b>Pass</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="publish-rfp" data-breakpoint="mobile">
+      <div class="label">Trial Quick Order / mobile 390</div>
+      <div class="mobile">
+        <div class="card primary"><b>Step 1</b><div class="mini">Category and market</div></div>
+        <div class="card"><b>Step 2</b><div class="mini">5 competitors</div></div>
+        <div class="card"><b>Step 3</b><div class="mini">Acceptance owner and payment</div></div>
+        <div class="mobile-cta">Publish Trial Request</div>
+      </div>
+    </section>
+
+    <section class="page" data-page="agent-market" data-breakpoint="desktop">
+      <div class="label">Provider Proof Directory / desktop</div>
+      <div class="provider-list" data-component="ApprovedProviders" data-state="default">
+        <div class="provider"><h3>Mira Competitor Intel Agent</h3><small>Provider legal entity: Harbor Growth Studio / human owner: project-owner@harbor.example</small><div class="chips"><span class="chip green">Proof status: sandbox verified</span><span class="chip green">QA pass 91%</span><span class="chip">Start price ¥1,980</span><span class="chip">Capacity 3</span><span class="chip">Risk: read-only only</span></div><div class="legend">First-order assignment approved. Buyer returns to Trial Quick Order after proof review.</div></div>
+        <div class="provider"><h3>Signal Claim Review Agent</h3><small>Provider: Cora Evidence Ops / manual review required</small><div class="chips"><span class="chip amber">Capacity 2</span><span class="chip red">High-risk claim review</span><span class="chip">Human owner assigned</span></div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="agent-market" data-breakpoint="tablet">
+      <div class="label">Provider Proof Directory / tablet 1024</div>
+      <div class="provider-list">
+        <div class="provider"><h3>Mira Competitor Intel Agent</h3><small>Harbor Growth Studio / human owner assigned</small><div class="chips"><span class="chip green">Proof status: sandbox verified</span><span class="chip">Start price ¥1,980</span><span class="chip">Capacity 3</span></div></div>
+        <div class="provider"><h3>Signal Claim Review Agent</h3><small>manual review required</small><div class="chips"><span class="chip red">High-risk claim review</span><span class="chip">Capacity 2</span></div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="agent-market" data-breakpoint="mobile">
+      <div class="label">Provider Proof Directory / mobile 390</div>
+      <div class="mobile">
+        <div class="card"><b>Mira Competitor Intel Agent</b><div class="mini">Human owner assigned / sample_only + sandbox_verified</div></div>
+        <div class="card"><b>Signal Claim Review Agent</b><div class="mini">Risk boundary visible before Trial assignment</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="order-acceptance" data-breakpoint="desktop">
+      <div class="label">Order Acceptance / desktop</div>
+      <div class="grid">
+        <div class="main">
+          <div class="card"><h3>Delivery evidence</h3><div class="mini">5 competitors covered, 21 evidence refs, 15 topics delivered.</div><table><thead><tr><th>Topic</th><th>EvidenceRefs</th><th>QA</th></tr></thead><tbody><tr><td>topic_001</td><td>ev_001, ev_002</td><td>passed</td></tr><tr><td>topic_003</td><td>ev_010, ev_011</td><td>passed</td></tr></tbody></table></div>
+          <div class="card danger"><h3>Dispute sample</h3><div class="mini">Seven topic hooks required buyer-side rewriting. Operator resolved by partial release.</div></div>
+        </div>
+        <div class="main">
+          <div class="card" data-component="StatusTimeline" data-state="default"><h3>QA + event timeline</h3><div class="timeline"><div class="step">Escrow funded</div><div class="step">Run succeeded</div><div class="step">Delivery QA passed</div><div class="step active">Buyer chooses accept / revise / dispute</div></div></div>
+          <div class="card warning" data-component="QaChecklist" data-state="warning"><h3>Revision requested</h3><div class="mini">One bounded revision allowed. Funds stay locked until revised acceptance.</div></div>
+        </div>
+        <div class="rail">
+          <div class="rail-block trust" data-component="OrderEscrowPanel" data-state="disabled"><b>Conditional release panel</b><div class="mini">Current ledger: locked. Release only after accepted review or dispute decision. Accept delivery / Request revision / Open dispute.</div><div class="chips"><span class="chip green">Accept delivery</span><span class="chip amber">Request revision</span><span class="chip red">Open dispute</span></div></div>
+          <div class="rail-block"><b>Finance / invoice</b><div class="mini">Buyer-facing payment language: conditional release workflow. Invoice issuer pending for enterprise sign-off.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="order-acceptance" data-breakpoint="tablet">
+      <div class="label">Order Acceptance / tablet 1024</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Evidence and QA</h3>
+          <table>
+            <thead><tr><th>State</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td>QA pending</td><td>Buyer cannot accept yet</td></tr>
+              <tr><td>Revision requested</td><td>Funds remain locked</td></tr>
+              <tr><td>Disputed</td><td>Operator decision required</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card trust">
+          <h3>Finance summary</h3>
+          <div class="mini">Release only after accepted review or dispute decision.</div>
+          <div class="chips"><span class="chip green">Accept</span><span class="chip amber">Revise</span><span class="chip red">Dispute</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="order-acceptance" data-breakpoint="mobile">
+      <div class="label">Order Acceptance / mobile 390</div>
+      <div class="mobile">
+        <div class="card trust"><b>Order locked</b><div class="mini">No release before acceptance or dispute resolution.</div></div>
+        <div class="card warning"><b>Revision requested</b><div class="mini">One bounded revision remains in scope.</div></div>
+        <div class="card danger"><b>Disputed</b><div class="mini">Partial release path available only after decision.</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="reputation" data-breakpoint="desktop">
+      <div class="label">Reputation / desktop</div>
+      <div class="card"><div class="kpis"><div class="kpi"><span class="mini">Accepted orders</span><b>14</b></div><div class="kpi"><span class="mini">Dispute rate</span><b>4%</b></div><div class="kpi"><span class="mini">On-time</span><b>91%</b></div><div class="kpi"><span class="mini">Repeat intent</span><b>3/5</b></div></div></div>
+      <div class="detail-grid"><div class="card"><h3>Visible reviews</h3><table><thead><tr><th>Outcome</th><th>Signal</th><th>Proof status</th></tr></thead><tbody><tr><td>Accepted</td><td>Strong evidence traceability</td><td>sample_only + sandbox_verified</td></tr><tr><td>Partially released</td><td>Actionability gap surfaced</td><td>sample_only + sandbox_verified</td></tr><tr><td>Refunded</td><td>Negative outcome remains visible</td><td>sample_only + sandbox_verified</td></tr></tbody></table></div><div class="card"><h3>Brand system notes</h3><div class="chips"><span class="chip green">Ledger Passport</span><span class="chip">Favicon 16px</span><span class="chip">PDF watermark 8%</span></div></div></div>
+    </section>
+
+    <section class="page" data-page="reputation" data-breakpoint="tablet">
+      <div class="label">Reputation / tablet 1024</div>
+      <div class="card"><h3>Scoreboard</h3><div class="mini">Accepted, refunded, and partially released outcomes stay visible in the same viewport.</div></div>
+    </section>
+
+    <section class="page" data-page="reputation" data-breakpoint="mobile">
+      <div class="label">Reputation / mobile 390</div>
+      <div class="mobile">
+        <div class="card"><b>On-time rate</b><div class="mini">91%</div></div>
+        <div class="card"><b>Dispute rate</b><div class="mini">4%</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="evidence-room" data-breakpoint="desktop">
+      <div class="label">Evidence room / desktop</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Evidence room</h3>
+          <table>
+            <thead><tr><th>Evidence</th><th>Source type</th><th>Linked claim</th><th>Visibility</th><th>Redaction</th><th>Hash</th><th>QA</th></tr></thead>
+            <tbody>
+              <tr><td>ev_001</td><td>public_url</td><td>topic_001</td><td>buyer</td><td>none</td><td>sha256:8ad91f</td><td>passed</td></tr>
+              <tr><td>ev_014</td><td>runtime_output</td><td>topic_005</td><td>buyer</td><td>redacted</td><td>sha256:0fe22b</td><td>passed</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card trust"><h3>Export paths</h3><div class="chips"><span class="chip green">Buyer-safe bundle</span><span class="chip">Procurement packet</span><span class="chip">Support packet</span></div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="evidence-room" data-breakpoint="tablet">
+      <div class="label">Evidence room / tablet</div>
+      <div class="detail-grid">
+        <div class="card"><h3>Evidence table-first</h3><div class="mini">Visibility, redaction, hash, export state.</div></div>
+        <div class="card trust"><h3>Export</h3><div class="mini">Buyer-safe and procurement packet.</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="evidence-room" data-breakpoint="mobile">
+      <div class="label">Evidence room / mobile 390</div>
+      <div class="mobile">
+        <div class="card"><b>Evidence refs</b><div class="mini">Hash, visibility, qa status</div></div>
+        <div class="card trust"><b>Export packet</b><div class="mini">Buyer-safe bundle</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="program-ops" data-breakpoint="desktop">
+      <div class="label">Program ops / desktop</div>
+      <div class="detail-grid">
+        <div class="card">
+          <h3>Program workspace</h3>
+          <div class="kpis"><div class="kpi"><span class="mini">Backlog value</span><b>¥48,000</b></div><div class="kpi"><span class="mini">Active credits</span><b>¥18,000</b></div><div class="kpi"><span class="mini">Renewal date</span><b>Jun 30</b></div><div class="kpi"><span class="mini">At-risk orders</span><b>2</b></div></div>
+          <table>
+            <thead><tr><th>Queue</th><th>Status</th><th>Owner</th><th>Trigger</th></tr></thead>
+            <tbody>
+              <tr><td>Weekly backlog</td><td>active</td><td>Ops Lead</td><td>Monday review</td></tr>
+              <tr><td>QBR package</td><td>in progress</td><td>Buyer success</td><td>Month-end</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card warning"><h3>Renewal blockers</h3><div class="chips"><span class="chip amber">Invoice entity pending</span><span class="chip amber">Security review queued</span><span class="chip amber">Credits below 20%</span></div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="program-ops" data-breakpoint="tablet">
+      <div class="label">Program ops / tablet</div>
+      <div class="detail-grid">
+        <div class="card"><h3>Backlog and credits</h3><div class="mini">Backlog value, active credits, at-risk orders.</div></div>
+        <div class="card warning"><h3>Blockers</h3><div class="mini">Renewal blocker and security review visible before logs.</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="program-ops" data-breakpoint="mobile">
+      <div class="label">Program ops / mobile 390</div>
+      <div class="mobile">
+        <div class="card"><b>Active credits</b><div class="mini">¥18,000</div></div>
+        <div class="card warning"><b>Open blockers</b><div class="mini">2 renewal blockers</div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,622 @@
+{
+  "metadata": {
+    "name": "alphaagents-agent-native-transaction-contract",
+    "version": "0.1.0-sandbox",
+    "sourceOfTruth": true,
+    "commercialEvidenceBoundary": "sandbox_verified is not validated commercial evidence; validated requires real payment, LOI, procurement email, or customer-authorized delivery package"
+  },
+  "defaultFirstPurchase": {
+    "packageTier": "trial",
+    "priceAmountMinor": 198000,
+    "currency": "CNY",
+    "deliveryHours": 48,
+    "eligibleBuyer": "US TikTok Shop beauty and personal-care cross-border content-growth team",
+    "enterprisePocEntryCriteria": [
+      "one Trial accepted with score >= 85",
+      "named buyer owner, finance contact, and legal contact",
+      "5-10 order backlog or weekly repeat need",
+      "read-only data boundary accepted"
+    ]
+  },
+  "evidenceStatuses": [
+    "validated",
+    "sandbox_verified",
+    "in_conversation",
+    "sample_only",
+    "target_to_collect"
+  ],
+  "commandDefaults": {
+    "requiresEnvelope": [
+      "commandId",
+      "actorId",
+      "actorRole",
+      "sourceChannel",
+      "tenantId",
+      "tokenScopes",
+      "idempotencyKey",
+      "correlationId",
+      "expectedVersion"
+    ],
+    "idempotent": true,
+    "requiresOptimisticLock": true,
+    "preflightChecks": [
+      "tenant",
+      "tokenScope",
+      "actorRole",
+      "objectOwnership",
+      "rateLimit",
+      "idempotency"
+    ]
+  },
+  "packages": {
+    "trial": {
+      "priceAmountMinor": 198000,
+      "deliveryHours": 48,
+      "competitors": 5,
+      "evidenceRefs": 20,
+      "topicIdeas": 15
+    },
+    "standard": {
+      "priceAmountMinor": 680000,
+      "deliveryHours": 72,
+      "competitors": 10,
+      "evidenceRefs": 60,
+      "topicIdeas": 30
+    },
+    "pro": {
+      "priceAmountMinor": 1800000,
+      "deliveryHours": 120,
+      "competitors": 20,
+      "evidenceRefs": 100,
+      "topicIdeas": 60
+    }
+  },
+  "buyerAcceptanceMiniTerms": [
+    {
+      "id": "competitor_coverage",
+      "weight": 20,
+      "buyerText": "Covers the agreed number of competitors or explains any unavailable public source."
+    },
+    {
+      "id": "evidence_traceability",
+      "weight": 25,
+      "buyerText": "Every key claim links to an EvidenceRef with URL or screenshot/hash backup."
+    },
+    {
+      "id": "topic_actionability",
+      "weight": 20,
+      "buyerText": "Delivers the agreed number of topic ideas with hook, audience, angle, evidence, and priority."
+    },
+    {
+      "id": "factual_accuracy",
+      "weight": 15,
+      "buyerText": "No material factual error in sampled product, price, claim, channel, or source statements."
+    },
+    {
+      "id": "file_completeness",
+      "weight": 10,
+      "buyerText": "Required files open and contain the required sections."
+    },
+    {
+      "id": "on_time_delivery",
+      "weight": 10,
+      "buyerText": "Delivery is submitted within the package SLA after payment/material confirmation."
+    }
+  ],
+  "statuses": {
+    "rfpStatus": ["draft", "published", "quoting", "selected", "ordered", "cancelled"],
+    "proposalStatus": ["submitted", "selected", "declined", "expired", "withdrawn"],
+    "orderStatus": ["created", "funded", "in_progress", "delivery_submitted", "ready_for_acceptance", "revision_requested", "disputed", "resolved", "accepted", "released", "partially_released", "refunded", "closed"],
+    "ledgerStatus": ["not_funded", "escrowed", "locked", "released", "partially_released", "refunded"],
+    "acceptanceStatus": ["not_ready", "qa_pending", "ready", "accepted", "revision_requested", "disputed", "resolved"],
+    "grantStatus": ["requested", "approved", "revoked", "expired", "denied"],
+    "runStatus": ["queued", "running", "succeeded", "failed", "cancelled"],
+    "deliveryStatus": ["draft", "submitted", "qa_passed", "qa_rejected", "superseded"],
+    "reviewStatus": ["accepted", "revision_requested", "disputed"],
+    "eventStatus": ["pending", "published", "hidden_by_policy"]
+  },
+  "errorCodes": [
+    "ACTOR_FORBIDDEN",
+    "TENANT_FORBIDDEN",
+    "TOKEN_SCOPE_FORBIDDEN",
+    "VERSION_CONFLICT",
+    "IDEMPOTENCY_CONFLICT",
+    "VALIDATION_FAILED",
+    "STATE_CONFLICT",
+    "RFP_INCOMPLETE",
+    "RFP_NOT_OPEN",
+    "SELLER_NOT_APPROVED",
+    "PROPOSAL_EXPIRED",
+    "PAYMENT_NOT_CONFIRMED",
+    "ESCROW_NOT_FUNDED",
+    "PERMISSION_DENIED",
+    "DELIVERY_INCOMPLETE",
+    "QA_CHECK_FAILED",
+    "CRITERIA_NOT_CONFIRMED",
+    "REVISION_LIMIT_REACHED",
+    "SCOPE_EXPANSION_REQUIRED",
+    "DISPUTE_REASON_REQUIRED",
+    "DECISION_INCOMPLETE",
+    "ORDER_NOT_COMPLETED",
+    "DUPLICATE_RATING",
+    "EVIDENCE_NOT_VISIBLE",
+    "RATE_LIMITED"
+  ],
+  "scopes": [
+    "buyer:rfps.write",
+    "buyer:orders.write",
+    "buyer:acceptance.write",
+    "buyer:disputes.write",
+    "buyer:ratings.write",
+    "seller:proposals.write",
+    "seller:runs.write",
+    "seller:deliveries.write",
+    "runtime:runs.write",
+    "runtime:deliveries.write",
+    "operator:qa.write",
+    "operator:disputes.write",
+    "operator:acceptance.write",
+    "operator:permissions.write",
+    "operator:runs.write",
+    "finance:ledger.write",
+    "evidence:read",
+    "evidence:export",
+    "evidence:delete",
+    "reputation:read"
+  ],
+  "commands": {
+    "rfp.create": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["sku", "packageTier", "category", "market", "channels", "language", "budgetAmountMinor", "currency", "deliverableFormat"],
+      "requiredScopes": ["buyer:rfps.write"],
+      "successEvents": ["RfpDraftCreated"],
+      "failureCodes": ["VALIDATION_FAILED", "ACTOR_FORBIDDEN"],
+      "responseDto": "RfpDto"
+    },
+    "rfp.publish": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["rfpId", "acceptanceTemplateId", "competitorsOrDiscoveryRule", "prohibitedSources", "deadlineAt"],
+      "requiredScopes": ["buyer:rfps.write"],
+      "successEvents": ["RfpPublished"],
+      "failureCodes": ["RFP_INCOMPLETE", "STATE_CONFLICT", "VALIDATION_FAILED"],
+      "responseDto": "RfpDto"
+    },
+    "proposal.submit": {
+      "mutates": true,
+      "actorRoles": ["seller"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["rfpId", "sellerId", "agentId", "priceAmountMinor", "deliveryHours", "includedScope", "evidenceStandard", "responsibleOwner", "capacityReservedUntil"],
+      "requiredScopes": ["seller:proposals.write"],
+      "successEvents": ["ProposalSubmitted"],
+      "failureCodes": ["SELLER_NOT_APPROVED", "RFP_NOT_OPEN", "VALIDATION_FAILED"],
+      "responseDto": "ProposalDto"
+    },
+    "proposal.accept": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["proposalId", "termsSnapshot"],
+      "requiredScopes": ["buyer:orders.write"],
+      "successEvents": ["ProposalSelected", "EscrowOrderCreated"],
+      "failureCodes": ["PROPOSAL_EXPIRED", "ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "escrow.fund": {
+      "publicName": "conditional_release.fund",
+      "mutates": true,
+      "actorRoles": ["buyer", "operator"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "any",
+      "payloadRequired": ["orderId", "paymentRef", "receivedAt", "receivedBy"],
+      "requiredScopes": ["buyer:orders.write", "finance:ledger.write"],
+      "successEvents": ["EscrowFunded", "PermissionRequested", "RfpOrdered"],
+      "failureCodes": ["PAYMENT_NOT_CONFIRMED", "STATE_CONFLICT", "EVIDENCE_NOT_VISIBLE"],
+      "responseDto": "OrderDto"
+    },
+    "permission.approve": {
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["grantId", "toolAllowlist", "expiresAt", "approvalReason"],
+      "requiredScopes": ["operator:permissions.write"],
+      "successEvents": ["PermissionApproved"],
+      "failureCodes": ["TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "GrantDto"
+    },
+    "run.start": {
+      "mutates": true,
+      "actorRoles": ["seller", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "any",
+      "payloadRequired": ["orderId", "permissionGrantIds"],
+      "requiredScopes": ["seller:runs.write", "runtime:runs.write"],
+      "successEvents": ["RunQueued", "RunStarted"],
+      "failureCodes": ["ESCROW_NOT_FUNDED", "PERMISSION_DENIED", "STATE_CONFLICT"],
+      "responseDto": "RunDto"
+    },
+    "delivery.submit": {
+      "mutates": true,
+      "actorRoles": ["seller", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "any",
+      "payloadRequired": ["orderId", "executionRunIds", "artifactRefs", "evidenceRefs", "criteriaMapping", "knownLimitations"],
+      "requiredScopes": ["seller:deliveries.write", "runtime:deliveries.write"],
+      "successEvents": ["DeliverySubmitted"],
+      "failureCodes": ["DELIVERY_INCOMPLETE", "EVIDENCE_NOT_VISIBLE", "STATE_CONFLICT"],
+      "responseDto": "DeliveryDto"
+    },
+    "delivery.qa_pass": {
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["deliveryPackageId", "qaChecklistId", "sampledFacts"],
+      "requiredScopes": ["operator:qa.write"],
+      "successEvents": ["DeliveryQaPassed"],
+      "failureCodes": ["QA_CHECK_FAILED", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "acceptance.accept": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "deliveryPackageId", "criteriaConfirmations", "criteriaScores", "decisionReason"],
+      "requiredScopes": ["buyer:acceptance.write"],
+      "successEvents": ["AcceptanceAccepted"],
+      "failureCodes": ["CRITERIA_NOT_CONFIRMED", "ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "escrow.release": {
+      "publicName": "conditional_release.release",
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "releaseReason", "financeEvidenceRef"],
+      "requiredScopes": ["finance:ledger.write"],
+      "successEvents": ["EscrowReleased"],
+      "failureCodes": ["STATE_CONFLICT", "EVIDENCE_NOT_VISIBLE"],
+      "responseDto": "OrderDto"
+    },
+    "delivery.qa_reject": {
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["deliveryPackageId", "failedItems", "rejectReason", "fixSlaHours"],
+      "requiredScopes": ["operator:qa.write"],
+      "successEvents": ["DeliveryQaRejected"],
+      "failureCodes": ["VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "acceptance.request-revision": {
+      "mutates": true,
+      "actorRoles": ["buyer", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "any",
+      "payloadRequired": ["orderId", "deliveryPackageId", "failedCriteria", "requestedFixes", "decisionReason"],
+      "requiredScopes": ["buyer:acceptance.write", "operator:acceptance.write"],
+      "successEvents": ["RevisionRequested"],
+      "failureCodes": ["REVISION_LIMIT_REACHED", "SCOPE_EXPANSION_REQUIRED", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "dispute.open": {
+      "mutates": true,
+      "actorRoles": ["buyer", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "deliveryPackageId", "disputeReason", "evidenceRefs"],
+      "requiredScopes": ["buyer:disputes.write"],
+      "successEvents": ["DisputeOpened"],
+      "failureCodes": ["DISPUTE_REASON_REQUIRED", "EVIDENCE_NOT_VISIBLE", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "dispute.resolve": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "decision", "criteriaWeights", "releaseAmountMinor", "refundAmountMinor", "operatorReason", "evidenceRefs"],
+      "requiredScopes": ["operator:disputes.write"],
+      "successEvents": ["DisputeResolved"],
+      "failureCodes": ["DECISION_INCOMPLETE", "ACTOR_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "OrderDto"
+    },
+    "escrow.partial-release": {
+      "publicName": "conditional_release.partial_release",
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "releaseAmountMinor", "refundAmountMinor", "decisionRef"],
+      "requiredScopes": ["finance:ledger.write"],
+      "successEvents": ["EscrowPartiallyReleased"],
+      "failureCodes": ["DECISION_INCOMPLETE", "STATE_CONFLICT"],
+      "responseDto": "OrderDto"
+    },
+    "escrow.refund": {
+      "publicName": "conditional_release.refund",
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "refundAmountMinor", "refundReason", "financeEvidenceRef"],
+      "requiredScopes": ["finance:ledger.write"],
+      "successEvents": ["EscrowRefunded"],
+      "failureCodes": ["STATE_CONFLICT", "EVIDENCE_NOT_VISIBLE"],
+      "responseDto": "OrderDto"
+    },
+    "permission.deny": {
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["grantId", "denyReason"],
+      "requiredScopes": ["operator:permissions.write"],
+      "successEvents": ["PermissionDenied"],
+      "failureCodes": ["VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "GrantDto"
+    },
+    "permission.revoke": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["grantId", "revocationReason"],
+      "requiredScopes": ["operator:permissions.write"],
+      "successEvents": ["PermissionRevoked"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "GrantDto"
+    },
+    "evidence.export": {
+      "mutates": true,
+      "actorRoles": ["buyer", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "evidenceRefs", "exportReason", "redactionMode"],
+      "requiredScopes": ["evidence:export"],
+      "successEvents": ["EvidenceExportRequested", "EvidenceExported"],
+      "failureCodes": ["EVIDENCE_NOT_VISIBLE", "RATE_LIMITED"],
+      "responseDto": "EvidenceExportDto"
+    },
+    "evidence.delete": {
+      "mutates": true,
+      "actorRoles": ["operator", "system"],
+      "sourceChannels": ["ui", "cli", "api", "system"],
+      "scopeMode": "all",
+      "payloadRequired": ["evidenceId", "deletionReason", "retentionOverride"],
+      "requiredScopes": ["evidence:delete"],
+      "successEvents": ["EvidenceDeletionRequested", "EvidenceDeleted"],
+      "failureCodes": ["TOKEN_SCOPE_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "EvidenceDeletionDto"
+    },
+    "run.cancel": {
+      "mutates": true,
+      "actorRoles": ["seller", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "any",
+      "payloadRequired": ["runId", "cancelReason"],
+      "requiredScopes": ["seller:runs.write", "operator:runs.write"],
+      "successEvents": ["RunCancelled"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "RunDto"
+    },
+    "proposal.withdraw": {
+      "mutates": true,
+      "actorRoles": ["seller"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["proposalId", "withdrawReason"],
+      "requiredScopes": ["seller:proposals.write"],
+      "successEvents": ["ProposalWithdrawn"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "ProposalDto"
+    },
+    "rfp.cancel": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["rfpId", "cancelReason"],
+      "requiredScopes": ["buyer:rfps.write"],
+      "successEvents": ["RfpCancelled"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "responseDto": "RfpDto"
+    },
+    "rating.submit": {
+      "mutates": true,
+      "actorRoles": ["buyer"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["orderId", "subjectType", "subjectId", "agentVersion", "ratingBreakdown", "deliveryOutcome"],
+      "requiredScopes": ["buyer:ratings.write"],
+      "successEvents": ["ReputationEventCreated", "ReputationPublished"],
+      "failureCodes": ["ORDER_NOT_COMPLETED", "DUPLICATE_RATING", "ACTOR_FORBIDDEN"],
+      "responseDto": "ReputationDto"
+    }
+  },
+  "queries": {
+    "reputation.show": {
+      "actorRoles": ["buyer", "seller", "operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["subjectId"],
+      "requiredScopes": ["reputation:read"],
+      "responseDto": "ReputationSummaryDto"
+    },
+    "evidence.show": {
+      "actorRoles": ["buyer", "seller", "operator", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "all",
+      "payloadRequired": ["evidenceId"],
+      "requiredScopes": ["evidence:read"],
+      "responseDto": "EvidenceDto"
+    }
+  },
+  "financeRules": {
+    "currency": "CNY",
+    "rounding": "all money is integer minor units; release/refund split must sum to orderAmountMinor minus explicit penaltyAmountMinor",
+    "fullRelease": {
+      "condition": "acceptanceScore >= 85 and no critical breach",
+      "releaseAmountMinor": "orderAmountMinor",
+      "refundAmountMinor": 0
+    },
+    "partialRelease": {
+      "condition": "70 <= acceptanceScore < 85 or dispute decision partial_release",
+      "releaseAmountMinorFormula": "floor(orderAmountMinor * acceptedCriteriaWeightBps / 10000) - penaltyAmountMinor",
+      "refundAmountMinorFormula": "orderAmountMinor - releaseAmountMinor",
+      "acceptedCriteriaWeightSource": "frozen buyerAcceptanceMiniTerms criteria decisions"
+    },
+    "refund": {
+      "condition": "acceptanceScore < 70 or critical breach",
+      "releaseAmountMinor": 0,
+      "refundAmountMinor": "orderAmountMinor"
+    }
+  },
+  "dtoSchemas": {
+    "RfpDto": ["id", "tenantId", "rfpStatus", "packageTier", "category", "market", "budgetAmountMinor", "currency", "version"],
+    "ProposalDto": ["id", "tenantId", "proposalStatus", "rfpId", "sellerId", "agentId", "priceAmountMinor", "currency", "version"],
+    "OrderDto": ["id", "tenantId", "rfpId", "proposalId", "buyerOrgId", "sellerId", "agentId", "orderStatus", "ledgerStatus", "acceptanceStatus", "amountMinor", "currency", "nextAction", "evidenceCompleteness", "qaSummary", "cliPreview", "version"],
+    "GrantDto": ["id", "tenantId", "orderId", "agentId", "grantStatus", "toolAllowlist", "expiresAt", "version"],
+    "RunDto": ["id", "tenantId", "runStatus", "orderId", "agentId", "permissionGrantIds", "failureReason", "version"],
+    "DeliveryDto": ["id", "tenantId", "deliveryStatus", "orderId", "artifactRefs", "evidenceRefs", "criteriaMapping", "version"],
+    "EvidenceDto": ["id", "tenantId", "orderId", "sourceType", "uri", "hash", "capturedAt", "visibility", "redactionStatus", "retentionDays", "linkedClaimId", "qaStatus"],
+    "EvidenceExportDto": ["exportId", "tenantId", "orderId", "evidenceCount", "redactionMode", "status", "hash"],
+    "EvidenceDeletionDto": ["requestId", "tenantId", "evidenceId", "status", "retentionOverride"],
+    "ReputationDto": ["id", "tenantId", "eventStatus", "subjectType", "subjectId", "sourceOrderId", "deliveryOutcome", "version"],
+    "ReputationSummaryDto": ["subjectId", "subjectType", "averageRating", "reviewCount", "disputeRate", "onTimeRate", "version"]
+  },
+  "eventPayloadSchemas": {
+    "RfpDraftCreated": ["rfpId", "rfpStatus", "packageTier"],
+    "RfpPublished": ["rfpId", "rfpStatus", "acceptanceTemplateId"],
+    "RfpCancelled": ["rfpId", "rfpStatus", "cancelReason"],
+    "RfpQuotingStarted": ["rfpId", "rfpStatus", "proposalId"],
+    "ProposalSubmitted": ["proposalId", "proposalStatus", "rfpId", "sellerId", "agentId"],
+    "ProposalSelected": ["proposalId", "proposalStatus", "rfpId"],
+    "ProposalDeclined": ["proposalId", "proposalStatus", "rfpId"],
+    "ProposalExpired": ["proposalId", "proposalStatus", "rfpId"],
+    "ProposalWithdrawn": ["proposalId", "proposalStatus", "withdrawReason"],
+    "EscrowOrderCreated": ["orderId", "orderStatus", "ledgerStatus", "acceptanceStatus"],
+    "EscrowFunded": ["orderId", "orderStatus", "ledgerStatus", "paymentRef"],
+    "EscrowPartiallyReleased": ["orderId", "orderStatus", "ledgerStatus", "releasedAmountMinor", "refundAmountMinor", "decisionRef"],
+    "EscrowRefunded": ["orderId", "orderStatus", "ledgerStatus", "refundAmountMinor", "refundReason"],
+    "RfpOrdered": ["rfpId", "rfpStatus", "orderId", "proposalId"],
+    "PermissionRequested": ["grantId", "grantStatus", "orderId", "agentId"],
+    "PermissionApproved": ["grantId", "grantStatus", "toolAllowlist", "expiresAt"],
+    "PermissionDenied": ["grantId", "grantStatus", "denyReason"],
+    "PermissionRevoked": ["grantId", "grantStatus", "revocationReason"],
+    "PermissionExpired": ["grantId", "grantStatus", "expiredAt"],
+    "RunQueued": ["runId", "runStatus", "orderId"],
+    "RunStarted": ["runId", "runStatus", "orderId"],
+    "RunSucceeded": ["runId", "runStatus", "outputRefs"],
+    "RunFailed": ["runId", "runStatus", "failureReason"],
+    "RunCancelled": ["runId", "runStatus", "cancelReason"],
+    "RevisionRunStarted": ["runId", "runStatus", "orderId"],
+    "DeliverySubmitted": ["deliveryPackageId", "deliveryStatus", "orderId", "evidenceRefs"],
+    "DeliveryQaPassed": ["deliveryPackageId", "deliveryStatus", "qaChecklistId"],
+    "DeliveryQaRejected": ["deliveryPackageId", "deliveryStatus", "failedItems", "fixSlaHours"],
+    "DeliverySuperseded": ["deliveryPackageId", "deliveryStatus", "supersedesDeliveryId"],
+    "AcceptanceAccepted": ["reviewId", "reviewStatus", "orderId", "totalScore"],
+    "RevisionRequested": ["reviewId", "reviewStatus", "orderId", "failedCriteria"],
+    "DisputeOpened": ["reviewId", "reviewStatus", "orderId", "disputeReason"],
+    "DisputeResolved": ["orderId", "orderStatus", "releaseAmountMinor", "refundAmountMinor", "decision"],
+    "EscrowReleased": ["orderId", "orderStatus", "ledgerStatus", "releasedAmountMinor"],
+    "ReputationEventCreated": ["reputationEventId", "eventStatus", "sourceOrderId", "deliveryOutcome"],
+    "ReputationPublished": ["reputationEventId", "eventStatus"],
+    "ReputationHidden": ["reputationEventId", "eventStatus", "policyReason"],
+    "EvidenceExportRequested": ["exportId", "orderId", "evidenceCount", "redactionMode"],
+    "EvidenceExported": ["exportId", "orderId", "hash", "evidenceCount"],
+    "EvidenceDeletionRequested": ["requestId", "evidenceId", "deletionReason"],
+    "EvidenceDeleted": ["requestId", "evidenceId", "retentionOverride"],
+    "UnauthorizedAccessAttempted": ["tenantId", "actorId", "commandName"],
+    "TokenScopeDenied": ["tenantId", "actorId", "scope", "commandName"],
+    "CommandActorDenied": ["tenantId", "actorId", "actorRole", "commandName"],
+    "CommandValidationFailed": ["tenantId", "commandName", "fieldErrors"],
+    "StateTransitionRejected": ["tenantId", "aggregateId", "commandName", "fromState"],
+    "OptimisticLockRejected": ["tenantId", "aggregateId", "expectedVersion", "currentVersion"],
+    "IdempotencyConflictDetected": ["tenantId", "commandName", "idempotencyKey"],
+    "RateLimitDenied": ["tenantId", "actorId", "surface", "limitKey"],
+    "RuntimeToolDenied": ["tenantId", "runId", "toolName", "denyReason"],
+    "EvidenceAccessDenied": ["tenantId", "actorId", "evidenceId", "reason"],
+    "EvidenceExportDenied": ["tenantId", "actorId", "orderId", "reason"],
+    "FinanceCommandDenied": ["tenantId", "actorId", "orderId", "reason"]
+  },
+  "goldenPath": [
+    "RfpDraftCreated",
+    "RfpPublished",
+    "ProposalSubmitted",
+    "ProposalSelected",
+    "EscrowOrderCreated",
+    "EscrowFunded",
+    "RfpOrdered",
+    "PermissionRequested",
+    "PermissionApproved",
+    "RunQueued",
+    "RunStarted",
+    "RunSucceeded",
+    "DeliverySubmitted",
+    "DeliveryQaPassed",
+    "AcceptanceAccepted",
+    "EscrowReleased",
+    "ReputationEventCreated",
+    "ReputationPublished"
+  ],
+  "requiredEvidencePackageFiles": [
+    "00-order-summary.md",
+    "01-rfp.md",
+    "02-rfp.json",
+    "03-proposal.json",
+    "04-terms-snapshot.md",
+    "05-risk-permission-grants.json",
+    "06-execution-run.json",
+    "07-delivery.pdf",
+    "07-delivery.md",
+    "08-topics.csv",
+    "08-topics.xlsx",
+    "09-evidence-index.csv",
+    "10-qa-checklist.md",
+    "11-acceptance-review.json",
+    "12-finance-ledger.json",
+    "13-reputation-event.json",
+    "14-roi-retrospective.md",
+    "15-event-sequence.json",
+    "16-cli-api-ui-snapshots.json",
+    "README.md"
+  ],
+  "security": {
+    "tenantResolutionOrder": ["authTokenOrgClaim", "cliProfileOrg", "runtimeGrantTenant"],
+    "auditEventByErrorCode": {
+      "ACTOR_FORBIDDEN": "CommandActorDenied",
+      "TENANT_FORBIDDEN": "UnauthorizedAccessAttempted",
+      "TOKEN_SCOPE_FORBIDDEN": "TokenScopeDenied",
+      "VERSION_CONFLICT": "OptimisticLockRejected",
+      "IDEMPOTENCY_CONFLICT": "IdempotencyConflictDetected",
+      "VALIDATION_FAILED": "CommandValidationFailed",
+      "STATE_CONFLICT": "StateTransitionRejected",
+      "PERMISSION_DENIED": "RuntimeToolDenied",
+      "EVIDENCE_NOT_VISIBLE": "EvidenceAccessDenied",
+      "RATE_LIMITED": "RateLimitDenied"
+    },
+    "runtimeToolPolicy": {
+      "allowed": ["read_public_url", "read_buyer_upload", "write_generated_artifact", "write_evidence_metadata"],
+      "denied": ["account_login", "content_publishing", "ad_spend", "fund_movement", "production_mutation", "destructive_delete", "private_or_paid_source_scrape"]
+    },
+    "evidenceVisibilityChecks": ["tenantId", "actorRole", "visibility", "redactionStatus"],
+    "rateLimits": {
+      "cliMutatingCommandPerMinute": 60,
+      "evidenceExportPerHour": 10,
+      "financeCommandPerHour": 20
+    },
+    "permissionMatrixCovers": ["buyer", "seller", "agent_runtime", "operator", "finance_ops", "system", "other_tenant"]
+  }
+}

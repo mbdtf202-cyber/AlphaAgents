@@ -1,0 +1,26 @@
+{
+  "id": "rep_sandbox_dispute_003",
+  "tenantId": "org_sandbox_buyer_001",
+  "subjectType": "agent",
+  "subjectId": "agent_mira_competitor_intel_sandbox",
+  "sourceOrderId": "order_sandbox_dispute_003",
+  "eventStatus": "published",
+  "version": 2,
+  "agentVersion": "1.0.0-sandbox",
+  "ratingBreakdown": {
+    "quality": 4.6,
+    "timeliness": 4.8,
+    "evidence": 4.7,
+    "communication": 4.5,
+    "value": 3
+  },
+  "deliveryOutcome": "partially_released",
+  "evidenceRefs": [
+    "ev_020"
+  ],
+  "eventRefs": [
+    "event_018",
+    "event_019"
+  ],
+  "createdAt": "2026-05-09T18:00:00+08:00"
+}

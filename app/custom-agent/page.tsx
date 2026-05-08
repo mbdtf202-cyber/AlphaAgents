@@ -2,10 +2,13 @@ export const dynamic = "force-dynamic";
 
 import { AppShell } from "../../components/alphaagents/shell";
 import { Chip, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
+import { RuntimeCommandConsole } from "../../components/alphaagents/runtime-command-console";
+import { getRuntimeSnapshot } from "../../lib/alphaagents/runtime-queries";
 import { getCustomAgentModel } from "../../lib/alphaagents/view-models";
 
 export default function CustomAgentPage() {
   const model = getCustomAgentModel();
+  const runtimeSnapshot = getRuntimeSnapshot();
 
   return (
     <AppShell shell={model.shell} currentPath="/custom-agent">
@@ -61,6 +64,7 @@ export default function CustomAgentPage() {
             <Chip tone="warning">Change orders stay explicit</Chip>
           </div>
         </SectionCard>
+        <RuntimeCommandConsole mode="custom-agent" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>
   );

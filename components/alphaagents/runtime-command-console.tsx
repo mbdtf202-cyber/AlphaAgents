@@ -8,6 +8,7 @@ type RuntimeSnapshot = {
   programWorkspaces: Array<{ id: string; activeCreditMinor: number; backlogValueMinor: number; qbrStatus: string }>;
   appInstalls: Array<{ id: string; appId: string; installStatus: string; usageMode: string; version: number }>;
   appUsageRuns: Array<{ id: string; installId: string; appId: string; usageStatus: string; version: number }>;
+  customProjects: Array<{ id: string; projectStatus: string; uatStatus: string; milestones: Array<{ milestoneId: string }>; changeOrders: Array<{ changeOrderId: string }>; version: number }>;
   rfps: Array<{ id: string; rfpStatus: string; version: number }>;
   proposals: Array<{ id: string; proposalStatus: string; version: number; rfpId: string }>;
   orders: Array<{ id: string; orderStatus: string; ledgerStatus: string; acceptanceStatus: string; version: number }>;
@@ -19,7 +20,7 @@ type RuntimeSnapshot = {
   events: Array<{ id: string; eventName: string; recordedAt: string }>;
 };
 
-type Mode = "catalog-admin" | "quick-order" | "order-workspace" | "agent-app" | "program-ops" | "risk-finance";
+type Mode = "catalog-admin" | "quick-order" | "order-workspace" | "agent-app" | "program-ops" | "risk-finance" | "custom-agent";
 
 type CommandResult = {
   ok: boolean;
@@ -207,6 +208,8 @@ export function RuntimeCommandConsole({
         {" "}
         programs {snapshot?.programWorkspaces.length ?? 0},
         {" "}
+        custom projects {snapshot?.customProjects.length ?? 0},
+        {" "}
         rfps {snapshot?.rfps.length ?? 0},
         {" "}
         proposals {snapshot?.proposals.length ?? 0},
@@ -393,6 +396,61 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           programId: "program_northstar_growth_001",
           qbrStatus: "ready_for_review"
         })
+      }
+    ];
+  }
+
+  if (mode === "custom-agent") {
+    return [
+      {
+        label: "Create Custom Project",
+        commandName: "custom-project.request",
+        actorRole: "buyer",
+        payload: () => ({
+          projectId: "custom_project_northstar_launch_001",
+          buyerOrgId: "org_demo_001",
+          projectTitle: "NorthStar launch workflow agent",
+          categoryId: "custom_agent_app",
+          targetOutcome: "launch-ready managed workflow agent with buyer UAT",
+          requestedBy: "user_demo_buyer_owner"
+        }),
+        expectedVersion: () => 0
+      },
+      {
+        label: "Confirm Milestone",
+        commandName: "custom-project.confirm-milestone",
+        actorRole: "operator",
+        payload: (snapshot) => ({
+          projectId: snapshot.customProjects.at(-1)?.id,
+          milestoneId: "milestone_design_freeze_001",
+          milestoneName: "Design freeze",
+          dueAt: "2026-05-20T18:00:00+08:00"
+        }),
+        enabled: (snapshot) => Boolean(snapshot.customProjects.at(-1))
+      },
+      {
+        label: "Submit UAT",
+        commandName: "custom-project.submit-uat",
+        actorRole: "seller",
+        payload: (snapshot) => ({
+          projectId: snapshot.customProjects.at(-1)?.id,
+          milestoneId: snapshot.customProjects.at(-1)?.milestones.at(-1)?.milestoneId ?? "milestone_design_freeze_001",
+          executionSummary: "sandbox UAT flow completed",
+          evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+        }),
+        enabled: (snapshot) => Boolean(snapshot.customProjects.at(-1)?.milestones.length)
+      },
+      {
+        label: "Create Change Order",
+        commandName: "custom-project.create-change-order",
+        actorRole: "buyer",
+        payload: (snapshot) => ({
+          projectId: snapshot.customProjects.at(-1)?.id,
+          changeOrderId: "change_scope_001",
+          requestedChange: "add private deployment checklist",
+          impactSummary: "one extra review cycle"
+        }),
+        enabled: (snapshot) => Boolean(snapshot.customProjects.at(-1))
       }
     ];
   }
@@ -780,6 +838,60 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
             })
           }
         ]
+      }
+    ];
+  }
+
+  if (mode === "custom-agent") {
+    return [
+      {
+        label: "Run Custom Agent Intake Flow",
+        steps: [
+          {
+            commandName: "custom-project.request",
+            actorRole: "buyer",
+            payload: () => ({
+              projectId: "custom_project_northstar_launch_001",
+              buyerOrgId: "org_demo_001",
+              projectTitle: "NorthStar launch workflow agent",
+              categoryId: "custom_agent_app",
+              targetOutcome: "launch-ready managed workflow agent with buyer UAT",
+              requestedBy: "user_demo_buyer_owner"
+            }),
+            expectedVersion: () => 0
+          },
+          {
+            commandName: "custom-project.confirm-milestone",
+            actorRole: "operator",
+            payload: (snapshot) => ({
+              projectId: snapshot.customProjects.at(-1)?.id,
+              milestoneId: "milestone_design_freeze_001",
+              milestoneName: "Design freeze",
+              dueAt: "2026-05-20T18:00:00+08:00"
+            })
+          },
+          {
+            commandName: "custom-project.submit-uat",
+            actorRole: "seller",
+            payload: (snapshot) => ({
+              projectId: snapshot.customProjects.at(-1)?.id,
+              milestoneId: snapshot.customProjects.at(-1)?.milestones.at(-1)?.milestoneId ?? "milestone_design_freeze_001",
+              executionSummary: "sandbox UAT flow completed",
+              evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+            })
+          },
+          {
+            commandName: "custom-project.create-change-order",
+            actorRole: "buyer",
+            payload: (snapshot) => ({
+              projectId: snapshot.customProjects.at(-1)?.id,
+              changeOrderId: "change_scope_001",
+              requestedChange: "add private deployment checklist",
+              impactSummary: "one extra review cycle"
+            })
+          }
+        ],
+        enabled: (snapshot) => snapshot.customProjects.length === 0
       }
     ];
   }

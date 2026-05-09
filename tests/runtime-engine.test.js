@@ -827,6 +827,78 @@ test("permission approval rejects denied high-risk tools", () => {
   assert.equal(denied.errorCode, "PERMISSION_DENIED");
 });
 
+test("delivery.qa_reject blocks buyer acceptance until QA passes", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.orders.push({
+    id: "order_qa_reject_block_001",
+    tenantId: "org_demo_001",
+    rfpId: "rfp_qa_reject_block_001",
+    proposalId: "proposal_qa_reject_block_001",
+    buyerOrgId: "org_demo_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    orderStatus: "delivery_submitted",
+    ledgerStatus: "locked",
+    acceptanceStatus: "qa_pending",
+    amountMinor: 198000,
+    currency: "CNY",
+    version: 1
+  });
+  state.deliveries.push({
+    id: "delivery_qa_reject_block_001",
+    tenantId: "org_demo_001",
+    deliveryStatus: "submitted",
+    orderId: "order_qa_reject_block_001",
+    artifactRefs: ["ev_sandbox_delivery_pdf_001"],
+    evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
+    criteriaMapping: ["competitor_coverage"],
+    knownLimitations: ["sandbox only"],
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const rejected = executeRuntimeCommand(
+    "delivery.qa_reject",
+    runtimeEnvelope("operator", {
+      deliveryPackageId: "delivery_qa_reject_block_001",
+      failedItems: ["critical evidence gap"],
+      rejectReason: "source evidence did not satisfy QA",
+      fixSlaHours: 24
+    }),
+    { stateFile }
+  );
+  assert.equal(rejected.ok, true);
+  assert.equal(rejected.dto.orderStatus, "revision_requested");
+  assert.equal(rejected.dto.acceptanceStatus, "qa_pending");
+
+  const blocked = executeRuntimeCommand(
+    "acceptance.accept",
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: "order_qa_reject_block_001",
+        deliveryPackageId: "delivery_qa_reject_block_001",
+        criteriaConfirmations: ["competitor_coverage"],
+        criteriaScores: { competitor_coverage: 20 },
+        decisionReason: "buyer tried to accept rejected QA"
+      },
+      { expectedVersion: rejected.newVersion }
+    ),
+    { stateFile }
+  );
+
+  const finalState = loadRuntimeState(stateFile);
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "STATE_CONFLICT");
+  assert.equal(finalState.reviews.length, 0);
+  assert.equal(finalState.orders[0].orderStatus, "revision_requested");
+  assert.equal(finalState.orders[0].acceptanceStatus, "qa_pending");
+  assert.ok(finalState.eventLog.some((entry) => entry.eventName === "DeliveryQaRejected"));
+});
+
 test("proposal.accept blocks orders when buyer org lacks procurement signability", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);

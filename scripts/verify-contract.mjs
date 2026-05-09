@@ -24,6 +24,16 @@ for (const key of Object.keys(contract.statuses)) {
 }
 
 const requiredCommands = [
+  "agent-category.create",
+  "agent-category.update",
+  "agent-category.archive",
+  "agent-category.restore",
+  "agent-passport.create",
+  "agent-passport.update",
+  "agent-passport.suspend",
+  "agent-listing.publish",
+  "agent-listing.update",
+  "agent-listing.archive",
   "buyer-org.setup",
   "custom-project.request",
   "custom-project.confirm-milestone",
@@ -62,8 +72,11 @@ const requiredCommands = [
   "evidence.delete"
 ];
 
-const requiredQueries = ["reputation.show", "evidence.show"];
+const requiredQueries = ["agent-category.list", "agent-listing.search", "agent-passport.show", "reputation.show", "evidence.show"];
 const requiredDtos = [
+  "AgentCategoryDto",
+  "AgentPassportDto",
+  "AgentListingDto",
   "RfpDto",
   "ProposalDto",
   "OrderDto",
@@ -127,6 +140,16 @@ for (const dto of requiredDtos) {
 }
 
 const requiredBranchEvents = [
+  "AgentCategoryCreated",
+  "AgentCategoryUpdated",
+  "AgentCategoryArchived",
+  "AgentCategoryRestored",
+  "AgentPassportCreated",
+  "AgentPassportUpdated",
+  "AgentPassportSuspended",
+  "AgentListingPublished",
+  "AgentListingUpdated",
+  "AgentListingArchived",
   "BuyerOrgSetupUpdated",
   "CustomProjectRequested",
   "CustomProjectMilestoneConfirmed",
@@ -185,7 +208,11 @@ const engineeringDoc = fs.readFileSync(path.join(root, "docs", "engineering-cont
 assert(engineeringDoc.includes("contracts/alphaagents.contract.json"), "engineering doc must reference machine-readable contract");
 assert(engineeringDoc.includes("acceptedCriteriaWeightBps"), "engineering doc must use canonical partial-release formula");
 for (const command of requiredCommands) {
-  assert(engineeringDoc.includes(`\`${command}\``), `engineering doc must mention ${command}`);
+  const runtimeAlias = command.replace(".", " ");
+  assert(
+    engineeringDoc.includes(`\`${command}\``) || engineeringDoc.includes(`\`${runtimeAlias}\``),
+    `engineering doc must mention ${command}`
+  );
 }
 
 console.log("contract verification passed");

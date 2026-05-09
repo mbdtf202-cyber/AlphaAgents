@@ -174,6 +174,29 @@ type CommandResult<TEvent, TDto> = CommandSuccess<TEvent, TDto> | CommandFailure
 | `PERMISSION_DENIED` | runtime 工具超出 grant allowlist | `PermissionDenied` |
 | `RATE_LIMITED` | 超出命令、导出、runtime 或财务频率限制 | `RateLimitDenied` |
 
+### 2.4 Catalog Control Plane Commands
+
+目录控制面同样属于机器契约，不允许只停留在前端常量、seed data 或 CLI 私有别名中。机器契约使用点分命令名，CLI 可展示空格别名，但两者必须进入同一 command handler、DTO 和事件流。
+
+| Machine command | CLI alias | 作用 |
+| --- | --- | --- |
+| `agent-category.create` | `agent-category create` | 创建分类，要求风险等级、默认权限模板、默认验收模板、运营 owner 和风险 owner |
+| `agent-category.update` | `agent-category update` | 修改分类名称、风险、模板、排序或 owner，并写入历史快照 |
+| `agent-category.archive` | `agent-category archive` | 归档分类，阻止新上架和新购买，但不删除历史订单、证据或声誉 |
+| `agent-category.restore` | `agent-category restore` | 恢复分类，必须重新确认风险、模板、负责人和可售状态 |
+| `agent-passport.create` | `agent-passport create` | 创建 Agent 身份、owner、分类、manifest 和版本 |
+| `agent-passport.update` | `agent-passport update` | 更新 Agent manifest、版本、权限边界或证明材料 |
+| `agent-passport.suspend` | `agent-passport suspend` | 暂停 Agent 身份，不删除历史履约和声誉 |
+| `agent-listing.publish` | `agent-listing publish` | 发布可售 listing，校验分类、价格、权限模板、验收模板和容量 |
+| `agent-listing.update` | `agent-listing update` | 更新 listing 的价格、容量、模板、状态或曝光字段 |
+| `agent-listing.archive` | `agent-listing archive` | 下架 listing，保留历史订单、证据和声誉回放 |
+
+配套查询：
+
+- `agent-category.list` / CLI alias `agent-category list`
+- `agent-listing.search` / CLI alias `agent-listing search`
+- `agent-passport.show` / CLI alias `agent-passport show`
+
 ## 3. 写模型 Schema
 
 组织、签约、收款和 Program 相关对象在 MVP 中是读模型或投影，不是新的交易终态 owner：

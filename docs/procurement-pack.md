@@ -42,6 +42,16 @@
 - Trial 后一周内有第二个相似需求：转 Standard 或 PoC。
 - 甲方连续 3 单或有月度例会需求：推进年度 order-credit。
 
+### 2.1 Agent App subscription boundary
+
+Agent App subscription 是 AaaS 的访问和计费方式，不是绕开平台的传统 SaaS seat。采购附件必须把订阅权益、使用量和退出路径写进同一责任链：
+
+- subscription entitlement 只授予可运行的 Agent App 权益，不自动授权账号登录、发布、生产写入、广告预算或资金动作。
+- 每个 App run 必须生成 `AgentAppUsageRecorded`、`ExecutionRun`、`DeliveryPackage` 或等价使用证明，并能进入 evidence room 回放。
+- subscription invoice、usage drawdown、refund、cancellation 和 exit evidence 必须进入 finance ledger 或 order-credit ledger。
+- Agent App 交付仍然要绑定 Agent / Agent App 身份、owner、version、permission boundary、acceptance proof、reputation writeback 和 revocation path。
+- 未完成 buyer org setup、authority chain、invoice readiness、scope acknowledgement 或高风险权限 preview 时，不得确认企业订阅、使用量包或 App 安装授权。
+
 ## 3. Default Trial gate
 
 Trial 是默认首单路径，不让买方先逛市场或等待多方报价。平台从已准入 roster 分配服务方和 Agent。买方只需要完成 Quick Order。

@@ -2,6 +2,8 @@
 
 AlphaAgents is an agent-native platform for verified Agent commerce, managed delivery, Agent Apps, custom Agents, and enterprise operations.
 
+AlphaAgents is built as **Agent as a Service (AaaS)**: it competes with traditional SaaS as an enterprise buying category, but sells Agent execution, evidence, acceptance, and accountable outcomes instead of seats, modules, or self-serve tooling alone.
+
 中文定位：
 
 **完整 Agent 交易、托管交付、应用分发和企业运营网络。**
@@ -19,7 +21,7 @@ AlphaAgents 的完整平台形态包括：
 - 交付与验收：执行记录、交付包、QA、验收、限定修改、争议、退款、部分放款和声誉回写。
 - 长期运营：复购、订阅、Program ops、QBR、证据留存、续约和分类质量治理。
 
-## MVP Business Starting Point
+## Commercial Starting Lane
 
 AlphaAgents keeps the full-platform direction, but the current commercial entry must stay narrow and honest.
 
@@ -27,7 +29,7 @@ AlphaAgents keeps the full-platform direction, but the current commercial entry 
 - Default first purchase: **跨境电商竞品监控与内容选题情报包**。
 - Default first purchase ICP: **US TikTok Shop beauty and personal-care** teams, plus agencies serving the same category.
 - Trial-first motion: start with a guided Quick Order, prove evidence quality and acceptance discipline, then expand into Standard, Pro, PoC, subscription, or order-credit.
-- Buyer-facing finance language remains **conditional release** workflow; internal ledger models and payout logic must not be marketed as licensed clearing capability.
+- Buyer-facing finance language remains **conditional release** workflow; internal ledger models and payout logic must not be marketed as regulated payment-clearing capability.
 
 This starting motion is a beachhead go-to-market lane, not a downgrade of the AlphaAgents platform scope.
 
@@ -118,7 +120,7 @@ The platform must prove this loop across every category and supply type:
 9. Funds, credits, subscription rights, refunds, partial releases, or revenue share are reconciled according to frozen terms.
 10. Rating and reputation events are written back to Agent, Agent App, Seller, version, and category projections.
 
-For the current MVP motion, the default first transaction is a read-only intelligence order with a frozen scope, evidence index, QA gate, buyer acceptance window, and conditional release rules before any provider payout.
+For the current commercial starting lane, the default first transaction is a read-only intelligence order with a frozen scope, evidence index, QA gate, buyer acceptance window, and conditional release rules before any provider payout.
 
 ## CLI Alignment
 

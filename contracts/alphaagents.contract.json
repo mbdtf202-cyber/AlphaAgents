@@ -169,9 +169,121 @@
     "evidence:read",
     "evidence:export",
     "evidence:delete",
+    "catalog:read",
+    "operator:catalog.write",
     "reputation:read"
   ],
   "commands": {
+    "agent-category.create": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["categoryId", "name", "riskLevel", "defaultPermissionTemplateId", "defaultAcceptanceTemplateId", "opsOwner", "riskOwner"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentCategoryCreated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "AgentCategoryDto"
+    },
+    "agent-category.update": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["categoryId", "patch"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentCategoryUpdated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentCategoryDto"
+    },
+    "agent-category.archive": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["categoryId", "archiveReason"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentCategoryArchived"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentCategoryDto"
+    },
+    "agent-category.restore": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["categoryId", "restoreReason"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentCategoryRestored"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentCategoryDto"
+    },
+    "agent-passport.create": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["agentId", "sellerId", "categoryIds", "manifestVersion", "machineManifest"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentPassportCreated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED"],
+      "responseDto": "AgentPassportDto"
+    },
+    "agent-passport.update": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["agentId", "patch"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentPassportUpdated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentPassportDto"
+    },
+    "agent-passport.suspend": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["agentId", "suspendReason"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentPassportSuspended"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentPassportDto"
+    },
+    "agent-listing.publish": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["listingId", "agentId", "categoryIds", "priceAmountMinor", "acceptanceTemplateId", "permissionTemplateId", "deliveryHours", "capacityAvailable"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentListingPublished"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentListingDto"
+    },
+    "agent-listing.update": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["listingId", "patch"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentListingUpdated"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentListingDto"
+    },
+    "agent-listing.archive": {
+      "mutates": true,
+      "actorRoles": ["operator"],
+      "sourceChannels": ["ui", "cli", "api"],
+      "scopeMode": "all",
+      "payloadRequired": ["listingId", "archiveReason"],
+      "requiredScopes": ["operator:catalog.write"],
+      "successEvents": ["AgentListingArchived"],
+      "failureCodes": ["ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "TOKEN_SCOPE_FORBIDDEN", "VALIDATION_FAILED", "STATE_CONFLICT"],
+      "responseDto": "AgentListingDto"
+    },
     "buyer-org.setup": {
       "mutates": true,
       "actorRoles": ["buyer"],
@@ -574,6 +686,30 @@
     }
   },
   "queries": {
+    "agent-category.list": {
+      "actorRoles": ["buyer", "seller", "operator", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "all",
+      "payloadRequired": ["tenantId"],
+      "requiredScopes": ["catalog:read"],
+      "responseDto": "AgentCategoryDto"
+    },
+    "agent-listing.search": {
+      "actorRoles": ["buyer", "seller", "operator", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "all",
+      "payloadRequired": ["filters"],
+      "requiredScopes": ["catalog:read"],
+      "responseDto": "AgentListingDto"
+    },
+    "agent-passport.show": {
+      "actorRoles": ["buyer", "seller", "operator", "agent_runtime"],
+      "sourceChannels": ["ui", "cli", "api", "runtime"],
+      "scopeMode": "all",
+      "payloadRequired": ["agentId"],
+      "requiredScopes": ["catalog:read"],
+      "responseDto": "AgentPassportDto"
+    },
     "reputation.show": {
       "actorRoles": ["buyer", "seller", "operator"],
       "sourceChannels": ["ui", "cli", "api"],
@@ -612,6 +748,9 @@
     }
   },
   "dtoSchemas": {
+    "AgentCategoryDto": ["categoryId", "name", "riskLevel", "defaultPermissionTemplateId", "defaultAcceptanceTemplateId", "opsOwner", "riskOwner", "categoryStatus", "supportedSupplyTypes", "tags", "history", "version"],
+    "AgentPassportDto": ["id", "sellerId", "categoryIds", "supplyType", "machineManifest", "manifestVersion", "humanOwner", "proofStatus", "passportStatus", "version"],
+    "AgentListingDto": ["listingId", "agentId", "categoryIds", "supplyType", "billingMode", "startingPriceMinor", "deliveryHours", "capacityAvailable", "acceptanceTemplateId", "permissionTemplateId", "listingStatus", "version"],
     "BuyerOrgProfileDto": ["id", "lifecycleStage", "requesterUserId", "acceptanceOwnerUserId", "financeContactUserId", "authorizedPayerId", "signerIds", "invoiceReadiness", "scopeAcknowledgement", "version"],
     "CustomProjectDto": ["id", "tenantId", "buyerOrgId", "projectTitle", "categoryId", "targetOutcome", "requestedBy", "projectStatus", "uatStatus", "milestones", "changeOrders", "version"],
     "AgentAppInstallDto": ["id", "tenantId", "buyerOrgId", "appId", "usageMode", "authorizedBy", "installStatus", "version"],
@@ -630,6 +769,16 @@
     "ReputationSummaryDto": ["subjectId", "subjectType", "averageRating", "reviewCount", "disputeRate", "onTimeRate", "version"]
   },
   "eventPayloadSchemas": {
+    "AgentCategoryCreated": ["categoryId", "categoryStatus"],
+    "AgentCategoryUpdated": ["categoryId", "previousVersion"],
+    "AgentCategoryArchived": ["categoryId", "archiveReason"],
+    "AgentCategoryRestored": ["categoryId", "restoreReason"],
+    "AgentPassportCreated": ["agentId", "sellerId"],
+    "AgentPassportUpdated": ["agentId", "previousVersion"],
+    "AgentPassportSuspended": ["agentId", "suspendReason"],
+    "AgentListingPublished": ["listingId", "agentId"],
+    "AgentListingUpdated": ["listingId", "previousVersion"],
+    "AgentListingArchived": ["listingId", "archiveReason"],
     "BuyerOrgSetupUpdated": ["buyerOrgId", "invoiceReadiness", "scopeAcknowledgement"],
     "CustomProjectRequested": ["projectId", "projectStatus"],
     "CustomProjectMilestoneConfirmed": ["projectId", "milestoneId"],

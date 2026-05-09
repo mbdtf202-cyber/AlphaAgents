@@ -147,6 +147,11 @@ for (const packageDir of packageDirs) {
   assert(review.deliveryPackageId.startsWith(expected.deliveryIdPrefix), `${packageName} delivery package id drifted`);
   assert(ledger.ledgerId === expected.ledgerId, `${packageName} ledger id drifted`);
   assert(ledger.orderId === expected.orderId, `${packageName} ledger orderId drifted`);
+  assert(ledger.paymentRef, `${packageName} ledger must include paymentRef`);
+  assert(ledger.invoiceStatus, `${packageName} ledger must include invoiceStatus`);
+  assert(ledger.reconciliationStatus, `${packageName} ledger must include reconciliationStatus`);
+  assert(ledger.reconciliationExport === `evidence-packages/${packageName}/12-finance-ledger.json`, `${packageName} ledger reconciliation export drifted`);
+  assert(Array.isArray(ledger.financeEvidenceRefs) && ledger.financeEvidenceRefs.length > 0, `${packageName} ledger must include finance evidence refs`);
   assert(reputation.id === expected.reputationId, `${packageName} reputation id drifted`);
   assert(reputation.sourceOrderId === expected.orderId, `${packageName} reputation sourceOrderId drifted`);
   assert(reputation.eventStatus === "published", `${packageName} reputation event must be published`);

@@ -21,7 +21,7 @@ export default function RiskFinancePage() {
             ))}
             <CommandPreview command="alphaagents dispute resolve --json" />
           </SectionCard>
-          <SectionCard title="High-risk action preview" tone="warning" subtitle="S-02 / UI-28: risky tools need explicit authorization, preview fields, audit events, and a visible revoke path before execution.">
+          <SectionCard title="High-risk action preview" tone="warning" subtitle="S-02 / UI-28: risky tools need Explicit authorization, Action preview, Audit event, and Revoke path before execution.">
             <div>
               {model.highRiskPermissionPreview.previewFields.map((field) => (
                 <Chip key={field}>{field}</Chip>
@@ -122,7 +122,7 @@ export default function RiskFinancePage() {
           </SectionCard>
         </div>
         <div className="aa-grid aa-grid-2">
-          <SectionCard title="Sample finance evidence" subtitle="Sandbox packages carry contract, invoice, refund, and reconciliation fields for B-06 / T-03 review.">
+          <SectionCard title="Sample Finance evidence" subtitle="Sandbox packages carry contract, invoice, refund, and reconciliation fields for B-06 / T-03 review.">
             <DataTable
               columns={[
                 { key: "packageId", label: "Package" },

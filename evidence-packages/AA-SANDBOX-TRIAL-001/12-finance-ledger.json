@@ -20,5 +20,7 @@
   "refundAmountMinor": 0,
   "invoiceStatus": "sandbox_not_issued",
   "reconciliationStatus": "sandbox_export_ready",
+  "reconciliationExport": "evidence-packages/AA-SANDBOX-TRIAL-001/12-finance-ledger.json",
+  "financeEvidenceRefs": ["ev_sandbox_finance_ledger_001"],
   "eventRefs": ["event_006", "event_016"]
 }

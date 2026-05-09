@@ -5,8 +5,27 @@ import { Chip, CommandPreview, DataTable, SectionCard } from "../../components/a
 import { getCatalogModel } from "../../lib/alphaagents/view-models";
 import Link from "next/link";
 
-export default function CatalogPage() {
-  const model = getCatalogModel();
+type CatalogListingRow = {
+  startingPriceMinor: number;
+  deliveryHours: number;
+  [key: string]: React.ReactNode;
+};
+
+export default async function CatalogPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = (await searchParams) ?? {};
+  const model = getCatalogModel(params);
+  const filterLinks = [
+    { label: "All listings", href: "/catalog" },
+    { label: "Social ops", href: "/catalog?categoryId=social_media_operations" },
+    { label: "Agent Apps", href: "/catalog?supplyType=agent_app" },
+    { label: "Subscription", href: "/catalog?billingMode=subscription" },
+    { label: "Medium-high risk", href: "/catalog?riskLevel=medium_high" },
+    { label: "Under ¥7,000", href: "/catalog?maxPriceMinor=700000" },
+    { label: "SLA <= 48h", href: "/catalog?maxDeliveryHours=48" },
+    { label: "QA >= 91%", href: "/catalog?minRating=0.91" },
+    { label: "Capacity >= 3", href: "/catalog?minCapacity=3" }
+  ];
+
   return (
     <AppShell shell={model.shell} currentPath="/catalog">
       <div className="aa-grid">
@@ -21,6 +40,13 @@ export default function CatalogPage() {
               <Chip key={category.categoryId} tone={category.riskLevel === "regulated" ? "warning" : "default"}>
                 {category.name["zh-CN"]}
               </Chip>
+            ))}
+          </div>
+          <div className="aa-button-row" style={{ marginTop: 12 }}>
+            {filterLinks.map((item) => (
+              <Link key={item.href} className="aa-button aa-button-secondary" href={item.href}>
+                {item.label}
+              </Link>
             ))}
           </div>
         </SectionCard>
@@ -39,7 +65,7 @@ export default function CatalogPage() {
           />
         </SectionCard>
 
-        <SectionCard title="Listings" subtitle="Every listing carries category, proof, price, SLA, capacity, and risk.">
+        <SectionCard title="Listings" subtitle={`Filtered result count: ${model.listingCount}. Category, supply, risk, billing, price, SLA, rating, and capacity filters are server-backed.`}>
           <DataTable
             columns={[
               { key: "title", label: "Agent / App" },
@@ -51,7 +77,7 @@ export default function CatalogPage() {
               { key: "capacityAvailable", label: "Capacity" },
               { key: "riskLevel", label: "Risk" }
             ]}
-            rows={model.listings.map((listing) => ({
+            rows={model.listings.map((listing: CatalogListingRow) => ({
               ...listing,
               startingPriceMinor: `¥${(listing.startingPriceMinor / 100).toLocaleString("en-US")}`,
               deliveryHours: `${listing.deliveryHours}h`

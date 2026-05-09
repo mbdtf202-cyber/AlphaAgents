@@ -370,6 +370,12 @@ a {
   font-weight: 600;
 }
 
+.aa-button-secondary {
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  border: 1px solid var(--aa-line);
+}
+
 .aa-meta {
   color: var(--aa-muted);
   font-size: 13px;

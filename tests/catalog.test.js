@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  filterCatalogListings,
+  getCatalogModel
+} from "../lib/alphaagents/view-models.js";
+
+import {
   getAgentAppBySlug,
   getAgentListings,
   getAgentPassportBySlug,
@@ -38,6 +43,23 @@ test("default registry contains all first-level categories", () => {
     assert.ok(category.opsOwner);
     assert.ok(category.riskOwner);
   }
+});
+
+test("catalog filters cover category, supply, risk, billing, price, SLA, rating, and capacity", () => {
+  const listings = getAgentListings();
+
+  assert.ok(filterCatalogListings(listings, { categoryId: "custom_agent_app" }).every((listing) => listing.categoryIds.includes("custom_agent_app")));
+  assert.ok(filterCatalogListings(listings, { supplyType: "agent_app" }).every((listing) => listing.supplyType === "agent_app"));
+  assert.ok(filterCatalogListings(listings, { riskLevel: "medium_high" }).every((listing) => listing.riskLevel === "medium_high"));
+  assert.ok(filterCatalogListings(listings, { billingMode: "subscription" }).every((listing) => listing.billingMode === "subscription"));
+  assert.ok(filterCatalogListings(listings, { maxPriceMinor: 700000 }).every((listing) => listing.startingPriceMinor <= 700000));
+  assert.ok(filterCatalogListings(listings, { maxDeliveryHours: 48 }).every((listing) => listing.deliveryHours <= 48));
+  assert.ok(filterCatalogListings(listings, { minRating: 0.91 }).every((listing) => listing.qaPassRate >= 0.91));
+  assert.ok(filterCatalogListings(listings, { minCapacity: 3 }).every((listing) => listing.capacityAvailable >= 3));
+
+  const model = getCatalogModel({ supplyType: "agent_app" });
+  assert.equal(model.listingCount, 1);
+  assert.equal(model.listings[0].supplyType, "agent_app");
 });
 
 test("every listing binds categories, pricing, proof, and capacity", () => {

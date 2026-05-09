@@ -6,9 +6,11 @@ import { executeRuntimeCommand } from "../../../lib/alphaagents/runtime-engine";
 import { listRuntimeCategories, listRuntimeListings } from "../../../lib/alphaagents/runtime-queries";
 import { resolveStateFile } from "../../../lib/alphaagents/runtime-state";
 
-export function GET() {
+export function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const filters = Object.fromEntries(searchParams.entries());
   return NextResponse.json({
-    ...getCatalogModel(),
+    ...getCatalogModel(filters),
     runtime: {
       categories: listRuntimeCategories({ stateFile: resolveStateFile() }),
       listings: listRuntimeListings({ stateFile: resolveStateFile() })

@@ -59,6 +59,23 @@ export default function CatalogPage() {
           />
           <CommandPreview command="alphaagents agent-listing search --json" />
         </SectionCard>
+        <SectionCard title="Category unit economics" subtitle="Category-level GMV, take rate, payout, QA minutes, CAC, dispute cost, and margin are visible before scaling supply.">
+          <DataTable
+            columns={[
+              { key: "categoryLabel", label: "Category" },
+              { key: "scenario", label: "Scenario" },
+              { key: "orders", label: "Orders" },
+              { key: "averageGmv", label: "Avg GMV" },
+              { key: "takeRate", label: "Take rate" },
+              { key: "providerPayout", label: "Payout" },
+              { key: "qaOpsMinutes", label: "QA min" },
+              { key: "cac", label: "CAC" },
+              { key: "disputeCost", label: "Dispute cost" },
+              { key: "contributionMargin", label: "Margin" }
+            ]}
+            rows={model.categoryUnitEconomics}
+          />
+        </SectionCard>
         <SectionCard title="Runtime listing state" subtitle="Live runtime listing snapshot from the shared control plane.">
           <DataTable
             columns={[

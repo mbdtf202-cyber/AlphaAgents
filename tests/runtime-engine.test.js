@@ -354,6 +354,73 @@ test("archived category blocks listing publish", () => {
   assert.equal(blocked.errorCode, "STATE_CONFLICT");
 });
 
+test("proposal.submit rejects sellers below admission score 80", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const draft = executeRuntimeCommand(
+    "rfp.create",
+    runtimeEnvelope("buyer", {
+      sku: "cross_border_competitor_topic_pack",
+      packageTier: "trial",
+      category: "US TikTok Shop sensitive-skin skincare",
+      market: "US",
+      channels: ["tiktok_shop_public"],
+      language: "zh-CN analysis with English source labels",
+      budgetAmountMinor: 198000,
+      currency: "CNY",
+      deliverableFormat: ["pdf", "csv"]
+    }, { expectedVersion: 0 }),
+    { stateFile }
+  );
+  assert.equal(draft.ok, true);
+
+  const published = executeRuntimeCommand(
+    "rfp.publish",
+    runtimeEnvelope("buyer", {
+      rfpId: draft.dto.id,
+      acceptanceTemplateId: "acceptance_template_trial_v1",
+      competitorsOrDiscoveryRule: "Use 5 named competitors",
+      prohibitedSources: ["production_account_login"],
+      deadlineAt: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(published.ok, true);
+
+  const state = loadRuntimeState(stateFile);
+  state.sellers.push({
+    id: "seller_under_80",
+    legalEntity: "Under Threshold Ops",
+    admissionScore: 79,
+    admissionStatus: "approved",
+    approved: true,
+    payoutReadiness: "ready",
+    capacityAvailable: 1,
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: draft.dto.id,
+      sellerId: "seller_under_80",
+      agentId: "agent_mira_competitor_intel_sandbox",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "under-threshold@example.com",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "SELLER_NOT_APPROVED");
+});
+
 test("permission approval rejects denied high-risk tools", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);

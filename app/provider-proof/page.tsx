@@ -1,5 +1,5 @@
 import { AppShell } from "../../components/alphaagents/shell";
-import { Chip, SectionCard } from "../../components/alphaagents/blocks";
+import { Chip, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { getProviderProofModel } from "../../lib/alphaagents/view-models";
 import Link from "next/link";
 
@@ -40,6 +40,19 @@ export default function ProviderProofPage() {
             </div>
           </SectionCard>
         ) : null}
+        <SectionCard title="Seller admission gate" subtitle="Supply below 80 cannot receive proposals, even if the listing exists.">
+          <DataTable
+            columns={[
+              { key: "legalEntity", label: "Seller" },
+              { key: "admissionScore", label: "Score" },
+              { key: "admissionStatus", label: "Admission" },
+              { key: "payoutReadiness", label: "Payout" },
+              { key: "capacityAvailable", label: "Capacity" },
+              { key: "gate", label: "Gate" }
+            ]}
+            rows={model.sellers}
+          />
+        </SectionCard>
       </div>
     </AppShell>
   );

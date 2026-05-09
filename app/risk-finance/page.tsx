@@ -34,6 +34,36 @@ export default function RiskFinancePage() {
           </SectionCard>
         </div>
         <div className="aa-grid aa-grid-2">
+          <SectionCard title="Seller admission controls" subtitle="Approved supply must hold admission score >= 80, payout readiness, and capacity before it can quote.">
+            <DataTable
+              columns={[
+                { key: "legalEntity", label: "Seller" },
+                { key: "admissionScore", label: "Score" },
+                { key: "admissionStatus", label: "Admission" },
+                { key: "gate", label: "Gate" },
+                { key: "payoutReadiness", label: "Payout" },
+                { key: "capacityAvailable", label: "Capacity" }
+              ]}
+              rows={model.sellerAdmissions}
+            />
+          </SectionCard>
+          <SectionCard title="Category unit economics" subtitle="Finance can compare GMV, take rate, payout, QA minutes, CAC, dispute cost, and contribution margin by category.">
+            <DataTable
+              columns={[
+                { key: "categoryLabel", label: "Category" },
+                { key: "averageGmv", label: "Avg GMV" },
+                { key: "takeRate", label: "Take rate" },
+                { key: "providerPayout", label: "Payout" },
+                { key: "qaOpsMinutes", label: "QA min" },
+                { key: "cac", label: "CAC" },
+                { key: "disputeCost", label: "Dispute" },
+                { key: "contributionMargin", label: "Margin" }
+              ]}
+              rows={model.categoryUnitEconomics}
+            />
+          </SectionCard>
+        </div>
+        <div className="aa-grid aa-grid-2">
           <SectionCard title="Live runtime orders" subtitle="Shared runtime ledger and acceptance state for current orders.">
             {model.runtimeOrders.length === 0 ? (
               <p className="aa-meta">No live runtime orders yet. Advance a Quick Order first, then return here for finance actions.</p>

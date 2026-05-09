@@ -7,7 +7,9 @@ import {
   getAgentDetailModel,
   getAgentAppDetailModel,
   getBuyerOrgSetupModel,
+  getCatalogModel,
   getCustomAgentModel,
+  getProviderProofModel,
   getProgramOpsModel,
   getReputationModel,
   getRiskFinanceModel
@@ -117,6 +119,23 @@ test("detail and reputation models expose order-version-category rating provenan
   assert.ok(reputation.provenanceRows.length >= 3);
   assert.equal(reputation.provenanceRows[0].eventStatus, "published");
   assert.ok(reputation.provenanceRows[0].categories.includes("情报"));
+});
+
+test("catalog and finance models expose seller admission and category unit economics", () => {
+  const catalog = getCatalogModel();
+  const providerProof = getProviderProofModel();
+  const riskFinance = getRiskFinanceModel();
+
+  assert.ok(catalog.categoryUnitEconomics.length >= 1);
+  assert.ok(catalog.categoryUnitEconomics[0].averageGmv.startsWith("¥"));
+  assert.ok(catalog.categoryUnitEconomics[0].contributionMargin.endsWith("%"));
+
+  assert.ok(providerProof.sellers.every((seller) => seller.admissionScore >= 80));
+  assert.ok(providerProof.sellers.some((seller) => seller.gate === "Can receive proposals"));
+
+  assert.ok(riskFinance.sellerAdmissions.length >= 1);
+  assert.ok(riskFinance.sellerAdmissions.every((seller) => seller.gate === "pass"));
+  assert.ok(riskFinance.categoryUnitEconomics.some((entry) => entry.categoryId === "social_media_operations"));
 });
 
 test("program ops model reflects runtime credit, drawdown, and qbr state", () => {

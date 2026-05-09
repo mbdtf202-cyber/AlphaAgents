@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { AliasSurfacePage } from "../../components/alphaagents/alias-surface";
 
 export default function ProgramsAliasPage() {
-  redirect("/program-ops");
+  return <AliasSurfacePage aliasKey="programs" />;
 }

@@ -21,6 +21,15 @@ export default function RiskFinancePage() {
             ))}
             <CommandPreview command="alphaagents dispute resolve --json" />
           </SectionCard>
+          <SectionCard title="High-risk action preview" tone="warning" subtitle="S-02 / UI-28: risky tools need explicit authorization, preview fields, audit events, and a visible revoke path before execution.">
+            <div>
+              {model.highRiskPermissionPreview.previewFields.map((field) => (
+                <Chip key={field}>{field}</Chip>
+              ))}
+            </div>
+            <CommandPreview command={model.highRiskPermissionPreview.revokeCommand} />
+            <p className="aa-meta">{model.highRiskPermissionPreview.blockedUntil}</p>
+          </SectionCard>
           <SectionCard title="Finance sample states" tone="trust" subtitle="Buyer-facing wording stays conditional release, not licensed clearing.">
             <DataTable
               columns={[
@@ -36,6 +45,17 @@ export default function RiskFinancePage() {
             />
           </SectionCard>
         </div>
+        <SectionCard title="Authorization / preview / audit / revoke checklist" subtitle="Risk reviewers can verify each high-risk action without opening logs or guessing which CLI action matches the UI.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Gate" },
+              { key: "gate", label: "Machine key" },
+              { key: "command", label: "CLI" },
+              { key: "evidence", label: "Evidence" }
+            ]}
+            rows={model.riskActionChecklist}
+          />
+        </SectionCard>
         <div className="aa-grid aa-grid-2">
           <SectionCard title="Seller admission controls" subtitle="Approved supply must hold admission score >= 80, payout readiness, and capacity before it can quote.">
             <DataTable

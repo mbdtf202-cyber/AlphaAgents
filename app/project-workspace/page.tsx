@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { AliasSurfacePage } from "../../components/alphaagents/alias-surface";
 
 export default function ProjectWorkspaceAliasPage() {
-  redirect("/order-workspace");
+  return <AliasSurfacePage aliasKey="project-workspace" />;
 }

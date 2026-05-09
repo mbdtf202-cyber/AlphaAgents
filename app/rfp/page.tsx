@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { AliasSurfacePage } from "../../components/alphaagents/alias-surface";
 
 export default function RfpAliasPage() {
-  redirect("/rfps");
+  return <AliasSurfacePage aliasKey="rfp" />;
 }

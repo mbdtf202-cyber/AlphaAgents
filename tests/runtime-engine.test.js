@@ -367,23 +367,6 @@ test("rating.submit rejects category provenance that does not match the order su
   );
   assert.equal(rfpDraft.ok, true);
 
-  const proposal = executeRuntimeCommand(
-    "proposal.submit",
-    runtimeEnvelope("seller", {
-      rfpId: rfpDraft.dto.id,
-      sellerId: "seller_harbor_growth_sandbox",
-      agentId: "agent_mira_competitor_intel_sandbox",
-      priceAmountMinor: 198000,
-      deliveryHours: 48,
-      includedScope: ["5 competitors"],
-      evidenceStandard: "Every key claim maps to evidence",
-      responsibleOwner: "project-owner@harbor-growth.example",
-      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
-    }),
-    { stateFile }
-  );
-  assert.equal(proposal.ok, false);
-
   const state = loadRuntimeState(stateFile);
   state.rfps[0].rfpStatus = "published";
   state.proposals.push({
@@ -429,6 +412,117 @@ test("rating.submit rejects category provenance that does not match the order su
   );
   assert.equal(mismatched.ok, false);
   assert.equal(mismatched.errorCode, "VALIDATION_FAILED");
+});
+
+test("category rename preserves historical order and reputation category snapshots", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+  readyBuyerOrg(stateFile);
+
+  const rfpDraft = executeRuntimeCommand(
+    "rfp.create",
+    runtimeEnvelope(
+      "buyer",
+      {
+        sku: "cross_border_competitor_topic_pack",
+        packageTier: "trial",
+        category: "社媒运营与内容增长",
+        market: "US",
+        channels: ["tiktok_shop_public"],
+        language: "zh-CN analysis with English source labels",
+        budgetAmountMinor: 198000,
+        currency: "CNY",
+        deliverableFormat: ["pdf", "csv"]
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(rfpDraft.ok, true);
+
+  const rfpPublished = executeRuntimeCommand(
+    "rfp.publish",
+    runtimeEnvelope("buyer", {
+      rfpId: rfpDraft.dto.id,
+      acceptanceTemplateId: "acceptance_template_trial_v1",
+      competitorsOrDiscoveryRule: "Use 5 named competitors",
+      prohibitedSources: ["production_account_login"],
+      deadlineAt: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(rfpPublished.ok, true);
+
+  const proposal = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: rfpDraft.dto.id,
+      sellerId: "seller_harbor_growth_sandbox",
+      agentId: "agent_mira_competitor_intel_sandbox",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "project-owner@harbor-growth.example",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }, { expectedVersion: rfpPublished.newVersion }),
+    { stateFile }
+  );
+  assert.equal(proposal.ok, true);
+
+  const order = executeRuntimeCommand(
+    "proposal.accept",
+    runtimeEnvelope("buyer", {
+      proposalId: proposal.dto.id,
+      termsSnapshot: "trial_v1_terms"
+    }),
+    { stateFile }
+  );
+  assert.equal(order.ok, true);
+  assert.match(order.dto.categorySnapshot.categoryLabels["zh-CN"], /社媒运营与内容增长/);
+  assert.match(order.dto.categorySnapshot.categoryLabels["zh-CN"], /情报与研究/);
+
+  const updated = executeRuntimeCommand(
+    "agent-category update",
+    runtimeEnvelope("operator", {
+      categoryId: "social_media_operations",
+      patch: {
+        name: { en: "Social Growth Operations", "zh-CN": "社媒增长运营" }
+      }
+    }),
+    { stateFile }
+  );
+  assert.equal(updated.ok, true);
+  assert.equal(updated.dto.history[0].name["zh-CN"], "社媒运营与内容增长");
+
+  const releasedState = loadRuntimeState(stateFile);
+  const createdOrder = releasedState.orders.find((entry) => entry.id === order.dto.id);
+  createdOrder.orderStatus = "released";
+  createdOrder.ledgerStatus = "released";
+  createdOrder.acceptanceStatus = "accepted";
+  saveRuntimeState(releasedState, stateFile);
+
+  const rated = executeRuntimeCommand(
+    "rating.submit",
+    runtimeEnvelope("buyer", {
+      orderId: order.dto.id,
+      subjectType: "agent",
+      subjectId: "agent_mira_competitor_intel_sandbox",
+      agentVersion: "1.0.0",
+      categoryIds: ["social_media_operations", "intelligence_research"],
+      ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+      deliveryOutcome: "accepted"
+    }),
+    { stateFile }
+  );
+  assert.equal(rated.ok, true);
+  assert.match(rated.dto.categorySnapshot.categoryLabels["zh-CN"], /社媒运营与内容增长/);
+  assert.doesNotMatch(rated.dto.categorySnapshot.categoryLabels["zh-CN"], /社媒增长运营/);
+
+  const state = loadRuntimeState(stateFile);
+  assert.match(state.orders[0].categorySnapshot.categoryLabels["zh-CN"], /社媒运营与内容增长/);
+  assert.doesNotMatch(state.orders[0].categorySnapshot.categoryLabels["zh-CN"], /社媒增长运营/);
+  assert.equal(state.categories.find((category) => category.categoryId === "social_media_operations").name["zh-CN"], "社媒增长运营");
 });
 
 test("write commands reject stale expectedVersion before mutating shared state", () => {

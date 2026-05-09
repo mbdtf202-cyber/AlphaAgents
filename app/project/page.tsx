@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { AliasSurfacePage } from "../../components/alphaagents/alias-surface";
 
 export default function ProjectAliasPage() {
-  redirect("/projects");
+  return <AliasSurfacePage aliasKey="project" />;
 }

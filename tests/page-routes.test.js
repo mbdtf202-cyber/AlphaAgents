@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
@@ -69,6 +69,20 @@ test("acceptance page ecosystem has concrete Next.js page files", () => {
 test("common buyer-facing route aliases resolve to pages instead of 404", () => {
   for (const route of aliasRoutes) {
     assert.equal(existsSync(pageFileForRoute(route)), true, `${route} alias is missing`);
+  }
+});
+
+test("buyer-facing route aliases render real pages instead of redirect-only placeholders", () => {
+  const aliasSurfaceSource = readFileSync(path.join("components", "alphaagents", "alias-surface.tsx"), "utf8");
+  assert.match(aliasSurfaceSource, /<AppShell/, "shared alias surface does not mount the shell");
+  assert.match(aliasSurfaceSource, /<SectionCard/, "shared alias surface does not expose section UI");
+  assert.match(aliasSurfaceSource, /<DataTable/, "shared alias surface does not expose route-specific data tables");
+  assert.match(aliasSurfaceSource, /<CliApiEventsPanel/, "shared alias surface does not expose CLI/API/event evidence");
+
+  for (const route of aliasRoutes) {
+    const source = readFileSync(pageFileForRoute(route), "utf8");
+    assert.equal(source.includes("redirect("), false, `${route} still redirects instead of rendering a real page`);
+    assert.match(source, /<AliasSurfacePage|<AppShell|<main|<section/, `${route} does not expose concrete page UI`);
   }
 });
 

@@ -502,3 +502,22 @@ test("buyer org model requires procurement signability fields for high-risk read
   assert.equal(model.readiness.find((entry) => entry.label === "Legal contact")?.status, "Pass");
   assert.equal(model.readiness.find((entry) => entry.label === "Subprocessors")?.status, "Pass");
 });
+
+test("risk finance model exposes high-risk authorization preview audit and revoke path", () => {
+  const model = getRiskFinanceModel();
+
+  assert.ok(model.riskActionChecklist.length >= 4);
+  assert.deepEqual(
+    model.riskActionChecklist.map((item) => item.gate),
+    ["explicit_authorization", "action_preview", "audit_event", "revoke_path"]
+  );
+  assert.ok(model.riskActionChecklist.every((item) => item.command.startsWith("alphaagents ")));
+  assert.ok(model.riskActionChecklist.some((item) => item.command.includes("permission revoke")));
+
+  assert.ok(model.highRiskPermissionPreview.deniedTools.includes("account_login"));
+  assert.ok(model.highRiskPermissionPreview.previewFields.includes("toolAllowlist"));
+  assert.ok(model.highRiskPermissionPreview.previewFields.includes("expiresAt"));
+  assert.ok(model.highRiskPermissionPreview.auditEvents.includes("PermissionApproved"));
+  assert.ok(model.highRiskPermissionPreview.auditEvents.includes("PermissionDenied"));
+  assert.ok(model.highRiskPermissionPreview.auditEvents.includes("PermissionRevoked"));
+});

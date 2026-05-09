@@ -6,38 +6,71 @@ import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
 import { getRuntimeSnapshot } from "../lib/alphaagents/runtime-queries.js";
 import { loadRuntimeState, resetRuntimeState, resolveStateFile } from "../lib/alphaagents/runtime-state.js";
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+const jsonOutput = rawArgs.includes("--json");
+const args = rawArgs.filter((arg) => arg !== "--json");
 const command = args.join(" ");
 const stateFile = resolveStateFile();
 
 if (command === "agent-category list") {
-  console.log(JSON.stringify(loadRuntimeState(stateFile).categories, null, 2));
+  printOutput(loadRuntimeState(stateFile).categories, (categories) =>
+    [
+      `Agent categories (${categories.length})`,
+      ...categories.map(
+        (category) =>
+          `- ${category.categoryId} | ${category.name?.en ?? category.categoryId} / ${category.name?.["zh-CN"] ?? category.categoryId} | ${category.categoryStatus} | risk=${category.riskLevel} | v${category.version}`
+      )
+    ].join("\n")
+  );
   process.exit(0);
 }
 
 if (command === "agent-listing search") {
-  console.log(JSON.stringify(loadRuntimeState(stateFile).listings, null, 2));
+  printOutput(loadRuntimeState(stateFile).listings, (listings) =>
+    [
+      `Agent listings (${listings.length})`,
+      ...listings.map(
+        (listing) =>
+          `- ${listing.listingId} | ${listing.title} | ${listing.listingStatus ?? "published"} | ${listing.billingMode} | capacity=${listing.capacityAvailable}`
+      )
+    ].join("\n")
+  );
   process.exit(0);
 }
 
 if (command === "runtime snapshot") {
-  console.log(JSON.stringify(getRuntimeSnapshot({ stateFile }), null, 2));
+  printOutput(getRuntimeSnapshot({ stateFile }), (snapshot) =>
+    [
+      "Runtime snapshot",
+      `- rfps=${snapshot.rfps.length}`,
+      `- proposals=${snapshot.proposals.length}`,
+      `- orders=${snapshot.orders.length}`,
+      `- grants=${snapshot.grants.length}`,
+      `- runs=${snapshot.runs.length}`,
+      `- deliveries=${snapshot.deliveries.length}`,
+      `- events=${snapshot.events.length}`
+    ].join("\n")
+  );
   process.exit(0);
 }
 
 if (command === "runtime reset") {
   resetRuntimeState(stateFile);
-  console.log(JSON.stringify({ ok: true, stateFile }, null, 2));
+  printOutput({ ok: true, stateFile }, (result) => `Runtime reset succeeded\n- stateFile=${result.stateFile}`);
   process.exit(0);
 }
 
 if (command === "reputation show") {
-  console.log(JSON.stringify(runQuery("reputation.show", { subjectId: "agent_mira_competitor_intel_sandbox" }), null, 2));
+  printOutput(runQuery("reputation.show", { subjectId: "agent_mira_competitor_intel_sandbox" }), (result) =>
+    `Reputation ${result.subjectId}\n- averageRating=${result.averageRating}\n- reviewCount=${result.reviewCount}\n- disputeRate=${result.disputeRate}`
+  );
   process.exit(0);
 }
 
 if (command === "evidence show") {
-  console.log(JSON.stringify(runQuery("evidence.show", { evidenceId: "ev_sandbox_delivery_pdf_001" }), null, 2));
+  printOutput(runQuery("evidence.show", { evidenceId: "ev_sandbox_delivery_pdf_001" }), (result) =>
+    `Evidence ${result.id}\n- visibility=${result.visibility}\n- redactionStatus=${result.redactionStatus}\n- hash=${result.hash}`
+  );
   process.exit(0);
 }
 
@@ -133,7 +166,7 @@ if (contractCommand) {
     },
     { stateFile }
   );
-  console.log(JSON.stringify(result, null, 2));
+  printOutput(result, (value) => formatCommandResult(contractCommand, value));
   process.exit(0);
 }
 
@@ -169,3 +202,25 @@ console.error("  node scripts/alphaagents.mjs rating submit");
 console.error("  node scripts/alphaagents.mjs reputation show");
 console.error("  node scripts/alphaagents.mjs evidence show");
 process.exit(1);
+
+function printOutput(value, humanFormatter) {
+  console.log(jsonOutput ? JSON.stringify(value, null, 2) : humanFormatter(value));
+}
+
+function formatCommandResult(commandName, result) {
+  if (!result.ok) {
+    return [
+      `Command ${commandName} failed`,
+      `- errorCode=${result.errorCode}`,
+      `- message=${result.message}`
+    ].join("\n");
+  }
+
+  const events = (result.events ?? []).map((event) => event.eventName).join(", ") || "none";
+  return [
+    `Command ${commandName} succeeded`,
+    `- aggregateId=${result.aggregateId}`,
+    `- newVersion=${result.newVersion}`,
+    `- events=${events}`
+  ].join("\n");
+}

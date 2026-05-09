@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { AliasSurfacePage } from "../../components/alphaagents/alias-surface";
 
 export default function ProvidersAliasPage() {
-  redirect("/provider-proof");
+  return <AliasSurfacePage aliasKey="providers" />;
 }

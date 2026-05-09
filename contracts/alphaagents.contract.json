@@ -565,7 +565,7 @@
       "actorRoles": ["buyer"],
       "sourceChannels": ["ui", "cli", "api"],
       "scopeMode": "all",
-      "payloadRequired": ["orderId", "subjectType", "subjectId", "agentVersion", "ratingBreakdown", "deliveryOutcome"],
+      "payloadRequired": ["orderId", "subjectType", "subjectId", "agentVersion", "categoryIds", "ratingBreakdown", "deliveryOutcome"],
       "requiredScopes": ["buyer:ratings.write"],
       "successEvents": ["ReputationEventCreated", "ReputationPublished"],
       "failureCodes": ["ORDER_NOT_COMPLETED", "DUPLICATE_RATING", "ACTOR_FORBIDDEN"],
@@ -625,7 +625,7 @@
     "EvidenceDto": ["id", "tenantId", "orderId", "sourceType", "uri", "hash", "capturedAt", "visibility", "redactionStatus", "retentionDays", "linkedClaimId", "qaStatus"],
     "EvidenceExportDto": ["exportId", "tenantId", "orderId", "evidenceCount", "redactionMode", "status", "hash"],
     "EvidenceDeletionDto": ["requestId", "tenantId", "evidenceId", "status", "retentionOverride"],
-    "ReputationDto": ["id", "tenantId", "eventStatus", "subjectType", "subjectId", "sourceOrderId", "deliveryOutcome", "version"],
+    "ReputationDto": ["id", "tenantId", "eventStatus", "subjectType", "subjectId", "sourceOrderId", "agentVersion", "categoryIds", "ratingBreakdown", "deliveryOutcome", "version"],
     "ReputationSummaryDto": ["subjectId", "subjectType", "averageRating", "reviewCount", "disputeRate", "onTimeRate", "version"]
   },
   "eventPayloadSchemas": {
@@ -674,7 +674,7 @@
     "DisputeOpened": ["reviewId", "reviewStatus", "orderId", "disputeReason"],
     "DisputeResolved": ["orderId", "orderStatus", "releaseAmountMinor", "refundAmountMinor", "decision"],
     "EscrowReleased": ["orderId", "orderStatus", "ledgerStatus", "releasedAmountMinor"],
-    "ReputationEventCreated": ["reputationEventId", "eventStatus", "sourceOrderId", "deliveryOutcome"],
+    "ReputationEventCreated": ["reputationEventId", "eventStatus", "sourceOrderId", "subjectType", "subjectId", "agentVersion", "categoryIds", "deliveryOutcome"],
     "ReputationPublished": ["reputationEventId", "eventStatus"],
     "ReputationHidden": ["reputationEventId", "eventStatus", "policyReason"],
     "EvidenceExportRequested": ["exportId", "orderId", "evidenceCount", "redactionMode"],

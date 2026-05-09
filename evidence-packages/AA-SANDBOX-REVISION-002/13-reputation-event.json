@@ -7,6 +7,8 @@
   "eventStatus": "published",
   "version": 2,
   "agentVersion": "1.0.0-sandbox",
+  "categoryIds": ["social_media_operations", "intelligence_research"],
+  "categoryLabels": ["社媒运营与内容增长", "情报与研究"],
   "ratingBreakdown": {
     "quality": 4.6,
     "timeliness": 4.8,

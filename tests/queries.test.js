@@ -11,6 +11,10 @@ test("reputation.show returns summary for the primary sandbox agent", () => {
   assert.equal(result.subjectId, "agent_mira_competitor_intel_sandbox");
   assert.ok(result.averageRating > 0);
   assert.ok(result.reviewCount >= 1);
+  assert.ok(result.provenanceEvents.length >= 1);
+  assert.equal(result.provenanceEvents[0].sourceOrderId.startsWith("order_sandbox_"), true);
+  assert.ok(result.provenanceEvents[0].agentVersion);
+  assert.ok(result.provenanceEvents[0].categoryIds.includes("social_media_operations"));
 });
 
 test("evidence.show returns visible evidence metadata", () => {

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
-import { createTempStateFile, loadRuntimeState, resetRuntimeState } from "../lib/alphaagents/runtime-state.js";
+import { createTempStateFile, loadRuntimeState, resetRuntimeState, saveRuntimeState } from "../lib/alphaagents/runtime-state.js";
 
 function runtimeEnvelope(actorRole, payload, overrides = {}) {
   return {
@@ -207,6 +207,7 @@ test("runtime engine persists a real golden path flow", () => {
       subjectType: "agent",
       subjectId: "agent_mira_competitor_intel_sandbox",
       agentVersion: "1.0.0",
+      categoryIds: ["social_media_operations", "intelligence_research"],
       ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
       deliveryOutcome: "accepted"
     }),
@@ -217,7 +218,112 @@ test("runtime engine persists a real golden path flow", () => {
   const finalState = loadRuntimeState(stateFile);
   assert.equal(finalState.orders.length, 1);
   assert.equal(finalState.reputations.length, 1);
+  assert.equal(finalState.reputations[0].sourceOrderId, order.dto.id);
+  assert.equal(finalState.reputations[0].agentVersion, "1.0.0");
+  assert.deepEqual(finalState.reputations[0].categoryIds, ["social_media_operations", "intelligence_research"]);
+  assert.equal(finalState.reputations[0].subjectId, "agent_mira_competitor_intel_sandbox");
   assert.equal(finalState.eventLog.length >= 12, true);
+
+  const duplicate = executeRuntimeCommand(
+    "rating.submit",
+    runtimeEnvelope("buyer", {
+      orderId: order.dto.id,
+      subjectType: "agent",
+      subjectId: "agent_mira_competitor_intel_sandbox",
+      agentVersion: "1.0.0",
+      categoryIds: ["social_media_operations", "intelligence_research"],
+      ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+      deliveryOutcome: "accepted"
+    }),
+    { stateFile }
+  );
+  assert.equal(duplicate.ok, false);
+  assert.equal(duplicate.errorCode, "DUPLICATE_RATING");
+});
+
+test("rating.submit rejects category provenance that does not match the order supply", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const rfpDraft = executeRuntimeCommand(
+    "rfp.create",
+    runtimeEnvelope("buyer", {
+      sku: "cross_border_competitor_topic_pack",
+      packageTier: "trial",
+      category: "US TikTok Shop sensitive-skin skincare",
+      market: "US",
+      channels: ["tiktok_shop_public"],
+      language: "zh-CN analysis with English source labels",
+      budgetAmountMinor: 198000,
+      currency: "CNY",
+      deliverableFormat: ["pdf", "csv"]
+    }, { expectedVersion: 0 }),
+    { stateFile }
+  );
+  assert.equal(rfpDraft.ok, true);
+
+  const proposal = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: rfpDraft.dto.id,
+      sellerId: "seller_harbor_growth_sandbox",
+      agentId: "agent_mira_competitor_intel_sandbox",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "project-owner@harbor-growth.example",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(proposal.ok, false);
+
+  const state = loadRuntimeState(stateFile);
+  state.rfps[0].rfpStatus = "published";
+  state.proposals.push({
+    id: "proposal_manual_001",
+    tenantId: "org_demo_001",
+    proposalStatus: "selected",
+    rfpId: rfpDraft.dto.id,
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    priceAmountMinor: 198000,
+    currency: "CNY",
+    version: 1
+  });
+  state.orders.push({
+    id: "order_manual_released_001",
+    tenantId: "org_demo_001",
+    rfpId: rfpDraft.dto.id,
+    proposalId: "proposal_manual_001",
+    buyerOrgId: "org_demo_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    orderStatus: "released",
+    ledgerStatus: "released",
+    acceptanceStatus: "accepted",
+    amountMinor: 198000,
+    currency: "CNY",
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const mismatched = executeRuntimeCommand(
+    "rating.submit",
+    runtimeEnvelope("buyer", {
+      orderId: "order_manual_released_001",
+      subjectType: "agent",
+      subjectId: "agent_mira_competitor_intel_sandbox",
+      agentVersion: "1.0.0",
+      categoryIds: ["finance"],
+      ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+      deliveryOutcome: "accepted"
+    }),
+    { stateFile }
+  );
+  assert.equal(mismatched.ok, false);
+  assert.equal(mismatched.errorCode, "VALIDATION_FAILED");
 });
 
 test("archived category blocks listing publish", () => {

@@ -11,9 +11,9 @@ export default function ReputationPage() {
         {agent ? (
           <SectionCard title={agent.name} subtitle="Reputation stays bound to the Agent, version, and transaction outcome.">
             <div>
-              <Chip tone="trust">Average rating {agent.scoreSummary.averageRating}</Chip>
-              <Chip>On-time {Math.round(agent.scoreSummary.onTimeRate * 100)}%</Chip>
-              <Chip tone="warning">Dispute {Math.round(agent.scoreSummary.disputeRate * 100)}%</Chip>
+              <Chip tone="trust">Average rating {model.reputationSummary?.averageRating ?? agent.scoreSummary.averageRating}</Chip>
+              <Chip>Reviews {model.reputationSummary?.reviewCount ?? agent.orderHistory.completed}</Chip>
+              <Chip tone="warning">Dispute {Math.round((model.reputationSummary?.disputeRate ?? agent.scoreSummary.disputeRate) * 100)}%</Chip>
             </div>
           </SectionCard>
         ) : null}
@@ -25,6 +25,20 @@ export default function ReputationPage() {
               { key: "note", label: "Signal" }
             ]}
             rows={model.summaries}
+          />
+        </SectionCard>
+        <SectionCard title="Rating provenance ledger" subtitle="Each rating row shows the order, subject, version, category, outcome, and published status behind the score.">
+          <DataTable
+            columns={[
+              { key: "reputationEventId", label: "Reputation event" },
+              { key: "sourceOrderId", label: "Source order" },
+              { key: "subjectType", label: "Subject" },
+              { key: "agentVersion", label: "Version" },
+              { key: "categories", label: "Categories" },
+              { key: "deliveryOutcome", label: "Outcome" },
+              { key: "eventStatus", label: "Status" }
+            ]}
+            rows={model.provenanceRows}
           />
         </SectionCard>
       </div>

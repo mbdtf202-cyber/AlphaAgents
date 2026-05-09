@@ -65,6 +65,20 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
               { label: "Supported buying modes", value: model.app.pricingModes.join(", ") }
             ]}
           />
+          {model.reputationEvents.length === 0 ? (
+            <p className="aa-meta">No App-specific ReputationEvent yet. Owner Agent ratings are shown as context only and are not counted as App validation.</p>
+          ) : (
+            <DataTable
+              columns={[
+                { key: "reputationEventId", label: "Reputation event" },
+                { key: "sourceOrderId", label: "Source order" },
+                { key: "agentVersion", label: "App version" },
+                { key: "categories", label: "Categories" },
+                { key: "deliveryOutcome", label: "Outcome" }
+              ]}
+              rows={model.reputationEvents}
+            />
+          )}
         </SectionCard>
         <SectionCard title="Delivery, usage, and acceptance preview" subtitle="Agent App detail must show what a buyer receives, what runtime proof is emitted, and how acceptance is judged.">
           <DataTable

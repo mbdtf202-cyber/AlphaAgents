@@ -4,10 +4,12 @@ import test from "node:test";
 import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
 import { createTempStateFile, resetRuntimeState } from "../lib/alphaagents/runtime-state.js";
 import {
+  getAgentDetailModel,
   getAgentAppDetailModel,
   getBuyerOrgSetupModel,
   getCustomAgentModel,
   getProgramOpsModel,
+  getReputationModel,
   getRiskFinanceModel
 } from "../lib/alphaagents/view-models.js";
 
@@ -101,6 +103,20 @@ test("agent app detail model includes live install, usage, and exit proof", () =
   assert.ok(model.runtimeUsageRuns.length >= 1);
   assert.equal(model.latestInstall.installStatus, "exited");
   assert.equal(model.activeInstallCount, 0);
+});
+
+test("detail and reputation models expose order-version-category rating provenance", () => {
+  const agent = getAgentDetailModel("mira-competitor-intel-agent");
+  const reputation = getReputationModel();
+
+  assert.ok(agent.reputationEvents.length >= 1);
+  assert.equal(agent.reputationEvents[0].sourceOrderId.startsWith("order_sandbox_"), true);
+  assert.ok(agent.reputationEvents[0].agentVersion);
+  assert.ok(agent.reputationEvents[0].categories.includes("社媒运营"));
+
+  assert.ok(reputation.provenanceRows.length >= 3);
+  assert.equal(reputation.provenanceRows[0].eventStatus, "published");
+  assert.ok(reputation.provenanceRows[0].categories.includes("情报"));
 });
 
 test("program ops model reflects runtime credit, drawdown, and qbr state", () => {

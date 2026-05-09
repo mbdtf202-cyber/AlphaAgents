@@ -90,6 +90,19 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
           />
           <CommandPreview command={"alphaagents reputation show --json\nalphaagents evidence show --json\nalphaagents agent-listing search --json"} />
         </SectionCard>
+        <SectionCard title="Rating provenance" subtitle="Ratings must bind back to a source order, Agent version, category, and published ReputationEvent.">
+          <DataTable
+            columns={[
+              { key: "reputationEventId", label: "Reputation event" },
+              { key: "sourceOrderId", label: "Source order" },
+              { key: "agentVersion", label: "Agent version" },
+              { key: "categories", label: "Categories" },
+              { key: "deliveryOutcome", label: "Outcome" },
+              { key: "eventStatus", label: "Status" }
+            ]}
+            rows={model.reputationEvents}
+          />
+        </SectionCard>
         <SectionCard title="Permissions, deployment, and failure boundaries" subtitle="Security, IT, and procurement need an explicit read of required scopes and rollback paths.">
           <DataTable
             columns={[

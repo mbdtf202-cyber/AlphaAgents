@@ -4,6 +4,7 @@ const scripts = [
   "scripts/verify-contract.mjs",
   "scripts/verify-evidence-package.mjs",
   "scripts/verify-visual-system.mjs",
+  "scripts/verify-frontend-implementation.mjs",
   "scripts/verify-business-readiness.mjs",
   "scripts/verify-acceptance-coverage.mjs",
   "scripts/verify-a19-frontend-coverage.mjs"

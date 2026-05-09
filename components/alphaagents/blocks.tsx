@@ -1,3 +1,5 @@
+import { CopyCommandButton } from "./copy-command-button";
+
 export function SectionCard({ title, subtitle, children, tone = "default" }: { title: string; subtitle?: string; children: React.ReactNode; tone?: "default" | "trust" | "warning" | "danger"; }) {
   return (
     <section className={`aa-card aa-card-${tone}`}>
@@ -46,7 +48,18 @@ export function Chip({ children, tone = "default" }: { children: React.ReactNode
 }
 
 export function CommandPreview({ command, mismatch = false }: { command: string; mismatch?: boolean }) {
-  return <pre className={`aa-command${mismatch ? " is-mismatch" : ""}`}>{command}</pre>;
+  return (
+    <div className="aa-command-wrap" data-component="CommandPreview" data-state={mismatch ? "mismatch" : "ready"}>
+      <pre
+        aria-label="CLI command preview"
+        className={`aa-command${mismatch ? " is-mismatch" : ""}`}
+        tabIndex={0}
+      >
+        {command}
+      </pre>
+      <CopyCommandButton command={command} />
+    </div>
+  );
 }
 
 export function KpiStrip({ items }: { items: Array<{ label: string; value: string }> }) {

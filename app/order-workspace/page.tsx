@@ -54,6 +54,28 @@ export default function OrderWorkspacePage() {
             />
           )}
         </SectionCard>
+        <SectionCard title="Finance evidence and ROI" subtitle="Order workspace keeps finance evidence, reconciliation exports, and buyer-value retrospectives visible beside execution state.">
+          <DataTable
+            columns={[
+              { key: "packageId", label: "Package" },
+              { key: "paymentRef", label: "Payment" },
+              { key: "invoiceStatus", label: "Invoice" },
+              { key: "reconciliationExport", label: "Export" }
+            ]}
+            rows={model.financeRows}
+          />
+          <div style={{ marginTop: 12 }}>
+            <DataTable
+              columns={[
+                { key: "packageId", label: "Package" },
+                { key: "cycleTimeSavedHours", label: "Saved h" },
+                { key: "usableResultRate", label: "Usable" },
+                { key: "repurchaseSignal", label: "Repurchase" }
+              ]}
+              rows={model.roiRows}
+            />
+          </div>
+        </SectionCard>
         <RuntimeCommandConsole mode="order-workspace" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>

@@ -41,6 +41,18 @@ export default function ReputationPage() {
             rows={model.provenanceRows}
           />
         </SectionCard>
+        <SectionCard title="ROI and repurchase signal" subtitle="Reputation cannot rely on score alone; every rating is interpreted with saved time, usable output, refund cost, and renewal signal.">
+          <DataTable
+            columns={[
+              { key: "orderId", label: "Order" },
+              { key: "cycleTimeSavedHours", label: "Saved h" },
+              { key: "usableResultRate", label: "Usable" },
+              { key: "refundCostMinor", label: "Refund cost" },
+              { key: "repurchaseSignal", label: "Repurchase" }
+            ]}
+            rows={model.roiRows}
+          />
+        </SectionCard>
       </div>
     </AppShell>
   );

@@ -10,6 +10,8 @@ import {
   getBuyerOrgSetupModel,
   getCatalogModel,
   getCustomAgentModel,
+  getOrderWorkspaceModel,
+  getOrdersIndexModel,
   getProviderProofModel,
   getProgramOpsModel,
   getReputationModel,
@@ -298,7 +300,29 @@ test("risk finance model exposes live runtime finance rows", () => {
   assert.ok(model.runtimeOrders.length >= 1);
   assert.ok(model.runtimeGrants.length >= 1);
   assert.equal(model.runtimeOrders[0].ledgerStatus, "escrowed");
+  assert.equal(model.runtimeFinanceRows[0].paymentRef, "sandbox_payment_ref_001");
+  assert.equal(model.runtimeFinanceRows[0].contractingEntity, "missing");
+  assert.equal(model.runtimeFinanceRows[0].invoiceStatus, "requested");
+  assert.equal(model.runtimeFinanceRows[0].reconciliationStatus, "payment_recorded");
   assert.ok(model.runtimeEvents.some((entry) => entry.eventName === "EscrowFunded"));
+  assert.ok(model.financeEvidenceRows.every((entry) => entry.contractingEntity === "NorthStar Beauty LLC"));
+  assert.ok(model.financeEvidenceRows.every((entry) => entry.reconciliationExport.endsWith("12-finance-ledger.json")));
+  assert.ok(model.roiRows.every((entry) => entry.cycleTimeSavedHours > 0));
+  assert.ok(model.roiRows.every((entry) => entry.repurchaseSignal));
+});
+
+test("orders, programs, reputation, and workspace models expose finance and ROI review rows", () => {
+  const orders = getOrdersIndexModel();
+  const program = getProgramOpsModel();
+  const reputation = getReputationModel();
+  const workspace = getOrderWorkspaceModel();
+
+  assert.ok(orders.sampleFinanceRows.length >= 3);
+  assert.ok(orders.roiRows.every((entry) => entry.renewalSignal));
+  assert.ok(program.roiRows.some((entry) => entry.contributionMarginEstimate.endsWith("%")));
+  assert.ok(reputation.roiRows.some((entry) => entry.refundCostMinor >= 0));
+  assert.ok(workspace.financeRows.every((entry) => entry.invoiceStatus));
+  assert.ok(workspace.roiRows.every((entry) => entry.usableResultRate));
 });
 
 test("custom agent model reflects intake, milestone, UAT, and change order runtime state", () => {

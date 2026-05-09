@@ -61,6 +61,36 @@ export default function OrdersPage() {
             rows={model.sampleOrders}
           />
         </SectionCard>
+        <div className="aa-grid aa-grid-2">
+          <SectionCard title="Runtime finance evidence" subtitle="Current orders expose payment, invoice, refund, and reconciliation fields from the same DTO.">
+            {model.runtimeFinanceRows.length === 0 ? (
+              <p className="aa-meta">No runtime finance rows yet.</p>
+            ) : (
+              <DataTable
+                columns={[
+                  { key: "orderId", label: "Order" },
+                  { key: "paymentRef", label: "Payment" },
+                  { key: "invoiceStatus", label: "Invoice" },
+                  { key: "refundAmountMinor", label: "Refund" },
+                  { key: "reconciliationExport", label: "Export" }
+                ]}
+                rows={model.runtimeFinanceRows}
+              />
+            )}
+          </SectionCard>
+          <SectionCard title="ROI retrospective" subtitle="Orders carry saved hours, usable output, costs, margin, and repurchase signal.">
+            <DataTable
+              columns={[
+                { key: "packageId", label: "Package" },
+                { key: "cycleTimeSavedHours", label: "Saved h" },
+                { key: "usableResultRate", label: "Usable" },
+                { key: "refundCostMinor", label: "Refund cost" },
+                { key: "renewalSignal", label: "Renewal" }
+              ]}
+              rows={model.roiRows}
+            />
+          </SectionCard>
+        </div>
         <RuntimeCommandConsole mode="order-workspace" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>

@@ -27,7 +27,10 @@ export default function RiskFinancePage() {
                 { key: "packageId", label: "Package" },
                 { key: "orderId", label: "Order" },
                 { key: "paymentLanguage", label: "Buyer language" },
-                { key: "ledgerStatus", label: "Ledger" }
+                { key: "ledgerStatus", label: "Ledger" },
+                { key: "paymentRef", label: "Payment ref" },
+                { key: "invoiceStatus", label: "Invoice" },
+                { key: "reconciliationStatus", label: "Reconciliation" }
               ]}
               rows={model.sampleOrders}
             />
@@ -79,6 +82,54 @@ export default function RiskFinancePage() {
               />
             )}
           </SectionCard>
+          <SectionCard title="Live runtime finance evidence" subtitle="Contracting entity, invoice issuer, payment refs, refunds, and reconciliation exports must stay visible to finance.">
+            {model.runtimeFinanceRows.length === 0 ? (
+              <p className="aa-meta">No live finance rows yet. Fund or close an order to create finance evidence.</p>
+            ) : (
+              <DataTable
+                columns={[
+                  { key: "orderId", label: "Order" },
+                  { key: "paymentRef", label: "Payment ref" },
+                  { key: "contractingEntity", label: "Contracting" },
+                  { key: "invoiceIssuer", label: "Invoice issuer" },
+                  { key: "invoiceStatus", label: "Invoice" },
+                  { key: "refundAmountMinor", label: "Refund" },
+                  { key: "reconciliationExport", label: "Export" }
+                ]}
+                rows={model.runtimeFinanceRows}
+              />
+            )}
+          </SectionCard>
+        </div>
+        <div className="aa-grid aa-grid-2">
+          <SectionCard title="Sample finance evidence" subtitle="Sandbox packages carry contract, invoice, refund, and reconciliation fields for B-06 / T-03 review.">
+            <DataTable
+              columns={[
+                { key: "packageId", label: "Package" },
+                { key: "contractingEntity", label: "Contracting" },
+                { key: "collectionEntity", label: "Collection" },
+                { key: "invoiceIssuer", label: "Invoice issuer" },
+                { key: "refundRemitter", label: "Refund remitter" },
+                { key: "reconciliationExport", label: "Export" }
+              ]}
+              rows={model.financeEvidenceRows}
+            />
+          </SectionCard>
+          <SectionCard title="ROI retrospectives" subtitle="Every sample order records saved cycle time, usable results, costs, and renewal signal.">
+            <DataTable
+              columns={[
+                { key: "packageId", label: "Package" },
+                { key: "cycleTimeSavedHours", label: "Saved hours" },
+                { key: "usableResultRate", label: "Usable" },
+                { key: "acceptanceScore", label: "Score" },
+                { key: "contributionMarginEstimate", label: "Margin" },
+                { key: "repurchaseSignal", label: "Repurchase" }
+              ]}
+              rows={model.roiRows}
+            />
+          </SectionCard>
+        </div>
+        <div className="aa-grid aa-grid-2">
           <SectionCard title="Live grants and finance events" subtitle="Permission and ledger transitions stay readable before any release or refund.">
             <DataTable
               columns={[

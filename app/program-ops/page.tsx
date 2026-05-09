@@ -68,6 +68,18 @@ export default function ProgramOpsPage() {
             )}
           </SectionCard>
         </div>
+        <SectionCard title="ROI and renewal evidence" subtitle="Program renewal review uses saved hours, usable results, contribution signal, and repurchase readiness from order retrospectives.">
+          <DataTable
+            columns={[
+              { key: "packageId", label: "Package" },
+              { key: "cycleTimeSavedHours", label: "Saved h" },
+              { key: "usableResultRate", label: "Usable" },
+              { key: "contributionMarginEstimate", label: "Margin" },
+              { key: "renewalSignal", label: "Renewal" }
+            ]}
+            rows={model.roiRows}
+          />
+        </SectionCard>
         <RuntimeCommandConsole mode="program-ops" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>

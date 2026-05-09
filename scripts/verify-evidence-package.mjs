@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
+import { createTempStateFile, loadRuntimeState, resetRuntimeState } from "../lib/alphaagents/runtime-state.js";
 
 const root = process.cwd();
 const contract = JSON.parse(fs.readFileSync(path.join(root, "contracts", "alphaagents.contract.json"), "utf8"));
@@ -188,5 +190,180 @@ for (const packageDir of packageDirs) {
 const buyerAudit = fs.readFileSync(path.join(root, "evidence-packages", "AA-SANDBOX-TRIAL-001", "17-buyer-audit.md"), "utf8");
 assert(buyerAudit.includes("2-minute Audit"), "buyer audit instructions must exist");
 assert(buyerAudit.includes("topic_015"), "buyer audit must include deterministic topic samples");
+
+const runtimeStateFile = createTempStateFile("alphaagents-export-verify-");
+resetRuntimeState(runtimeStateFile);
+
+function envelope(actorRole, payload, overrides = {}) {
+  return {
+    commandId: `cmd_${Math.random().toString(36).slice(2, 10)}`,
+    actorId:
+      actorRole === "operator"
+        ? "user_operator_001"
+        : actorRole === "seller"
+          ? "user_seller_001"
+          : "user_buyer_001",
+    actorRole,
+    sourceChannel: "api",
+    tenantId: "org_demo_001",
+    tokenScopes: [
+      "buyer:rfps.write",
+      "buyer:orders.write",
+      "buyer:acceptance.write",
+      "buyer:ratings.write",
+      "seller:proposals.write",
+      "seller:runs.write",
+      "seller:deliveries.write",
+      "operator:qa.write",
+      "operator:permissions.write",
+      "finance:ledger.write",
+      "evidence:export"
+    ],
+    idempotencyKey: `idem_${Math.random().toString(36).slice(2, 10)}`,
+    correlationId: `corr_${Math.random().toString(36).slice(2, 10)}`,
+    expectedVersion: 1,
+    payload,
+    ...overrides
+  };
+}
+
+function execute(commandName, actorRole, payload, overrides = {}) {
+  const result = executeRuntimeCommand(commandName, envelope(actorRole, payload, overrides), { stateFile: runtimeStateFile });
+  assert(result.ok, `runtime ${commandName} should succeed: ${result.errorCode ?? result.message}`);
+  return result;
+}
+
+execute("buyer-org.setup", "buyer", {
+  buyerOrgId: "org_demo_001",
+  requesterUserId: "user_demo_buyer_owner",
+  acceptanceOwnerUserId: "user_demo_acceptance_owner",
+  financeContactUserId: "user_demo_finance_owner",
+  legalContactUserId: "user_demo_legal_owner",
+  authorizedPayerId: "payer_demo_001",
+  signerIds: ["signer_demo_001"],
+  invoiceReadiness: "ready",
+  scopeAcknowledgement: "accepted",
+  contractingEntity: "NorthStar Beauty LLC",
+  collectionEntity: "AlphaAgents Platform Ops LLC",
+  invoiceIssuer: "AlphaAgents Platform Ops LLC",
+  refundRemitter: "AlphaAgents Platform Ops LLC",
+  subprocessors: ["Harbor Growth Studio"]
+});
+const runtimeRfp = execute("rfp.create", "buyer", {
+  sku: "cross_border_competitor_topic_pack",
+  packageTier: "trial",
+  category: "US TikTok Shop sensitive-skin skincare",
+  market: "US",
+  channels: ["tiktok_shop_public"],
+  language: "zh-CN analysis with English source labels",
+  budgetAmountMinor: 198000,
+  currency: "CNY",
+  deliverableFormat: ["pdf", "csv"]
+}, { expectedVersion: 0 });
+const runtimePublished = execute("rfp.publish", "buyer", {
+  rfpId: runtimeRfp.dto.id,
+  acceptanceTemplateId: "acceptance_template_trial_v1",
+  competitorsOrDiscoveryRule: "Use 5 named competitors",
+  prohibitedSources: ["production_account_login"],
+  deadlineAt: "2026-05-10T18:00:00+08:00"
+});
+const runtimeProposal = execute("proposal.submit", "seller", {
+  rfpId: runtimeRfp.dto.id,
+  sellerId: "seller_harbor_growth_sandbox",
+  agentId: "agent_mira_competitor_intel_sandbox",
+  priceAmountMinor: 198000,
+  deliveryHours: 48,
+  includedScope: ["5 competitors", "15 topic ideas"],
+  evidenceStandard: "Every key claim maps to evidence",
+  responsibleOwner: "project-owner@harbor-growth.example",
+  capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+}, { expectedVersion: runtimePublished.newVersion });
+const runtimeOrder = execute("proposal.accept", "buyer", {
+  proposalId: runtimeProposal.dto.id,
+  termsSnapshot: "trial_v1_terms"
+});
+const runtimeFunded = execute("escrow.fund", "buyer", {
+  orderId: runtimeOrder.dto.id,
+  paymentRef: "sandbox_payment_ref_001",
+  receivedAt: "2026-05-08T20:00:00+08:00",
+  receivedBy: "user_finance_sandbox_001"
+}, { expectedVersion: runtimeOrder.newVersion });
+const runtimeGrant = loadRuntimeState(runtimeStateFile).grants[0];
+execute("permission.approve", "operator", {
+  grantId: runtimeGrant.id,
+  toolAllowlist: ["read_public_url", "write_generated_artifact"],
+  expiresAt: "2026-05-10T18:00:00+08:00",
+  approvalReason: "trial lane"
+});
+const runtimeRun = execute("run.start", "seller", {
+  orderId: runtimeOrder.dto.id,
+  permissionGrantIds: [runtimeGrant.id]
+}, { expectedVersion: runtimeFunded.newVersion });
+const runtimeDelivery = execute("delivery.submit", "seller", {
+  orderId: runtimeOrder.dto.id,
+  executionRunIds: [runtimeRun.dto.id],
+  artifactRefs: ["ev_sandbox_delivery_pdf_001"],
+  evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
+  criteriaMapping: ["competitor_coverage"],
+  knownLimitations: ["sandbox only"]
+}, { expectedVersion: runtimeRun.newVersion + 2 });
+const runtimeQa = execute("delivery.qa_pass", "operator", {
+  deliveryPackageId: runtimeDelivery.dto.id,
+  qaChecklistId: "qa_trial_001",
+  sampledFacts: ["fact_01"]
+});
+const runtimeAccepted = execute("acceptance.accept", "buyer", {
+  orderId: runtimeOrder.dto.id,
+  deliveryPackageId: runtimeDelivery.dto.id,
+  criteriaConfirmations: ["competitor_coverage", "evidence_traceability", "topic_actionability"],
+  criteriaScores: { competitor_coverage: 20, evidence_traceability: 25, topic_actionability: 20 },
+  decisionReason: "buyer accepted"
+}, { expectedVersion: runtimeQa.newVersion });
+const runtimeReleased = execute("escrow.release", "operator", {
+  orderId: runtimeOrder.dto.id,
+  releaseReason: "accepted",
+  financeEvidenceRef: "ev_sandbox_delivery_pdf_001"
+}, { expectedVersion: runtimeAccepted.newVersion });
+execute("rating.submit", "buyer", {
+  orderId: runtimeOrder.dto.id,
+  subjectType: "agent",
+  subjectId: "agent_mira_competitor_intel_sandbox",
+  agentVersion: "1.0.0",
+  categoryIds: ["social_media_operations", "intelligence_research"],
+  ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+  deliveryOutcome: "accepted"
+}, { expectedVersion: runtimeReleased.newVersion });
+const runtimeCurrentOrder = loadRuntimeState(runtimeStateFile).orders.find((order) => order.id === runtimeOrder.dto.id);
+const runtimeExport = execute("evidence.export", "buyer", {
+  orderId: runtimeOrder.dto.id,
+  evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
+  exportReason: "verify runtime package",
+  redactionMode: "buyer_safe"
+}, { expectedVersion: runtimeCurrentOrder.version });
+
+for (const section of [
+  "rfp",
+  "proposal",
+  "terms",
+  "permissionGrants",
+  "executionRuns",
+  "deliveryPackages",
+  "topics",
+  "evidenceIndex",
+  "qaChecklist",
+  "acceptanceReview",
+  "financeLedger",
+  "reputationEvent",
+  "roiRetrospective",
+  "eventSequence",
+  "cliApiUiSnapshots"
+]) {
+  assert(runtimeExport.dto.manifest.requiredSections.includes(section), `runtime export missing manifest section ${section}`);
+  assert(runtimeExport.dto.manifest.sectionStatuses[section] === "present", `runtime export section ${section} should be present`);
+}
+assert(JSON.stringify(runtimeExport.dto.snapshot.ui.orderDto) === JSON.stringify(runtimeExport.dto.snapshot.cli.orderDto), "runtime export UI/CLI snapshots must match");
+assert(JSON.stringify(runtimeExport.dto.snapshot.api.orderDto) === JSON.stringify(runtimeExport.dto.snapshot.cli.orderDto), "runtime export API/CLI snapshots must match");
+assert(runtimeExport.dto.sections.financeLedger.ledgerStatus === "released", "runtime export finance ledger must reflect release");
+assert(runtimeExport.dto.sections.reputationEvent.sourceOrderId === runtimeOrder.dto.id, "runtime export reputation event must bind source order");
 
 console.log("evidence package verification passed");

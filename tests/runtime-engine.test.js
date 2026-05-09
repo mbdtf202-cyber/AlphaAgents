@@ -278,6 +278,53 @@ test("runtime engine persists a real golden path flow", () => {
   assert.equal(finalState.reputations[0].subjectId, "agent_mira_competitor_intel_sandbox");
   assert.equal(finalState.eventLog.length >= 12, true);
 
+  const exported = executeRuntimeCommand(
+    "evidence.export",
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
+        exportReason: "buyer audit",
+        redactionMode: "buyer_safe"
+      },
+      { expectedVersion: finalState.orders[0].version }
+    ),
+    { stateFile }
+  );
+  assert.equal(exported.ok, true);
+  assert.deepEqual(exported.dto.manifest.requiredSections, [
+    "rfp",
+    "proposal",
+    "terms",
+    "permissionGrants",
+    "executionRuns",
+    "deliveryPackages",
+    "topics",
+    "evidenceIndex",
+    "qaChecklist",
+    "acceptanceReview",
+    "financeLedger",
+    "reputationEvent",
+    "roiRetrospective",
+    "eventSequence",
+    "cliApiUiSnapshots"
+  ]);
+  assert.equal(exported.dto.snapshot.ui.orderDto.id, order.dto.id);
+  assert.deepEqual(exported.dto.snapshot.ui.orderDto, exported.dto.snapshot.cli.orderDto);
+  assert.deepEqual(exported.dto.snapshot.api.orderDto, exported.dto.snapshot.cli.orderDto);
+  assert.equal(exported.dto.sections.rfp.id, rfpDraft.dto.id);
+  assert.equal(exported.dto.sections.proposal.id, proposal.dto.id);
+  assert.equal(exported.dto.sections.permissionGrants[0].id, grant.id);
+  assert.equal(exported.dto.sections.executionRuns[0].id, run.dto.id);
+  assert.equal(exported.dto.sections.deliveryPackages[0].id, delivery.dto.id);
+  assert.equal(exported.dto.sections.acceptanceReview.reviewStatus, "accepted");
+  assert.equal(exported.dto.sections.financeLedger.ledgerStatus, "released");
+  assert.equal(exported.dto.sections.reputationEvent.id, rated.dto.id);
+  assert.equal(exported.dto.sections.roiRetrospective.usableResultRate, "runtime");
+  assert.ok(exported.events.map((event) => event.eventName).includes("EvidenceExportRequested"));
+  assert.ok(exported.events.map((event) => event.eventName).includes("EvidenceExported"));
+
   const duplicate = executeRuntimeCommand(
     "rating.submit",
     runtimeEnvelope(

@@ -1,5 +1,5 @@
 import { AppShell } from "../../components/alphaagents/shell";
-import { Chip, DataTable, SectionCard } from "../../components/alphaagents/blocks";
+import { Chip, CliApiEventsPanel, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { getProviderProofModel } from "../../lib/alphaagents/view-models";
 import Link from "next/link";
 
@@ -53,6 +53,17 @@ export default function ProviderProofPage() {
             rows={model.sellers}
           />
         </SectionCard>
+        <CliApiEventsPanel
+          a19Id="A-19-PROVIDER-PROOF"
+          subject="Provider passport, seller admission, and listing proof"
+          commands={["alphaagents agent-passport update --json", "alphaagents agent-listing search --json"]}
+          apiRoutes={[
+            { method: "GET", path: "/api/catalog", purpose: "Read AgentPassport, AgentListing, AgentApp, seller admission, and category evidence." },
+            { method: "GET", path: "/api/contract", purpose: "Read canonical contract version, command schemas, DTOs, and event vocabulary for provider proof." }
+          ]}
+          events={["AgentPassportCreated", "AgentPassportUpdated", "AgentPassportSuspended", "AgentListingPublished"]}
+          dtoRefs={["AgentPassport", "SellerAdmission", "AgentListing"]}
+        />
       </div>
     </AppShell>
   );

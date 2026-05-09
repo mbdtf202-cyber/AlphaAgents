@@ -4,7 +4,8 @@ const scripts = [
   "scripts/verify-contract.mjs",
   "scripts/verify-evidence-package.mjs",
   "scripts/verify-visual-system.mjs",
-  "scripts/verify-business-readiness.mjs"
+  "scripts/verify-business-readiness.mjs",
+  "scripts/verify-a19-frontend-coverage.mjs"
 ];
 
 for (const script of scripts) {

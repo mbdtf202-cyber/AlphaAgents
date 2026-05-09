@@ -1,5 +1,5 @@
 import { AppShell } from "../../components/alphaagents/shell";
-import { Chip, DataTable, SectionCard } from "../../components/alphaagents/blocks";
+import { Chip, CliApiEventsPanel, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { getReputationModel } from "../../lib/alphaagents/view-models";
 
 export default function ReputationPage() {
@@ -53,6 +53,17 @@ export default function ReputationPage() {
             rows={model.roiRows}
           />
         </SectionCard>
+        <CliApiEventsPanel
+          a19Id="A-19-REPUTATION"
+          subject="Reputation publication, source-order proof, and buyer-visible ROI"
+          commands={["alphaagents reputation show --json", "alphaagents rating submit --json"]}
+          apiRoutes={[
+            { method: "GET", path: "/api/reputation", purpose: "Read reputation summary, source-order provenance, ROI, disputes, and publication state." },
+            { method: "POST", path: "/api/commands", purpose: "Submit ratings and publish ReputationEvent records after acceptance and anti-self-rating gates." }
+          ]}
+          events={["ReputationEventCreated", "ReputationPublished"]}
+          dtoRefs={["ReputationSummary", "ReputationEvent", "RoiRetrospective"]}
+        />
       </div>
     </AppShell>
   );

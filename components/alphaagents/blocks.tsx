@@ -61,3 +61,74 @@ export function KpiStrip({ items }: { items: Array<{ label: string; value: strin
     </div>
   );
 }
+
+type CliApiEventsPanelProps = {
+  a19Id: string;
+  subject: string;
+  commands: string[];
+  apiRoutes: Array<{ method: "GET" | "POST" | "DELETE"; path: string; purpose: string }>;
+  events: string[];
+  dtoRefs?: string[];
+  defaultOpen?: boolean;
+  mismatch?: boolean;
+};
+
+export function CliApiEventsPanel({
+  a19Id,
+  subject,
+  commands,
+  apiRoutes,
+  events,
+  dtoRefs = [],
+  defaultOpen = false,
+  mismatch = false
+}: CliApiEventsPanelProps) {
+  return (
+    <details className="aa-a19-panel" data-a19={a19Id} open={defaultOpen}>
+      <summary>
+        CLI / API / Events <span className="aa-meta">{subject}</span>
+      </summary>
+      <SectionCard
+        title="CLI / API / Events"
+        subtitle={`${subject} must expose the same command, route, DTO, and event contract to buyers and operators.`}
+        tone={mismatch ? "warning" : "default"}
+      >
+        <div>
+          <Chip tone={mismatch ? "warning" : "trust"}>{a19Id}</Chip>
+          {dtoRefs.map((dtoRef) => (
+            <Chip key={dtoRef}>{dtoRef}</Chip>
+          ))}
+        </div>
+        <div className="aa-grid aa-grid-2" style={{ marginTop: 12 }}>
+          <div>
+            {commands.map((command) => (
+              <CommandPreview key={command} command={command} mismatch={mismatch} />
+            ))}
+          </div>
+          <DataTable
+            columns={[
+              { key: "method", label: "Method" },
+              { key: "path", label: "API route" },
+              { key: "purpose", label: "Purpose" }
+            ]}
+            rows={apiRoutes.map((route) => ({
+              method: <Chip tone={route.method === "GET" ? "default" : "trust"}>{route.method}</Chip>,
+              path: route.path,
+              purpose: route.purpose
+            }))}
+          />
+        </div>
+        <DataTable
+          columns={[
+            { key: "event", label: "Event" },
+            { key: "subject", label: "Subject" }
+          ]}
+          rows={events.map((event) => ({
+            event,
+            subject
+          }))}
+        />
+      </SectionCard>
+    </details>
+  );
+}

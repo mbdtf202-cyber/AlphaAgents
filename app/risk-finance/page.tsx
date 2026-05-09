@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { AppShell } from "../../components/alphaagents/shell";
-import { Chip, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
+import { Chip, CliApiEventsPanel, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { RuntimeCommandConsole } from "../../components/alphaagents/runtime-command-console";
 import { getRiskFinanceModel } from "../../lib/alphaagents/view-models";
 import { getRuntimeSnapshot } from "../../lib/alphaagents/runtime-queries";
@@ -154,6 +154,17 @@ export default function RiskFinancePage() {
             </div>
           </SectionCard>
         </div>
+        <CliApiEventsPanel
+          a19Id="A-19-RISK-FINANCE"
+          subject="Permission control, dispute resolution, finance evidence, and ledger events"
+          commands={["alphaagents permission approve --json", "alphaagents dispute resolve --json"]}
+          apiRoutes={[
+            { method: "POST", path: "/api/commands", purpose: "Approve, deny, revoke permissions and resolve disputes with optimistic version gates." },
+            { method: "GET", path: "/api/runtime-state", purpose: "Read grants, runtime orders, ledger, finance rows, and emitted events after each action." }
+          ]}
+          events={["PermissionApproved", "PermissionDenied", "PermissionRevoked", "DisputeResolved"]}
+          dtoRefs={["PermissionGrant", "RuntimeOrder", "FinanceEvidence"]}
+        />
         <RuntimeCommandConsole mode="risk-finance" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>

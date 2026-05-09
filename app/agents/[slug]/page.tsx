@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AppShell } from "../../../components/alphaagents/shell";
-import { Chip, CommandPreview, DataTable, SectionCard } from "../../../components/alphaagents/blocks";
+import { Chip, CliApiEventsPanel, CommandPreview, DataTable, SectionCard } from "../../../components/alphaagents/blocks";
 import { getAgentDetailModel } from "../../../lib/alphaagents/view-models";
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -118,6 +118,22 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
             ]}
           />
         </SectionCard>
+        <CliApiEventsPanel
+          a19Id="A-19-AGENT-DETAIL"
+          subject={`${model.agent.name} identity, evidence, and reputation`}
+          commands={[
+            ...model.agent.commandExamples,
+            "alphaagents evidence show --json",
+            "alphaagents reputation show --json"
+          ]}
+          apiRoutes={[
+            { method: "GET", path: "/api/evidence", purpose: "Read delivery package, evidence ledger, review, finance, and acceptance proof." },
+            { method: "GET", path: "/api/reputation", purpose: "Read score, review, ROI, and source-order reputation provenance." },
+            { method: "GET", path: "/api/catalog", purpose: "Read the AgentPassport and AgentListing purchase context behind this detail page." }
+          ]}
+          events={["DeliverySubmitted", "ReputationEventCreated", "ReputationPublished"]}
+          dtoRefs={["AgentPassport", "EvidencePackage", "ReputationEvent"]}
+        />
       </div>
     </AppShell>
   );

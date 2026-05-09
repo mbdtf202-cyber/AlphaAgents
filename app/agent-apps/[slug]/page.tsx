@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 
 import { AppShell } from "../../../components/alphaagents/shell";
-import { Chip, CommandPreview, DataTable, SectionCard } from "../../../components/alphaagents/blocks";
+import { Chip, CliApiEventsPanel, CommandPreview, DataTable, SectionCard } from "../../../components/alphaagents/blocks";
 import { RuntimeCommandConsole } from "../../../components/alphaagents/runtime-command-console";
 import { getAgentAppDetailModel } from "../../../lib/alphaagents/view-models";
 import { getRuntimeSnapshot } from "../../../lib/alphaagents/runtime-queries";
@@ -152,6 +152,21 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
             ]}
           />
         </SectionCard>
+        <CliApiEventsPanel
+          a19Id="A-19-AGENT-APP-DETAIL"
+          subject={`${model.app.name} install, usage, exit, and runtime proof`}
+          commands={[
+            "alphaagents agent-app install --json",
+            "alphaagents agent-app record-usage --json",
+            "alphaagents agent-app exit --json"
+          ]}
+          apiRoutes={[
+            { method: "POST", path: "/api/commands", purpose: "Execute install, usage, exit, permission, delivery, and rating commands with version gates." },
+            { method: "GET", path: "/api/runtime-state", purpose: "Read current Agent App install, usage, event, and finance state from the runtime snapshot." }
+          ]}
+          events={["AgentAppInstalled", "AgentAppUsageRecorded", "AgentAppExited"]}
+          dtoRefs={["AgentAppPassport", "AgentAppInstall", "RuntimeEvent"]}
+        />
         <RuntimeCommandConsole mode="agent-app" initialSnapshot={runtimeSnapshot} />
       </div>
     </AppShell>

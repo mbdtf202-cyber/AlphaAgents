@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { AppShell } from "../../components/alphaagents/shell";
-import { Chip, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
+import { Chip, CliApiEventsPanel, CommandPreview, DataTable, SectionCard } from "../../components/alphaagents/blocks";
 import { getCatalogModel } from "../../lib/alphaagents/view-models";
 import Link from "next/link";
 
@@ -116,6 +116,17 @@ export default async function CatalogPage({ searchParams }: { searchParams?: Pro
             }))}
           />
         </SectionCard>
+        <CliApiEventsPanel
+          a19Id="A-19-CATALOG"
+          subject="Catalog discovery and listing lifecycle"
+          commands={["alphaagents agent-listing search --json"]}
+          apiRoutes={[
+            { method: "GET", path: "/api/catalog", purpose: "Read server-backed category, listing, billing, risk, price, SLA, rating, and capacity filters." },
+            { method: "POST", path: "/api/catalog", purpose: "Publish, update, archive, and version AgentListing records through the shared runtime contract." }
+          ]}
+          events={["AgentListingPublished", "AgentListingUpdated", "AgentListingArchived"]}
+          dtoRefs={["AgentListing", "CatalogFilterDto", "CategoryUnitEconomics"]}
+        />
       </div>
     </AppShell>
   );

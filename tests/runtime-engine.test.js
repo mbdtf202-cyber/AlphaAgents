@@ -46,9 +46,35 @@ function runtimeEnvelope(actorRole, payload, overrides = {}) {
   };
 }
 
+function readyBuyerOrg(stateFile) {
+  const result = executeRuntimeCommand(
+    "buyer-org.setup",
+    runtimeEnvelope("buyer", {
+      buyerOrgId: "org_demo_001",
+      requesterUserId: "user_demo_buyer_owner",
+      acceptanceOwnerUserId: "user_demo_acceptance_owner",
+      financeContactUserId: "user_demo_finance_owner",
+      legalContactUserId: "user_demo_legal_owner",
+      authorizedPayerId: "payer_demo_001",
+      signerIds: ["signer_demo_001"],
+      invoiceReadiness: "ready",
+      scopeAcknowledgement: "accepted",
+      contractingEntity: "NorthStar Beauty LLC",
+      collectionEntity: "AlphaAgents Platform Ops LLC",
+      invoiceIssuer: "AlphaAgents Platform Ops LLC",
+      refundRemitter: "AlphaAgents Platform Ops LLC",
+      subprocessors: ["Harbor Growth Studio"]
+    }),
+    { stateFile }
+  );
+  assert.equal(result.ok, true);
+  return result;
+}
+
 test("runtime engine persists a real golden path flow", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);
+  readyBuyerOrg(stateFile);
 
   const rfpDraft = executeRuntimeCommand(
     "rfp.create",
@@ -481,7 +507,11 @@ test("archived category blocks listing publish", () => {
         listingId: "listing_new_001",
         agentId: "agent_mira_competitor_intel_sandbox",
         categoryIds: ["social_media_operations"],
-        priceAmountMinor: 198000
+        priceAmountMinor: 198000,
+        acceptanceTemplateId: "acceptance_social_result_v1",
+        permissionTemplateId: "perm_social_readonly_v1",
+        deliveryHours: 48,
+        capacityAvailable: 1
       },
       { expectedVersion: 0 }
     ),
@@ -565,6 +595,7 @@ test("proposal.submit rejects sellers below admission score 80", () => {
 test("permission approval rejects denied high-risk tools", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);
+  readyBuyerOrg(stateFile);
 
   const draft = executeRuntimeCommand(
     "rfp.create",
@@ -653,4 +684,203 @@ test("permission approval rejects denied high-risk tools", () => {
 
   assert.equal(denied.ok, false);
   assert.equal(denied.errorCode, "PERMISSION_DENIED");
+});
+
+test("proposal.accept blocks orders when buyer org lacks procurement signability", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.rfps.push({
+    id: "rfp_procurement_block_001",
+    tenantId: "org_demo_001",
+    buyerOrgId: "org_demo_001",
+    rfpStatus: "quoting",
+    category: "US TikTok Shop sensitive-skin skincare",
+    version: 1
+  });
+  state.proposals.push({
+    id: "proposal_procurement_block_001",
+    tenantId: "org_demo_001",
+    proposalStatus: "submitted",
+    rfpId: "rfp_procurement_block_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    priceAmountMinor: 198000,
+    currency: "CNY",
+    includedScope: ["5 competitors", "15 topic ideas"],
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "proposal.accept",
+    runtimeEnvelope("buyer", {
+      proposalId: "proposal_procurement_block_001",
+      termsSnapshot: "trial_v1_terms"
+    }),
+    { stateFile }
+  );
+
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "BUYER_NOT_PROCUREMENT_READY");
+  assert.equal(loadRuntimeState(stateFile).orders.length, 0);
+});
+
+test("escrow.fund blocks existing orders with incomplete finance profile", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.orders.push({
+    id: "order_missing_finance_001",
+    tenantId: "org_demo_001",
+    rfpId: "rfp_missing_finance_001",
+    proposalId: "proposal_missing_finance_001",
+    buyerOrgId: "org_demo_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    orderStatus: "created",
+    ledgerStatus: "not_funded",
+    acceptanceStatus: "not_ready",
+    amountMinor: 198000,
+    currency: "CNY",
+    contractingEntity: "",
+    collectionEntity: "",
+    invoiceIssuer: "",
+    refundRemitter: "",
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "escrow.fund",
+    runtimeEnvelope("buyer", {
+      orderId: "order_missing_finance_001",
+      paymentRef: "sandbox_payment_ref_blocked",
+      receivedAt: "2026-05-08T20:00:00+08:00",
+      receivedBy: "user_finance_sandbox_001"
+    }),
+    { stateFile }
+  );
+
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "BUYER_NOT_PROCUREMENT_READY");
+  assert.equal(loadRuntimeState(stateFile).orders[0].ledgerStatus, "not_funded");
+});
+
+test("agent-listing publish fails closed when passport, templates, or pricing are incomplete", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const missingPassport = executeRuntimeCommand(
+    "agent-listing publish",
+    runtimeEnvelope(
+      "operator",
+      {
+        listingId: "listing_missing_passport_001",
+        agentId: "agent_missing_passport",
+        categoryIds: ["social_media_operations"],
+        priceAmountMinor: 198000,
+        acceptanceTemplateId: "acceptance_social_result_v1",
+        permissionTemplateId: "perm_social_readonly_v1",
+        deliveryHours: 48,
+        capacityAvailable: 1
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(missingPassport.ok, false);
+  assert.equal(missingPassport.errorCode, "VALIDATION_FAILED");
+
+  const missingTemplates = executeRuntimeCommand(
+    "agent-listing publish",
+    runtimeEnvelope(
+      "operator",
+      {
+        listingId: "listing_missing_templates_001",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        categoryIds: ["social_media_operations"],
+        priceAmountMinor: 198000
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(missingTemplates.ok, false);
+  assert.equal(missingTemplates.errorCode, "VALIDATION_FAILED");
+
+  const invalidPrice = executeRuntimeCommand(
+    "agent-listing publish",
+    runtimeEnvelope(
+      "operator",
+      {
+        listingId: "listing_invalid_price_001",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        categoryIds: ["social_media_operations"],
+        priceAmountMinor: 0,
+        acceptanceTemplateId: "acceptance_social_result_v1",
+        permissionTemplateId: "perm_social_readonly_v1",
+        deliveryHours: 48,
+        capacityAvailable: 1
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(invalidPrice.ok, false);
+  assert.equal(invalidPrice.errorCode, "VALIDATION_FAILED");
+});
+
+test("acceptance.request-revision rejects fixes that expand beyond frozen proposal scope", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.proposals.push({
+    id: "proposal_revision_scope_001",
+    tenantId: "org_demo_001",
+    proposalStatus: "selected",
+    rfpId: "rfp_revision_scope_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    priceAmountMinor: 198000,
+    currency: "CNY",
+    includedScope: ["5 competitors", "15 topic ideas"],
+    version: 1
+  });
+  state.orders.push({
+    id: "order_revision_scope_001",
+    tenantId: "org_demo_001",
+    rfpId: "rfp_revision_scope_001",
+    proposalId: "proposal_revision_scope_001",
+    buyerOrgId: "org_demo_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    orderStatus: "ready_for_acceptance",
+    ledgerStatus: "locked",
+    acceptanceStatus: "ready",
+    amountMinor: 198000,
+    currency: "CNY",
+    includedScope: ["5 competitors", "15 topic ideas"],
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "acceptance.request-revision",
+    runtimeEnvelope("buyer", {
+      orderId: "order_revision_scope_001",
+      deliveryPackageId: "delivery_revision_scope_001",
+      failedCriteria: ["topic_actionability"],
+      requestedFixes: ["add 3 net-new competitor teardown reports"],
+      decisionReason: "new work requested"
+    }),
+    { stateFile }
+  );
+
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "SCOPE_EXPANSION_REQUIRED");
+  assert.equal(loadRuntimeState(stateFile).reviews.length, 0);
 });

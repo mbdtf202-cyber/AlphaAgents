@@ -36,10 +36,36 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
               { label: "Delivery modes", value: model.agent.deliveryModes.join(", ") },
               { label: "Average rating", value: String(model.agent.scoreSummary.averageRating) },
               { label: "QA pass rate", value: `${Math.round(model.agent.scoreSummary.qaPassRate * 100)}%` },
-              { label: "Dispute rate", value: `${Math.round(model.agent.scoreSummary.disputeRate * 100)}%` },
+              { label: "On-time delivery rate", value: model.performanceMetrics.onTimeDeliveryRate },
+              { label: "Rework / revision rate", value: model.performanceMetrics.reworkRevisionRate },
+              { label: "Dispute rate", value: model.performanceMetrics.disputeRate },
               { label: "Completed orders", value: String(model.agent.orderHistory.completed) },
               { label: "Revisions", value: String(model.agent.orderHistory.revisions) }
             ]}
+          />
+        </SectionCard>
+        <SectionCard title="Reputation and performance completeness" subtitle="Detail page reputation now exposes distribution, on-time delivery, revision, dispute, and evidence-backed performance history.">
+          <DataTable
+            columns={[
+              { key: "label", label: "Metric" },
+              { key: "value", label: "Value" }
+            ]}
+            rows={[
+              { label: "Rated orders", value: String(model.performanceMetrics.ratedOrderCount) },
+              { label: "Average rating", value: model.performanceMetrics.averageRating },
+              { label: "QA pass rate", value: model.performanceMetrics.qaPassRate },
+              { label: "On-time delivery rate", value: model.performanceMetrics.onTimeDeliveryRate },
+              { label: "Explicit rework / revision rate", value: model.performanceMetrics.reworkRevisionRate },
+              { label: "Dispute rate", value: model.performanceMetrics.disputeRate }
+            ]}
+          />
+          <DataTable
+            columns={[
+              { key: "bucket", label: "Rating bucket" },
+              { key: "count", label: "Orders" },
+              { key: "share", label: "Share" }
+            ]}
+            rows={model.ratingDistributionBuckets}
           />
         </SectionCard>
         <SectionCard title="Machine-readable manifest" subtitle="Capability claims are separated from verified delivery history.">
@@ -101,6 +127,34 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ sl
               { key: "eventStatus", label: "Status" }
             ]}
             rows={model.reputationEvents}
+          />
+        </SectionCard>
+        <SectionCard title="Historical order rows" subtitle="Every visible reputation score is backed by an order row, outcome, SLA, revision flag, dispute flag, and ReputationEvent.">
+          <DataTable
+            columns={[
+              { key: "orderId", label: "Order" },
+              { key: "deliveryOutcome", label: "Outcome" },
+              { key: "ratingAverage", label: "Rating" },
+              { key: "onTimeFlag", label: "On time" },
+              { key: "reworkRevisionFlag", label: "Rework / revision" },
+              { key: "disputeFlag", label: "Dispute" },
+              { key: "reputationEventId", label: "Reputation event" }
+            ]}
+            rows={model.historicalOrderRows}
+          />
+        </SectionCard>
+        <SectionCard title="Performance history" subtitle="Per-agent trend rows expose review score, timeliness, evidence rating, outcome, and exception flags instead of only aggregate averages.">
+          <DataTable
+            columns={[
+              { key: "orderId", label: "Order" },
+              { key: "reviewScore", label: "Review score" },
+              { key: "ratingAverage", label: "Rating" },
+              { key: "timelinessRating", label: "Timeliness" },
+              { key: "evidenceRating", label: "Evidence" },
+              { key: "reworkRevisionFlag", label: "Revision" },
+              { key: "disputeFlag", label: "Dispute" }
+            ]}
+            rows={model.performanceHistory}
           />
         </SectionCard>
         <SectionCard title="Permissions, deployment, and failure boundaries" subtitle="Security, IT, and procurement need an explicit read of required scopes and rollback paths.">

@@ -132,6 +132,7 @@
     "RFP_INCOMPLETE",
     "RFP_NOT_OPEN",
     "SELLER_NOT_APPROVED",
+    "BUYER_NOT_PROCUREMENT_READY",
     "PROPOSAL_EXPIRED",
     "PAYMENT_NOT_CONFIRMED",
     "ESCROW_NOT_FUNDED",
@@ -333,7 +334,7 @@
       "payloadRequired": ["proposalId", "termsSnapshot"],
       "requiredScopes": ["buyer:orders.write"],
       "successEvents": ["ProposalSelected", "EscrowOrderCreated"],
-      "failureCodes": ["PROPOSAL_EXPIRED", "ACTOR_FORBIDDEN", "STATE_CONFLICT"],
+      "failureCodes": ["PROPOSAL_EXPIRED", "ACTOR_FORBIDDEN", "STATE_CONFLICT", "BUYER_NOT_PROCUREMENT_READY"],
       "responseDto": "OrderDto"
     },
     "escrow.fund": {
@@ -345,7 +346,7 @@
       "payloadRequired": ["orderId", "paymentRef", "receivedAt", "receivedBy"],
       "requiredScopes": ["buyer:orders.write", "finance:ledger.write"],
       "successEvents": ["EscrowFunded", "PermissionRequested", "RfpOrdered"],
-      "failureCodes": ["PAYMENT_NOT_CONFIRMED", "STATE_CONFLICT", "EVIDENCE_NOT_VISIBLE"],
+      "failureCodes": ["PAYMENT_NOT_CONFIRMED", "STATE_CONFLICT", "EVIDENCE_NOT_VISIBLE", "BUYER_NOT_PROCUREMENT_READY"],
       "responseDto": "OrderDto"
     },
     "permission.approve": {

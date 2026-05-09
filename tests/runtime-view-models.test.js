@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
 import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
@@ -142,6 +143,44 @@ test("detail and reputation models expose order-version-category rating provenan
   assert.ok(reputation.provenanceRows[0].categories.includes("情报"));
 });
 
+test("agent detail model exposes UI-22 reputation and performance completeness", () => {
+  const agent = getAgentDetailModel("mira-competitor-intel-agent");
+
+  assert.ok(agent.historicalOrderRows.length >= 3);
+  assert.deepEqual(
+    agent.ratingDistributionBuckets.map((bucket) => [bucket.rating, bucket.count]),
+    [
+      [5, 2],
+      [4, 1],
+      [3, 0],
+      [2, 0],
+      [1, 0]
+    ]
+  );
+  assert.equal(agent.performanceMetrics.onTimeDeliveryRate, "100%");
+  assert.equal(agent.performanceMetrics.reworkRevisionRate, "33%");
+  assert.equal(agent.performanceMetrics.disputeRate, "33%");
+
+  assert.ok(agent.performanceHistory.length >= 3);
+  assert.ok(agent.performanceHistory.every((entry) => entry.reviewScore >= 0));
+
+  const revisionRow = agent.historicalOrderRows.find((row) => row.orderId === "order_sandbox_revision_002");
+  const disputeRow = agent.historicalOrderRows.find((row) => row.orderId === "order_sandbox_dispute_003");
+
+  assert.equal(revisionRow.reworkRevisionFlag, "yes");
+  assert.equal(disputeRow.disputeFlag, "yes");
+  assert.equal(disputeRow.deliveryOutcome, "partially_released");
+});
+
+test("agent detail page renders UI-22 reputation and performance sections", () => {
+  const pageSource = fs.readFileSync(new URL("../app/agents/[slug]/page.tsx", import.meta.url), "utf8");
+
+  assert.match(pageSource, /performanceMetrics/);
+  assert.match(pageSource, /historicalOrderRows/);
+  assert.match(pageSource, /ratingDistributionBuckets/);
+  assert.match(pageSource, /performanceHistory/);
+});
+
 test("catalog and finance models expose seller admission and category unit economics", () => {
   const catalog = getCatalogModel();
   const providerProof = getProviderProofModel();
@@ -213,6 +252,28 @@ test("program ops model reflects runtime credit, drawdown, and qbr state", () =>
 test("risk finance model exposes live runtime finance rows", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);
+
+  const buyerSetup = executeRuntimeCommand(
+    "buyer-org.setup",
+    runtimeEnvelope("buyer", {
+      buyerOrgId: "org_demo_001",
+      requesterUserId: "user_demo_buyer_owner",
+      acceptanceOwnerUserId: "user_demo_acceptance_owner",
+      financeContactUserId: "user_demo_finance_owner",
+      legalContactUserId: "user_demo_legal_owner",
+      authorizedPayerId: "payer_demo_001",
+      signerIds: ["signer_demo_001"],
+      invoiceReadiness: "ready",
+      scopeAcknowledgement: "accepted",
+      contractingEntity: "NorthStar Beauty LLC",
+      collectionEntity: "AlphaAgents Platform Ops LLC",
+      invoiceIssuer: "AlphaAgents Platform Ops LLC",
+      refundRemitter: "AlphaAgents Platform Ops LLC",
+      subprocessors: ["Harbor Growth Studio"]
+    }),
+    { stateFile }
+  );
+  assert.equal(buyerSetup.ok, true);
 
   const rfp = executeRuntimeCommand(
     "rfp.create",
@@ -301,7 +362,7 @@ test("risk finance model exposes live runtime finance rows", () => {
   assert.ok(model.runtimeGrants.length >= 1);
   assert.equal(model.runtimeOrders[0].ledgerStatus, "escrowed");
   assert.equal(model.runtimeFinanceRows[0].paymentRef, "sandbox_payment_ref_001");
-  assert.equal(model.runtimeFinanceRows[0].contractingEntity, "missing");
+  assert.equal(model.runtimeFinanceRows[0].contractingEntity, "NorthStar Beauty LLC");
   assert.equal(model.runtimeFinanceRows[0].invoiceStatus, "requested");
   assert.equal(model.runtimeFinanceRows[0].reconciliationStatus, "payment_recorded");
   assert.ok(model.runtimeEvents.some((entry) => entry.eventName === "EscrowFunded"));

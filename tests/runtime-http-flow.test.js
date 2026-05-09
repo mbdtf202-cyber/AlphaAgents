@@ -8,6 +8,12 @@ import { createDemoEnvelope, buildSamplePayload } from "../lib/alphaagents/comma
 test("runtime command engine advances a draft RFP to funded order with shared state", () => {
   resetRuntimeState();
 
+  const buyerSetup = executeRuntimeCommand(
+    "buyer-org.setup",
+    { ...createDemoEnvelope("buyer", buildSamplePayload("buyer-org.setup")), sourceChannel: "api", expectedVersion: 1 }
+  );
+  assert.equal(buyerSetup.ok, true);
+
   const rfpCreate = executeRuntimeCommand(
     "rfp.create",
     { ...createDemoEnvelope("buyer", buildSamplePayload("rfp.create")), sourceChannel: "api", expectedVersion: 0 }

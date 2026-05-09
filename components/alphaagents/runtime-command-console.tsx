@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 type RuntimeSnapshot = {
   categories: Array<{ categoryId: string; categoryStatus: string; version: number }>;
   listings: Array<{ listingId: string; listingStatus: string; version: number }>;
-  programWorkspaces: Array<{ id: string; activeCreditMinor: number; backlogValueMinor: number; qbrStatus: string }>;
+  programWorkspaces: Array<{ id: string; activeCreditMinor: number; backlogValueMinor: number; qbrStatus: string; version: number }>;
   appInstalls: Array<{ id: string; appId: string; installStatus: string; usageMode: string; version: number }>;
   appUsageRuns: Array<{ id: string; installId: string; appId: string; usageStatus: string; version: number }>;
   customProjects: Array<{ id: string; projectStatus: string; uatStatus: string; milestones: Array<{ milestoneId: string }>; changeOrders: Array<{ changeOrderId: string }>; version: number }>;
@@ -253,13 +253,15 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         label: "Archive Social Category",
         commandName: "agent-category archive",
         actorRole: "operator",
-        payload: () => ({ categoryId, archiveReason: "manual review" })
+        payload: () => ({ categoryId, archiveReason: "manual review" }),
+        expectedVersion: (snapshot) => snapshot.categories.find((category) => category.categoryId === categoryId)?.version ?? 1
       },
       {
         label: "Restore Social Category",
         commandName: "agent-category restore",
         actorRole: "operator",
-        payload: () => ({ categoryId, restoreReason: "re-enable" })
+        payload: () => ({ categoryId, restoreReason: "re-enable" }),
+        expectedVersion: (snapshot) => snapshot.categories.find((category) => category.categoryId === categoryId)?.version ?? 1
       }
     ];
   }
@@ -312,6 +314,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           responsibleOwner: "project-owner@harbor-growth.example",
           capacityReservedUntil: "2026-05-10T18:00:00+08:00"
         }),
+        expectedVersion: (snapshot) => snapshot.rfps.at(-1)?.version ?? 1,
         enabled: (snapshot) => ["published", "quoting"].includes(snapshot.rfps.at(-1)?.rfpStatus ?? "")
       },
       {
@@ -322,6 +325,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           proposalId: snapshot.proposals.at(-1)?.id,
           termsSnapshot: "trial_v1_terms"
         }),
+        expectedVersion: (snapshot) => snapshot.proposals.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.proposals.at(-1))
       }
     ];
@@ -351,6 +355,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           usageSummary: "weekly content sync completed with buyer-safe evidence",
           evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
         }),
+        expectedVersion: (snapshot) => snapshot.appInstalls.at(-1)?.version ?? 1,
         enabled: (snapshot) => snapshot.appInstalls.at(-1)?.installStatus === "active"
       },
       {
@@ -361,6 +366,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           installId: snapshot.appInstalls.at(-1)?.id,
           exitReason: "quarterly review complete"
         }),
+        expectedVersion: (snapshot) => snapshot.appInstalls.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.appInstalls.at(-1))
       }
     ];
@@ -376,7 +382,8 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           programId: "program_northstar_growth_001",
           creditAmountMinor: 320000,
           reason: "quarterly top-up"
-        })
+        }),
+        expectedVersion: (snapshot) => snapshot.programWorkspaces.find((program) => program.id === "program_northstar_growth_001")?.version ?? 1
       },
       {
         label: "Record Drawdown",
@@ -386,7 +393,8 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           programId: "program_northstar_growth_001",
           drawdownMinor: 120000,
           reason: "managed delivery batch 01"
-        })
+        }),
+        expectedVersion: (snapshot) => snapshot.programWorkspaces.find((program) => program.id === "program_northstar_growth_001")?.version ?? 1
       },
       {
         label: "Update QBR",
@@ -395,7 +403,8 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         payload: () => ({
           programId: "program_northstar_growth_001",
           qbrStatus: "ready_for_review"
-        })
+        }),
+        expectedVersion: (snapshot) => snapshot.programWorkspaces.find((program) => program.id === "program_northstar_growth_001")?.version ?? 1
       }
     ];
   }
@@ -426,6 +435,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           milestoneName: "Design freeze",
           dueAt: "2026-05-20T18:00:00+08:00"
         }),
+        expectedVersion: (snapshot) => snapshot.customProjects.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.customProjects.at(-1))
       },
       {
@@ -438,6 +448,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           executionSummary: "sandbox UAT flow completed",
           evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
         }),
+        expectedVersion: (snapshot) => snapshot.customProjects.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.customProjects.at(-1)?.milestones.length)
       },
       {
@@ -450,6 +461,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           requestedChange: "add private deployment checklist",
           impactSummary: "one extra review cycle"
         }),
+        expectedVersion: (snapshot) => snapshot.customProjects.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.customProjects.at(-1))
       }
     ];
@@ -467,6 +479,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           expiresAt: "2026-05-10T18:00:00+08:00",
           approvalReason: "risk review cleared"
         }),
+        expectedVersion: (snapshot) => snapshot.grants.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.grants.at(-1))
       },
       {
@@ -479,6 +492,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           refundAmountMinor: 58000,
           decisionRef: "decision_dispute_001"
         }),
+        expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
         enabled: (snapshot) => ["resolved", "accepted", "disputed"].includes(snapshot.orders.at(-1)?.orderStatus ?? "")
       },
       {
@@ -491,6 +505,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
           refundReason: "critical breach",
           financeEvidenceRef: "ev_sandbox_dispute_001"
         }),
+        expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
         enabled: (snapshot) => Boolean(snapshot.orders.at(-1))
       }
     ];
@@ -507,6 +522,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         receivedAt: "2026-05-08T20:00:00+08:00",
         receivedBy: "user_finance_sandbox_001"
       }),
+      expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
       enabled: (snapshot) => Boolean(snapshot.orders.at(-1))
     },
     {
@@ -519,6 +535,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         expiresAt: "2026-05-10T18:00:00+08:00",
         approvalReason: "trial lane"
       }),
+      expectedVersion: (snapshot) => snapshot.grants.at(-1)?.version ?? 1,
       enabled: (snapshot) => Boolean(snapshot.grants.at(-1))
     },
     {
@@ -529,6 +546,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         orderId: snapshot.orders.at(-1)?.id,
         permissionGrantIds: [snapshot.grants.at(-1)?.id]
       }),
+      expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
       enabled: (snapshot) => Boolean(snapshot.orders.at(-1) && snapshot.grants.at(-1)?.grantStatus === "approved")
     },
     {
@@ -543,6 +561,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         criteriaMapping: ["competitor_coverage"],
         knownLimitations: ["sandbox only"]
       }),
+      expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
       enabled: (snapshot) => Boolean(snapshot.runs.at(-1))
     },
     {
@@ -554,6 +573,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         qaChecklistId: "qa_trial_001",
         sampledFacts: ["fact_01"]
       }),
+      expectedVersion: (snapshot) => snapshot.deliveries.at(-1)?.version ?? 1,
       enabled: (snapshot) => Boolean(snapshot.deliveries.at(-1))
     },
     {
@@ -571,6 +591,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         },
         decisionReason: "buyer accepted"
       }),
+      expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
       enabled: (snapshot) => (snapshot.orders.at(-1)?.acceptanceStatus ?? "") === "ready"
     },
     {
@@ -582,6 +603,7 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         releaseReason: "accepted",
         financeEvidenceRef: "ev_sandbox_delivery_pdf_001"
       }),
+      expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
       enabled: (snapshot) => (snapshot.orders.at(-1)?.acceptanceStatus ?? "") === "accepted"
     },
     {
@@ -593,9 +615,11 @@ function createCommandDefinitions(mode: Mode): CommandDefinition[] {
         subjectType: "agent",
         subjectId: "agent_mira_competitor_intel_sandbox",
         agentVersion: "1.0.0",
+        categoryIds: ["social_media_operations", "intelligence_research"],
         ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
         deliveryOutcome: "accepted"
       }),
+      expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1,
       enabled: (snapshot) => ["released", "partially_released", "refunded"].includes(snapshot.orders.at(-1)?.orderStatus ?? "")
     }
   ];
@@ -648,7 +672,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               evidenceStandard: "Every key claim maps to evidence",
               responsibleOwner: "project-owner@harbor-growth.example",
               capacityReservedUntil: "2026-05-10T18:00:00+08:00"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.rfps.at(-1)?.version ?? 1
           },
           {
             commandName: "proposal.accept",
@@ -656,7 +681,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
             payload: (snapshot) => ({
               proposalId: snapshot.proposals.at(-1)?.id,
               termsSnapshot: "trial_v1_terms"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.proposals.at(-1)?.version ?? 1
           }
         ],
         enabled: (snapshot) => snapshot.orders.length === 0
@@ -677,7 +703,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               paymentRef: "sandbox_payment_ref_001",
               receivedAt: "2026-05-08T20:00:00+08:00",
               receivedBy: "user_finance_sandbox_001"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1
           },
           {
             commandName: "permission.approve",
@@ -687,7 +714,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               toolAllowlist: ["read_public_url", "write_generated_artifact"],
               expiresAt: "2026-05-10T18:00:00+08:00",
               approvalReason: "trial lane"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.grants.at(-1)?.version ?? 1
           },
           {
             commandName: "run.start",
@@ -695,7 +723,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
             payload: (snapshot) => ({
               orderId: snapshot.orders.at(-1)?.id,
               permissionGrantIds: [snapshot.grants.at(-1)?.id]
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1
           },
           {
             commandName: "delivery.submit",
@@ -707,7 +736,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
               criteriaMapping: ["competitor_coverage"],
               knownLimitations: ["sandbox only"]
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1
           },
           {
             commandName: "delivery.qa_pass",
@@ -716,7 +746,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               deliveryPackageId: snapshot.deliveries.at(-1)?.id,
               qaChecklistId: "qa_trial_001",
               sampledFacts: ["fact_01"]
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.deliveries.at(-1)?.version ?? 1
           },
           {
             commandName: "acceptance.accept",
@@ -731,7 +762,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
                 topic_actionability: 20
               },
               decisionReason: "buyer accepted"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1
           }
         ],
         enabled: (snapshot) => snapshot.orders.length > 0 && !["accepted", "released"].includes(snapshot.orders.at(-1)?.orderStatus ?? "")
@@ -746,7 +778,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               orderId: snapshot.orders.at(-1)?.id,
               releaseReason: "accepted",
               financeEvidenceRef: "ev_sandbox_delivery_pdf_001"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1
           },
           {
             commandName: "rating.submit",
@@ -756,9 +789,11 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               subjectType: "agent",
               subjectId: "agent_mira_competitor_intel_sandbox",
               agentVersion: "1.0.0",
+              categoryIds: ["social_media_operations", "intelligence_research"],
               ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
               deliveryOutcome: "accepted"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.orders.at(-1)?.version ?? 1
           }
         ],
         enabled: (snapshot) => (snapshot.orders.at(-1)?.acceptanceStatus ?? "") === "accepted"
@@ -790,7 +825,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               appId: "agent_app_harbor_growth_workbench",
               usageSummary: "weekly content sync completed with buyer-safe evidence",
               evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.appInstalls.at(-1)?.version ?? 1
           },
           {
             commandName: "agent-app.exit",
@@ -798,7 +834,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
             payload: (snapshot) => ({
               installId: snapshot.appInstalls.at(-1)?.id,
               exitReason: "quarterly review complete"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.appInstalls.at(-1)?.version ?? 1
           }
         ],
         enabled: (snapshot) => snapshot.appUsageRuns.length === 0
@@ -818,7 +855,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               programId: "program_northstar_growth_001",
               creditAmountMinor: 320000,
               reason: "quarterly top-up"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.programWorkspaces.find((program) => program.id === "program_northstar_growth_001")?.version ?? 1
           },
           {
             commandName: "program.record-drawdown",
@@ -827,7 +865,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               programId: "program_northstar_growth_001",
               drawdownMinor: 120000,
               reason: "managed delivery batch 01"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.programWorkspaces.find((program) => program.id === "program_northstar_growth_001")?.version ?? 1
           },
           {
             commandName: "program.update-qbr",
@@ -835,7 +874,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
             payload: () => ({
               programId: "program_northstar_growth_001",
               qbrStatus: "ready_for_review"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.programWorkspaces.find((program) => program.id === "program_northstar_growth_001")?.version ?? 1
           }
         ]
       }
@@ -868,7 +908,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               milestoneId: "milestone_design_freeze_001",
               milestoneName: "Design freeze",
               dueAt: "2026-05-20T18:00:00+08:00"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.customProjects.at(-1)?.version ?? 1
           },
           {
             commandName: "custom-project.submit-uat",
@@ -878,7 +919,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               milestoneId: snapshot.customProjects.at(-1)?.milestones.at(-1)?.milestoneId ?? "milestone_design_freeze_001",
               executionSummary: "sandbox UAT flow completed",
               evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.customProjects.at(-1)?.version ?? 1
           },
           {
             commandName: "custom-project.create-change-order",
@@ -888,7 +930,8 @@ function createWorkflowDefinitions(mode: Mode): WorkflowDefinition[] {
               changeOrderId: "change_scope_001",
               requestedChange: "add private deployment checklist",
               impactSummary: "one extra review cycle"
-            })
+            }),
+            expectedVersion: (snapshot) => snapshot.customProjects.at(-1)?.version ?? 1
           }
         ],
         enabled: (snapshot) => snapshot.customProjects.length === 0

@@ -16,6 +16,7 @@ const requiredPageRoutes = [
   "/rfps",
   "/workbench",
   "/provider-proof",
+  "/order-workspace",
   "/orders",
   "/projects",
   "/evidence-room",
@@ -26,9 +27,11 @@ const requiredPageRoutes = [
 ];
 
 const aliasRoutes = [
+  "/agent-catalog",
   "/rfp",
   "/order",
   "/project",
+  "/project-workspace",
   "/orders-and-projects",
   "/orders-acceptance",
   "/provider-proof-directory",
@@ -39,11 +42,17 @@ const aliasRoutes = [
   "/apps",
   "/agent-app",
   "/quick-order-rfp",
+  "/program",
   "/programs",
   "/admin",
   "/risk",
   "/finance",
   "/risk-finance-console"
+];
+
+const dynamicSampleRoutes = [
+  "/agents/mira-competitor-intel-agent",
+  "/agent-apps/harbor-growth-workbench-app"
 ];
 
 function pageFileForRoute(route) {
@@ -60,5 +69,17 @@ test("acceptance page ecosystem has concrete Next.js page files", () => {
 test("common buyer-facing route aliases resolve to pages instead of 404", () => {
   for (const route of aliasRoutes) {
     assert.equal(existsSync(pageFileForRoute(route)), true, `${route} alias is missing`);
+  }
+});
+
+function dynamicPageFileForRoute(route) {
+  if (route.startsWith("/agents/")) return path.join(appDir, "agents", "[slug]", "page.tsx");
+  if (route.startsWith("/agent-apps/")) return path.join(appDir, "agent-apps", "[slug]", "page.tsx");
+  throw new Error(`No dynamic route matcher for ${route}`);
+}
+
+test("known dynamic agent and agent-app detail routes have concrete page handlers", () => {
+  for (const route of dynamicSampleRoutes) {
+    assert.equal(existsSync(dynamicPageFileForRoute(route)), true, `${route} dynamic detail handler is missing`);
   }
 });

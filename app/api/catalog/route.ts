@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     {
       ...createDemoEnvelope(actorRole, body.payload ?? {}),
       sourceChannel: "api",
-      expectedVersion: body.expectedVersion ?? 1,
+      expectedVersion: body.expectedVersion,
       tokenScopes: body.tokenScopes ?? createDemoEnvelope(actorRole, {}).tokenScopes
     },
     { stateFile: resolveStateFile() }

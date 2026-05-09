@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       idempotencyKey: body.idempotencyKey ?? `idem_${crypto.randomUUID().slice(0, 12)}`,
       correlationId: body.correlationId ?? `corr_${crypto.randomUUID().slice(0, 12)}`,
       sourceChannel: "api",
-      expectedVersion: body.expectedVersion ?? baseline.expectedVersion,
+      expectedVersion: body.expectedVersion,
       tokenScopes: body.tokenScopes ?? baseline.tokenScopes,
       tenantId: body.tenantId ?? baseline.tenantId
     },

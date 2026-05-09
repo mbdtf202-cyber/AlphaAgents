@@ -82,17 +82,21 @@ test("runtime engine persists a real golden path flow", () => {
 
   const proposal = executeRuntimeCommand(
     "proposal.submit",
-    runtimeEnvelope("seller", {
-      rfpId: rfpDraft.dto.id,
-      sellerId: "seller_harbor_growth_sandbox",
-      agentId: "agent_mira_competitor_intel_sandbox",
-      priceAmountMinor: 198000,
-      deliveryHours: 48,
-      includedScope: ["5 competitors", "15 topic ideas"],
-      evidenceStandard: "Every key claim maps to evidence",
-      responsibleOwner: "project-owner@harbor-growth.example",
-      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        rfpId: rfpDraft.dto.id,
+        sellerId: "seller_harbor_growth_sandbox",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        priceAmountMinor: 198000,
+        deliveryHours: 48,
+        includedScope: ["5 competitors", "15 topic ideas"],
+        evidenceStandard: "Every key claim maps to evidence",
+        responsibleOwner: "project-owner@harbor-growth.example",
+        capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+      },
+      { expectedVersion: rfpPublished.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(proposal.ok, true);
@@ -109,12 +113,16 @@ test("runtime engine persists a real golden path flow", () => {
 
   const funded = executeRuntimeCommand(
     "escrow.fund",
-    runtimeEnvelope("buyer", {
-      orderId: order.dto.id,
-      paymentRef: "sandbox_payment_ref_001",
-      receivedAt: "2026-05-08T20:00:00+08:00",
-      receivedBy: "user_finance_sandbox_001"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        paymentRef: "sandbox_payment_ref_001",
+        receivedAt: "2026-05-08T20:00:00+08:00",
+        receivedBy: "user_finance_sandbox_001"
+      },
+      { expectedVersion: order.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(funded.ok, true);
@@ -137,24 +145,32 @@ test("runtime engine persists a real golden path flow", () => {
 
   const run = executeRuntimeCommand(
     "run.start",
-    runtimeEnvelope("seller", {
-      orderId: order.dto.id,
-      permissionGrantIds: [grant.id]
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        orderId: order.dto.id,
+        permissionGrantIds: [grant.id]
+      },
+      { expectedVersion: funded.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(run.ok, true);
 
   const delivery = executeRuntimeCommand(
     "delivery.submit",
-    runtimeEnvelope("seller", {
-      orderId: order.dto.id,
-      executionRunIds: [run.dto.id],
-      artifactRefs: ["ev_sandbox_delivery_pdf_001"],
-      evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
-      criteriaMapping: ["competitor_coverage"],
-      knownLimitations: ["sandbox only"]
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        orderId: order.dto.id,
+        executionRunIds: [run.dto.id],
+        artifactRefs: ["ev_sandbox_delivery_pdf_001"],
+        evidenceRefs: ["ev_sandbox_delivery_pdf_001"],
+        criteriaMapping: ["competitor_coverage"],
+        knownLimitations: ["sandbox only"]
+      },
+      { expectedVersion: run.newVersion + 2 }
+    ),
     { stateFile }
   );
   assert.equal(delivery.ok, true);
@@ -173,28 +189,36 @@ test("runtime engine persists a real golden path flow", () => {
 
   const accepted = executeRuntimeCommand(
     "acceptance.accept",
-    runtimeEnvelope("buyer", {
-      orderId: order.dto.id,
-      deliveryPackageId: delivery.dto.id,
-      criteriaConfirmations: ["competitor_coverage", "evidence_traceability", "topic_actionability"],
-      criteriaScores: {
-        competitor_coverage: 20,
-        evidence_traceability: 25,
-        topic_actionability: 20
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        deliveryPackageId: delivery.dto.id,
+        criteriaConfirmations: ["competitor_coverage", "evidence_traceability", "topic_actionability"],
+        criteriaScores: {
+          competitor_coverage: 20,
+          evidence_traceability: 25,
+          topic_actionability: 20
+        },
+        decisionReason: "buyer accepted"
       },
-      decisionReason: "buyer accepted"
-    }),
+      { expectedVersion: qaPassed.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(accepted.ok, true);
 
   const released = executeRuntimeCommand(
     "escrow.release",
-    runtimeEnvelope("operator", {
-      orderId: order.dto.id,
-      releaseReason: "accepted",
-      financeEvidenceRef: "ev_sandbox_delivery_pdf_001"
-    }),
+    runtimeEnvelope(
+      "operator",
+      {
+        orderId: order.dto.id,
+        releaseReason: "accepted",
+        financeEvidenceRef: "ev_sandbox_delivery_pdf_001"
+      },
+      { expectedVersion: accepted.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(released.ok, true);
@@ -202,15 +226,19 @@ test("runtime engine persists a real golden path flow", () => {
 
   const rated = executeRuntimeCommand(
     "rating.submit",
-    runtimeEnvelope("buyer", {
-      orderId: order.dto.id,
-      subjectType: "agent",
-      subjectId: "agent_mira_competitor_intel_sandbox",
-      agentVersion: "1.0.0",
-      categoryIds: ["social_media_operations", "intelligence_research"],
-      ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
-      deliveryOutcome: "accepted"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        subjectType: "agent",
+        subjectId: "agent_mira_competitor_intel_sandbox",
+        agentVersion: "1.0.0",
+        categoryIds: ["social_media_operations", "intelligence_research"],
+        ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+        deliveryOutcome: "accepted"
+      },
+      { expectedVersion: released.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(rated.ok, true);
@@ -226,15 +254,19 @@ test("runtime engine persists a real golden path flow", () => {
 
   const duplicate = executeRuntimeCommand(
     "rating.submit",
-    runtimeEnvelope("buyer", {
-      orderId: order.dto.id,
-      subjectType: "agent",
-      subjectId: "agent_mira_competitor_intel_sandbox",
-      agentVersion: "1.0.0",
-      categoryIds: ["social_media_operations", "intelligence_research"],
-      ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
-      deliveryOutcome: "accepted"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        subjectType: "agent",
+        subjectId: "agent_mira_competitor_intel_sandbox",
+        agentVersion: "1.0.0",
+        categoryIds: ["social_media_operations", "intelligence_research"],
+        ratingBreakdown: { outcome: 5, evidence: 5, speed: 4 },
+        deliveryOutcome: "accepted"
+      },
+      { expectedVersion: released.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(duplicate.ok, false);
@@ -326,6 +358,107 @@ test("rating.submit rejects category provenance that does not match the order su
   assert.equal(mismatched.errorCode, "VALIDATION_FAILED");
 });
 
+test("write commands reject stale expectedVersion before mutating shared state", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const rfpDraft = executeRuntimeCommand(
+    "rfp.create",
+    runtimeEnvelope(
+      "buyer",
+      {
+        sku: "cross_border_competitor_topic_pack",
+        packageTier: "trial",
+        category: "US TikTok Shop sensitive-skin skincare",
+        market: "US",
+        channels: ["tiktok_shop_public"],
+        language: "zh-CN analysis with English source labels",
+        budgetAmountMinor: 198000,
+        currency: "CNY",
+        deliverableFormat: ["pdf", "csv"]
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(rfpDraft.ok, true);
+
+  const stalePublish = executeRuntimeCommand(
+    "rfp.publish",
+    runtimeEnvelope(
+      "buyer",
+      {
+        rfpId: rfpDraft.dto.id,
+        acceptanceTemplateId: "acceptance_template_trial_v1",
+        competitorsOrDiscoveryRule: "Use 5 named competitors",
+        prohibitedSources: ["production_account_login"],
+        deadlineAt: "2026-05-10T18:00:00+08:00"
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+  assert.equal(stalePublish.ok, false);
+  assert.equal(stalePublish.errorCode, "VERSION_CONFLICT");
+
+  const state = loadRuntimeState(stateFile);
+  assert.equal(state.rfps[0].rfpStatus, "draft");
+  assert.equal(state.rfps[0].version, 1);
+  assert.ok(state.eventLog.some((entry) => entry.eventName === "OptimisticLockRejected"));
+});
+
+test("rating.submit rejects seller self-rating attempts", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.proposals.push({
+    id: "proposal_self_rating_001",
+    tenantId: "org_demo_001",
+    proposalStatus: "selected",
+    rfpId: "rfp_self_rating_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    priceAmountMinor: 198000,
+    currency: "CNY",
+    version: 1
+  });
+  state.orders.push({
+    id: "order_self_rating_001",
+    tenantId: "org_demo_001",
+    rfpId: "rfp_self_rating_001",
+    proposalId: "proposal_self_rating_001",
+    buyerOrgId: "org_demo_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    orderStatus: "released",
+    ledgerStatus: "released",
+    acceptanceStatus: "accepted",
+    amountMinor: 198000,
+    currency: "CNY",
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const selfRating = executeRuntimeCommand(
+    "rating.submit",
+    runtimeEnvelope("seller", {
+      orderId: "order_self_rating_001",
+      subjectType: "agent",
+      subjectId: "agent_mira_competitor_intel_sandbox",
+      agentVersion: "1.0.0",
+      categoryIds: ["social_media_operations", "intelligence_research"],
+      ratingBreakdown: { outcome: 5, evidence: 5, speed: 5 },
+      deliveryOutcome: "accepted"
+    }),
+    { stateFile }
+  );
+
+  assert.equal(selfRating.ok, false);
+  assert.equal(selfRating.errorCode, "ACTOR_FORBIDDEN");
+  assert.equal(loadRuntimeState(stateFile).reputations.length, 0);
+});
+
 test("archived category blocks listing publish", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);
@@ -342,12 +475,16 @@ test("archived category blocks listing publish", () => {
 
   const blocked = executeRuntimeCommand(
     "agent-listing publish",
-    runtimeEnvelope("operator", {
-      listingId: "listing_new_001",
-      agentId: "agent_mira_competitor_intel_sandbox",
-      categoryIds: ["social_media_operations"],
-      priceAmountMinor: 198000
-    }),
+    runtimeEnvelope(
+      "operator",
+      {
+        listingId: "listing_new_001",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        categoryIds: ["social_media_operations"],
+        priceAmountMinor: 198000
+      },
+      { expectedVersion: 0 }
+    ),
     { stateFile }
   );
   assert.equal(blocked.ok, false);
@@ -403,17 +540,21 @@ test("proposal.submit rejects sellers below admission score 80", () => {
 
   const blocked = executeRuntimeCommand(
     "proposal.submit",
-    runtimeEnvelope("seller", {
-      rfpId: draft.dto.id,
-      sellerId: "seller_under_80",
-      agentId: "agent_mira_competitor_intel_sandbox",
-      priceAmountMinor: 198000,
-      deliveryHours: 48,
-      includedScope: ["5 competitors"],
-      evidenceStandard: "Every key claim maps to evidence",
-      responsibleOwner: "under-threshold@example.com",
-      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        rfpId: draft.dto.id,
+        sellerId: "seller_under_80",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        priceAmountMinor: 198000,
+        deliveryHours: 48,
+        includedScope: ["5 competitors"],
+        evidenceStandard: "Every key claim maps to evidence",
+        responsibleOwner: "under-threshold@example.com",
+        capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+      },
+      { expectedVersion: published.newVersion }
+    ),
     { stateFile }
   );
 
@@ -455,17 +596,21 @@ test("permission approval rejects denied high-risk tools", () => {
 
   const proposal = executeRuntimeCommand(
     "proposal.submit",
-    runtimeEnvelope("seller", {
-      rfpId: draft.dto.id,
-      sellerId: "seller_harbor_growth_sandbox",
-      agentId: "agent_mira_competitor_intel_sandbox",
-      priceAmountMinor: 198000,
-      deliveryHours: 48,
-      includedScope: ["5 competitors", "15 topic ideas"],
-      evidenceStandard: "Every key claim maps to evidence",
-      responsibleOwner: "project-owner@harbor-growth.example",
-      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        rfpId: draft.dto.id,
+        sellerId: "seller_harbor_growth_sandbox",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        priceAmountMinor: 198000,
+        deliveryHours: 48,
+        includedScope: ["5 competitors", "15 topic ideas"],
+        evidenceStandard: "Every key claim maps to evidence",
+        responsibleOwner: "project-owner@harbor-growth.example",
+        capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+      },
+      { expectedVersion: 2 }
+    ),
     { stateFile }
   );
 
@@ -480,12 +625,16 @@ test("permission approval rejects denied high-risk tools", () => {
 
   executeRuntimeCommand(
     "escrow.fund",
-    runtimeEnvelope("buyer", {
-      orderId: order.dto.id,
-      paymentRef: "sandbox_payment_ref_001",
-      receivedAt: "2026-05-08T20:00:00+08:00",
-      receivedBy: "user_finance_sandbox_001"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        paymentRef: "sandbox_payment_ref_001",
+        receivedAt: "2026-05-08T20:00:00+08:00",
+        receivedBy: "user_finance_sandbox_001"
+      },
+      { expectedVersion: order.newVersion }
+    ),
     { stateFile }
   );
 

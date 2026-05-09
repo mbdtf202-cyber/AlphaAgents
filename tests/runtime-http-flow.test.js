@@ -35,7 +35,8 @@ test("runtime command engine advances a draft RFP to funded order with shared st
         ...buildSamplePayload("proposal.submit"),
         rfpId: rfpCreate.dto.id
       }),
-      sourceChannel: "api"
+      sourceChannel: "api",
+      expectedVersion: rfpPublish.newVersion
     }
   );
   assert.equal(proposal.ok, true);
@@ -60,7 +61,8 @@ test("runtime command engine advances a draft RFP to funded order with shared st
         ...buildSamplePayload("escrow.fund"),
         orderId: accepted.dto.id
       }),
-      sourceChannel: "api"
+      sourceChannel: "api",
+      expectedVersion: accepted.newVersion
     }
   );
   assert.equal(funded.ok, true);

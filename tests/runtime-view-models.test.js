@@ -6,6 +6,7 @@ import { createTempStateFile, resetRuntimeState } from "../lib/alphaagents/runti
 import {
   getAgentDetailModel,
   getAgentAppDetailModel,
+  getAgentAppsIndexModel,
   getBuyerOrgSetupModel,
   getCatalogModel,
   getCustomAgentModel,
@@ -79,22 +80,30 @@ test("agent app detail model includes live install, usage, and exit proof", () =
 
   const usage = executeRuntimeCommand(
     "agent-app.record-usage",
-    runtimeEnvelope("buyer", {
-      installId: install.dto.id,
-      appId: "agent_app_harbor_growth_workbench",
-      usageSummary: "weekly content sync completed with buyer-safe evidence",
-      evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        installId: install.dto.id,
+        appId: "agent_app_harbor_growth_workbench",
+        usageSummary: "weekly content sync completed with buyer-safe evidence",
+        evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+      },
+      { expectedVersion: install.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(usage.ok, true);
 
   const exit = executeRuntimeCommand(
     "agent-app.exit",
-    runtimeEnvelope("buyer", {
-      installId: install.dto.id,
-      exitReason: "quarterly review complete"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        installId: install.dto.id,
+        exitReason: "quarterly review complete"
+      },
+      { expectedVersion: install.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(exit.ok, true);
@@ -105,6 +114,16 @@ test("agent app detail model includes live install, usage, and exit proof", () =
   assert.ok(model.runtimeUsageRuns.length >= 1);
   assert.equal(model.latestInstall.installStatus, "exited");
   assert.equal(model.activeInstallCount, 0);
+});
+
+test("agent app index links to AgentAppPassport detail slugs instead of listing slugs", () => {
+  const model = getAgentAppsIndexModel();
+  const app = model.apps.find((entry) => entry.agentId === "agent_app_harbor_growth_workbench");
+
+  assert.ok(app);
+  assert.equal(app.slug, "harbor-growth-workbench");
+  assert.equal(app.detailSlug, "harbor-growth-workbench-app");
+  assert.ok(getAgentAppDetailModel(app.detailSlug));
 });
 
 test("detail and reputation models expose order-version-category rating provenance", () => {
@@ -155,21 +174,29 @@ test("program ops model reflects runtime credit, drawdown, and qbr state", () =>
 
   const drawdown = executeRuntimeCommand(
     "program.record-drawdown",
-    runtimeEnvelope("operator", {
-      programId: "program_northstar_growth_001",
-      drawdownMinor: 120000,
-      reason: "managed delivery batch 01"
-    }),
+    runtimeEnvelope(
+      "operator",
+      {
+        programId: "program_northstar_growth_001",
+        drawdownMinor: 120000,
+        reason: "managed delivery batch 01"
+      },
+      { expectedVersion: allocated.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(drawdown.ok, true);
 
   const qbr = executeRuntimeCommand(
     "program.update-qbr",
-    runtimeEnvelope("operator", {
-      programId: "program_northstar_growth_001",
-      qbrStatus: "ready_for_review"
-    }),
+    runtimeEnvelope(
+      "operator",
+      {
+        programId: "program_northstar_growth_001",
+        qbrStatus: "ready_for_review"
+      },
+      { expectedVersion: drawdown.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(qbr.ok, true);
@@ -221,17 +248,21 @@ test("risk finance model exposes live runtime finance rows", () => {
 
   const proposal = executeRuntimeCommand(
     "proposal.submit",
-    runtimeEnvelope("seller", {
-      rfpId: rfp.dto.id,
-      sellerId: "seller_harbor_growth_sandbox",
-      agentId: "agent_mira_competitor_intel_sandbox",
-      priceAmountMinor: 198000,
-      deliveryHours: 48,
-      includedScope: ["5 competitors", "15 topic ideas"],
-      evidenceStandard: "Every key claim maps to evidence",
-      responsibleOwner: "project-owner@harbor-growth.example",
-      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        rfpId: rfp.dto.id,
+        sellerId: "seller_harbor_growth_sandbox",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        priceAmountMinor: 198000,
+        deliveryHours: 48,
+        includedScope: ["5 competitors", "15 topic ideas"],
+        evidenceStandard: "Every key claim maps to evidence",
+        responsibleOwner: "project-owner@harbor-growth.example",
+        capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+      },
+      { expectedVersion: published.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(proposal.ok, true);
@@ -248,12 +279,16 @@ test("risk finance model exposes live runtime finance rows", () => {
 
   const funded = executeRuntimeCommand(
     "escrow.fund",
-    runtimeEnvelope("buyer", {
-      orderId: order.dto.id,
-      paymentRef: "sandbox_payment_ref_001",
-      receivedAt: "2026-05-08T20:00:00+08:00",
-      receivedBy: "user_finance_sandbox_001"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        paymentRef: "sandbox_payment_ref_001",
+        receivedAt: "2026-05-08T20:00:00+08:00",
+        receivedBy: "user_finance_sandbox_001"
+      },
+      { expectedVersion: order.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(funded.ok, true);
@@ -290,36 +325,48 @@ test("custom agent model reflects intake, milestone, UAT, and change order runti
 
   const milestone = executeRuntimeCommand(
     "custom-project.confirm-milestone",
-    runtimeEnvelope("operator", {
-      projectId: intake.dto.id,
-      milestoneId: "milestone_design_freeze_001",
-      milestoneName: "Design freeze",
-      dueAt: "2026-05-20T18:00:00+08:00"
-    }),
+    runtimeEnvelope(
+      "operator",
+      {
+        projectId: intake.dto.id,
+        milestoneId: "milestone_design_freeze_001",
+        milestoneName: "Design freeze",
+        dueAt: "2026-05-20T18:00:00+08:00"
+      },
+      { expectedVersion: intake.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(milestone.ok, true);
 
   const uat = executeRuntimeCommand(
     "custom-project.submit-uat",
-    runtimeEnvelope("seller", {
-      projectId: intake.dto.id,
-      milestoneId: "milestone_design_freeze_001",
-      executionSummary: "sandbox UAT flow completed",
-      evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
-    }),
+    runtimeEnvelope(
+      "seller",
+      {
+        projectId: intake.dto.id,
+        milestoneId: "milestone_design_freeze_001",
+        executionSummary: "sandbox UAT flow completed",
+        evidenceRefs: ["ev_sandbox_delivery_pdf_001"]
+      },
+      { expectedVersion: milestone.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(uat.ok, true);
 
   const change = executeRuntimeCommand(
     "custom-project.create-change-order",
-    runtimeEnvelope("buyer", {
-      projectId: intake.dto.id,
-      changeOrderId: "change_scope_001",
-      requestedChange: "add private deployment checklist",
-      impactSummary: "one extra review cycle"
-    }),
+    runtimeEnvelope(
+      "buyer",
+      {
+        projectId: intake.dto.id,
+        changeOrderId: "change_scope_001",
+        requestedChange: "add private deployment checklist",
+        impactSummary: "one extra review cycle"
+      },
+      { expectedVersion: uat.newVersion }
+    ),
     { stateFile }
   );
   assert.equal(change.ok, true);

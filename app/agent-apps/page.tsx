@@ -26,7 +26,7 @@ export default function AgentAppsIndexPage() {
               billingMode: app.billingMode,
               proofStatus: app.proofStatus,
               capacityAvailable: String(app.capacityAvailable),
-              action: <Link href={`/agent-apps/${app.slug}`}>Open detail</Link>
+              action: <Link href={`/agent-apps/${app.detailSlug}`}>Open detail</Link>
             }))}
           />
         </SectionCard>

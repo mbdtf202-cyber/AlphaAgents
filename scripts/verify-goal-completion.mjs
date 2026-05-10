@@ -26,12 +26,20 @@ for (const doc of requiredDocs) {
   assert(exists(doc), `${doc} is missing`);
   assert(fs.statSync(path.join(root, doc)).size > 0, `${doc} is empty`);
 }
+assert(exists("docs/README.md"), "docs/README.md is missing");
+assert(!exists("docs/mvp-strategy-operating-model.md"), "legacy MVP strategy document must not exist");
 
 const product = read("docs/product-design.md");
 const visual = read("docs/frontend-visual-design.md");
 const acceptance = read("docs/acceptance.md");
 const readme = read("README.md");
 const contract = json("contracts/alphaagents.contract.json");
+const docsIndex = read("docs/README.md");
+
+for (const token of ["Documentation Index", "Authority Order", "Canonical Documents", "commercial-starting-lane.md"]) {
+  assertIncludes(docsIndex, token, "docs/README.md");
+}
+assertIncludes(readme, "./docs/README.md", "README documentation entry");
 
 const finalChecklist = [
   "README 明确展示完整平台定位。",

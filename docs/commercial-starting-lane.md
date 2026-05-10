@@ -1,19 +1,21 @@
-# AlphaAgents MVP Strategy Operating Model
+# AlphaAgents Commercial Starting Lane
 
-## 1. MVP objective
+This document defines the first sellable lane for the full AlphaAgents AaaS platform. It is not a separate reduced scope and does not reduce the authority of `product-design.md`, `frontend-visual-design.md`, or `acceptance.md`.
 
-AlphaAgents is building the full Agent-native transaction and managed-delivery platform, but the MVP must prove one narrow commercial loop first: a buyer can purchase a bounded Agent-delivered result, review evidence, complete acceptance, and move through finance and reputation gates without ambiguity.
+## 1. Starting-lane objective
 
-The MVP is not a generic marketplace launch. It is a trial-first, procurement-grade operating lane that proves the platform can turn one real demand pattern into repeatable revenue and replayable evidence.
+AlphaAgents is building the full Agent-native transaction and managed-delivery platform, but the first commercial lane must prove one narrow loop first: a buyer can purchase a bounded Agent-delivered result, review evidence, complete acceptance, and move through finance and reputation gates without ambiguity.
 
-## 2. Default MVP motion
+The starting lane is not a generic marketplace launch. It is a trial-first, procurement-grade operating lane that proves the platform can turn one real demand pattern into repeatable revenue and replayable evidence.
+
+## 2. Default commercial motion
 
 - Default first purchase: `跨境电商竞品监控与内容选题情报包`.
 - Default first ICP: `US TikTok Shop beauty and personal-care`.
 - Default motion: `Trial Quick Order -> acceptance or bounded revision -> Standard / Pro repeat order -> PoC -> annual order-credit or managed program`.
 - Default operating boundary: read-only public-source research or customer-uploaded copies only.
 
-The first MVP order must stay narrow enough to verify delivery quality quickly:
+The first commercial order must stay narrow enough to verify delivery quality quickly:
 
 - frozen scope before payment
 - explicit acceptance owner
@@ -43,7 +45,7 @@ This creates a clean commercial ladder:
 
 AlphaAgents is Agent as a Service, not seat-first SaaS and not an app store that lets supply bypass accountability.
 
-Boundary rules for the MVP:
+Boundary rules for the starting lane:
 
 - Agent Apps, custom Agents, and managed services still use the same identity, permission, evidence, acceptance, finance, and reputation chain.
 - Subscription, usage, or installation can define access and billing, but cannot replace execution evidence or acceptance proof.
@@ -52,7 +54,7 @@ Boundary rules for the MVP:
 
 ## 5. Command, UI, API, runtime consistency
 
-The MVP only counts if all four surfaces describe and mutate the same transaction truth:
+The starting lane only counts if all four surfaces describe and mutate the same transaction truth:
 
 - UI explains the buyer path and exposes the current frozen state.
 - CLI provides the same core actions and state transitions.
@@ -68,7 +70,7 @@ Required consistency rules:
 
 ## 6. Evidence and finance gates
 
-The MVP operating model is evidence-first and finance-aware.
+The starting-lane operating model is evidence-first and finance-aware.
 
 Evidence gates:
 
@@ -128,9 +130,9 @@ Exit signal:
 
 ## 8. Acceptance posture
 
-This MVP document does not replace the broader platform design. It defines the operating lane that must become real first.
+This document does not replace the broader platform design. It defines the operating lane that must become real first.
 
-Acceptance for MVP readiness should ask:
+Acceptance for starting-lane readiness should ask:
 
 - Is the first transaction narrow, honest, and sellable?
 - Can the buyer understand what they are buying, how it will be reviewed, and when funds move?

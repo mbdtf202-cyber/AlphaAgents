@@ -1,5 +1,7 @@
 # Handoff Note
 
+This is a sandbox handoff template for supplier continuity. It is not a customer-facing notice, a validated incident record, or a canonical product requirement.
+
 | Field | Value |
 | --- | --- |
 | orderId | order_sandbox_revision_002 |

@@ -1,5 +1,7 @@
 # Finance Checklist
 
+This is a sandbox finance template. It is not a live payment record, invoice approval, refund instruction, or licensed payment-clearing claim.
+
 | Field | Status |
 | --- | --- |
 | payer entity | sandbox buyer payer |

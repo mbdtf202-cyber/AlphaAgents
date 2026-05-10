@@ -46,25 +46,16 @@ Core platform commitments:
 - Every buyer-facing action must be backed by the same domain contract used by UI, CLI, API, Agent runtime, and Agent App callbacks.
 - Historical orders, evidence, and reputation are replayed from immutable snapshots, not mutable marketing text.
 
-The current source of truth is documentation-first:
+The current source of truth is documentation-first. Start from the document index, then open only the document needed for the job:
 
+- [Documentation Index](./docs/README.md)
 - [Product Design](./docs/product-design.md)
 - [Acceptance](./docs/acceptance.md)
 - [Frontend Visual Design](./docs/frontend-visual-design.md)
-- [PoC Procurement Pack](./docs/procurement-pack.md)
 - [Engineering Contract](./docs/engineering-contract.md)
-- [Market Validation Pack](./docs/market-validation-pack.md)
-- [PoC War-room Runbook](./docs/poc-war-room-runbook.md)
-- [Buyer Seller Order Pack](./docs/buyer-seller-order-pack.md)
-- [Evidence Room Index](./docs/evidence-room-index.md)
-- [US Buyer Payment / Refund Sheet](./docs/us-buyer-payment-refund-sheet.md)
-- [War-room Templates](./docs/war-room-templates.md)
 - [Machine-readable Contract](./contracts/alphaagents.contract.json)
 - [Design Tokens](./design/alphaagents-design-tokens.json)
 - [Visual Master](./design/visual-masters/alphaagents-visual-master.html)
-- [Visual Fixtures](./design/visual-fixtures/orders.json)
-- [Breakpoint Contract](./docs/breakpoints-and-layout.md)
-- [Table Column Priority](./docs/table-column-priority.md)
 
 ## Agent Categories
 

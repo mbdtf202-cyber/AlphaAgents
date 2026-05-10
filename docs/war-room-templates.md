@@ -1,6 +1,6 @@
 # AlphaAgents War-room Templates
 
-These templates convert the runbook into executable operating artifacts. They are repository-ready scaffolds, not evidence of real customer orders.
+These templates convert the enterprise trial / PoC runbook into executable operating artifacts. They are repository-ready scaffolds, not canonical requirements and not evidence of real customer orders.
 
 ## Template Inventory
 

@@ -1,5 +1,7 @@
 # Mid Review Board Note
 
+This is a sandbox review template for enterprise trial / PoC governance. It is not investor proof, customer proof, or a canonical acceptance result.
+
 | Field | Value |
 | --- | --- |
 | completedOrders | 3 sandbox paths |

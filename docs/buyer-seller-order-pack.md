@@ -1,5 +1,9 @@
 # AlphaAgents 首单成交、法务与样单包
 
+## 文档边界
+
+本文件是销售启用、首单说明、样单解读和合同附件草稿的执行材料，不是产品范围或完成验收的权威来源。所有样例默认是 `sample_only` 或 `sandbox_verified`，除非附带真实付款、客户授权交付包、验收记录或签约证据并明确标为 `validated`。
+
 ## 1. 甲方下首单一页纸
 
 | 问题 | 回答 |
@@ -230,7 +234,7 @@ Payout：
 | --- | --- |
 | Processing purpose | 完成订单交付、QA、验收、争议和复盘 |
 | Data categories | public source, buyer-uploaded copy, confidential business data |
-| Restricted data | 账号凭证、支付信息、生产后台数据，MVP 禁止处理 |
+| Restricted data | 账号凭证、支付信息、生产后台数据，当前起步交易边界禁止处理 |
 | Subprocessors | 服务方、对象存储、邮件服务、日志/监控服务，必须在订单或附件中列明 |
 | Retention | 默认 365 天，可合同缩短或延长 |
 | Deletion | 生成 deletion request 和 deletion complete event |
@@ -248,7 +252,7 @@ Payout：
 
 ### 7.5 合规红线
 
-AlphaAgents MVP 的 escrow 是平台内部账本托管状态机，不提供持牌资金清结算服务。外部付款、退款和服务方结算必须通过合法支付或银行路径完成，并由 finance evidence 记录。平台不得代客户操作广告预算、支付账户、生产账号发布或资金转移。
+AlphaAgents 当前起步交易边界内的 escrow 是平台内部账本托管状态机，不提供持牌资金清结算服务。外部付款、退款和服务方结算必须通过合法支付或银行路径完成，并由 finance evidence 记录。平台不得代客户操作广告预算、支付账户、生产账号发布或资金转移。
 
 ## 8. 资金流、票流、合同流、退款流
 

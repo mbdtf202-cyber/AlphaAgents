@@ -1,5 +1,7 @@
 # Evidence Weighted Decision Table
 
+This is a sandbox dispute-decision template. It is not a live adjudication record unless linked to validated buyer, order, evidence, finance, and acceptance artifacts.
+
 | Field | Value |
 | --- | --- |
 | orderId | order_sandbox_dispute_003 |

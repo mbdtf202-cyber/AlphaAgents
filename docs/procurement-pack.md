@@ -1,5 +1,9 @@
 # AlphaAgents PoC 采购与交付附件包
 
+## 文档边界
+
+本文件是采购、法务、财务和安全评审用的执行附件，不是产品范围或验收标准的权威来源。若本文件与 `docs/product-design.md`、`docs/frontend-visual-design.md`、`docs/acceptance.md`、`docs/engineering-contract.md` 或 `contracts/alphaagents.contract.json` 冲突，必须以 canonical 文档和机器契约为准，并同步修正本文件。
+
 ## 1. 采购决策摘要
 
 本附件用于让业务负责人、采购、法务、财务在一次评审中判断是否推进 AlphaAgents Trial 或付费 PoC。当前是 procurement review pack；在真实签约主体、收款主体、开票主体、退款路径和子处理方清单未填实前，不得宣称 enterprise procurement ready。
@@ -240,7 +244,7 @@ Trial buyer does not see this formula by default. It is used for Standard/Pro, d
 - 数据保留：默认 365 天；甲方可要求更短保留或到期删除。
 - 子处理方：服务方/Agent 必须在订单 terms snapshot 中列明。
 - 事故响应：发现越权、泄露、证据伪造或敏感数据误用，24 小时内通知甲方并冻结相关订单/服务方。
-- 非持牌清结算边界：MVP 的 escrow 是内部账本托管状态机，不代表平台提供持牌资金清结算服务。
+- 非持牌清结算边界：当前起步交易边界内的 escrow 是内部账本托管状态机，不代表平台提供持牌资金清结算服务。
 
 ### 6.6 Signability checklist
 
@@ -358,7 +362,7 @@ US buyer-facing payment/refund summary lives in [us-buyer-payment-refund-sheet.m
 | Public source | 公开网页、广告库、公开社媒内容 | 可采集 evidenceRef |
 | Buyer-uploaded copy | 甲方上传的资料副本 | 订单内可见，默认 365 天保留 |
 | Confidential business data | 未公开产品计划、价格策略 | 仅授权服务方可见，导出留痕 |
-| Restricted data | 账号凭证、支付信息、生产后台数据 | MVP 禁止处理 |
+| Restricted data | 账号凭证、支付信息、生产后台数据 | 当前起步交易边界禁止处理 |
 
 ### 8.2 数据流
 

@@ -9,6 +9,7 @@ const scripts = [
   "scripts/verify-business-readiness.mjs",
   "scripts/verify-acceptance-coverage.mjs",
   "scripts/verify-a19-frontend-coverage.mjs",
+  "scripts/verify-documentation-index.mjs",
   "scripts/verify-goal-completion.mjs"
 ];
 

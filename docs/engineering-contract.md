@@ -168,7 +168,7 @@ type CommandResult<TEvent, TDto> = CommandSuccess<TEvent, TDto> | CommandFailure
 | `TOKEN_SCOPE_FORBIDDEN` | token 缺少 command scope | `TokenScopeDenied` |
 | `VERSION_CONFLICT` | `expectedVersion` 与聚合版本不一致 | `OptimisticLockRejected` |
 | `IDEMPOTENCY_CONFLICT` | 同一 idempotency key 搭配不同 payload | `IdempotencyConflictDetected` |
-| `VALIDATION_FAILED` | 字段、范围、MVP 风险边界或 payload 校验失败 | `CommandValidationFailed` |
+| `VALIDATION_FAILED` | 字段、范围、当前起步交易边界或 payload 校验失败 | `CommandValidationFailed` |
 | `STATE_CONFLICT` | 状态机不允许该迁移 | `StateTransitionRejected` |
 | `EVIDENCE_NOT_VISIBLE` | EvidenceRef 不属于本租户或可见范围不允许 | `EvidenceAccessDenied` |
 | `PERMISSION_DENIED` | runtime 工具超出 grant allowlist | `PermissionDenied` |
@@ -199,7 +199,7 @@ type CommandResult<TEvent, TDto> = CommandSuccess<TEvent, TDto> | CommandFailure
 
 ## 3. 写模型 Schema
 
-组织、签约、收款和 Program 相关对象在 MVP 中是读模型或投影，不是新的交易终态 owner：
+组织、签约、收款和 Program 相关对象在当前起步交易边界内是读模型或投影，不是新的交易终态 owner：
 
 - `BuyerOrgProfile`
 - `BeneficiaryProfile`
@@ -253,7 +253,7 @@ Invariants:
 
 - `rfpStatus="ordered"` requires one selected proposal and one created EscrowOrder.
 - `budgetAmountMinor > 0`.
-- `prohibitedSources` must include production account, private group, paid account, ad account, and fund movement exclusions for MVP.
+- `prohibitedSources` must include production account, private group, paid account, ad account, and fund movement exclusions for the current read-only starting lane.
 - `deadlineAt` must respect package SLA.
 
 ### 3.2 Proposal
@@ -373,7 +373,7 @@ interface RiskPermissionGrant {
 
 Invariants:
 
-- MVP grant cannot include account publishing, ad spend, fund movement, production mutation, or destructive delete tools.
+- Current starting-lane grants cannot include account publishing, ad spend, fund movement, production mutation, or destructive delete tools.
 - Runtime must present an approved, unexpired grant for every tool call.
 
 ### 3.5 ExecutionRun
@@ -508,7 +508,7 @@ Invariants:
 | From | Command | Guard | To | Event | Side effect | Forbidden |
 | --- | --- | --- | --- | --- | --- | --- |
 | new | `rfp.create` | buyer tenant valid, required draft fields valid | `draft` | `RfpDraftCreated` | save draft | non-buyer actor |
-| `draft` | `rfp.publish` | acceptance template, budget, deliverables, permission scope complete | `published` | `RfpPublished` | visible to approved sellers | high-risk MVP scope |
+| `draft` | `rfp.publish` | acceptance template, budget, deliverables, permission scope complete | `published` | `RfpPublished` | visible to approved sellers | high-risk scope outside the current starting lane |
 | `published` | `proposal.submit` | seller approved, capacity available | `quoting` | `ProposalSubmitted` | create Proposal | seller not approved |
 | `quoting` | `proposal.submit` | RFP open | `quoting` | `ProposalSubmitted` | add Proposal | expired RFP |
 | `published`/`quoting` | `proposal.accept` | buyer owns RFP, proposal valid | `selected` | `ProposalSelected` | create EscrowOrder `created` | wrong tenant |
@@ -561,7 +561,7 @@ Forbidden global transitions:
 
 | From | Command | Guard | To | Event | Side effect | Forbidden |
 | --- | --- | --- | --- | --- | --- | --- |
-| new | `escrow.fund` | order funded, MVP resource scope | `requested` | `PermissionRequested` | queue approval | high-risk tool |
+| new | `escrow.fund` | order funded, current starting-lane resource scope | `requested` | `PermissionRequested` | queue approval | high-risk tool |
 | `requested` | `permission.approve` | operator/system approval, allowlist valid | `approved` | `PermissionApproved` | runtime can start | unsupported tool |
 | `requested` | `permission.deny` | reason present | `denied` | `PermissionDenied` | block run | missing reason |
 | `approved` | `permission.revoke` | operator owner | `revoked` | `PermissionRevoked` | cancel future tool calls | wrong tenant |
@@ -655,7 +655,7 @@ All commands share transaction rules:
 | Command | Required payload | Validation and guard | Success events | Failure codes | Response DTO |
 | --- | --- | --- | --- | --- | --- |
 | `rfp.create` | `sku`, `packageTier`, `category`, `market`, `channels`, `language`, `budgetAmountMinor`, `currency`, draft `deliverableFormat` | buyer tenant active, amount > 0, SKU supported | `RfpDraftCreated` | `VALIDATION_FAILED`, `ACTOR_FORBIDDEN` | `RfpDto` |
-| `rfp.publish` | `rfpId`, `acceptanceTemplateId`, `competitors` or `competitorDiscoveryRule`, `prohibitedSources`, `deadlineAt` | owner buyer, draft complete, MVP risk scope only | `RfpPublished` | `RFP_INCOMPLETE`, `STATE_CONFLICT`, `VALIDATION_FAILED` | `RfpDto` |
+| `rfp.publish` | `rfpId`, `acceptanceTemplateId`, `competitors` or `competitorDiscoveryRule`, `prohibitedSources`, `deadlineAt` | owner buyer, draft complete, current starting-lane risk scope only | `RfpPublished` | `RFP_INCOMPLETE`, `STATE_CONFLICT`, `VALIDATION_FAILED` | `RfpDto` |
 | `proposal.submit` | `rfpId`, `sellerId`, `agentId`, `priceAmountMinor`, `deliveryHours`, `includedScope`, `evidenceStandard`, `responsibleOwner`, `capacityReservedUntil` | RFP open, seller approved, agent passport valid, capacity available | `ProposalSubmitted`, optional `RfpQuotingStarted` | `SELLER_NOT_APPROVED`, `RFP_NOT_OPEN`, `VALIDATION_FAILED` | `ProposalDto` |
 | `proposal.accept` | `proposalId`, `termsSnapshot`, `invoiceProfileId?` | buyer owns RFP, proposal submitted and unexpired | `ProposalSelected`, `EscrowOrderCreated`, `ProposalDeclined[]` | `PROPOSAL_EXPIRED`, `ACTOR_FORBIDDEN`, `STATE_CONFLICT` | `OrderDto` |
 | `escrow.fund` | `orderId`, `paymentRef`, `receivedAt`, `receivedBy`, `invoiceProfileId?` | order created, finance evidence visible, terms signed | `EscrowFunded`, `PermissionRequested`, `RfpOrdered` | `PAYMENT_NOT_CONFIRMED`, `STATE_CONFLICT`, `EVIDENCE_NOT_VISIBLE` | `OrderDto` |
@@ -671,7 +671,7 @@ All commands share transaction rules:
 | `escrow.partial-release` | `orderId`, `releaseAmountMinor`, `refundAmountMinor`, `decisionRef` | resolved partial release, finance approval complete | `EscrowPartiallyReleased` | `DECISION_INCOMPLETE`, `STATE_CONFLICT` | `OrderDto` |
 | `escrow.refund` | `orderId`, `refundAmountMinor`, `refundReason`, `financeEvidenceRef` | resolved refund or contract refund clause | `EscrowRefunded` | `STATE_CONFLICT`, `EVIDENCE_NOT_VISIBLE` | `OrderDto` |
 | `rating.submit` | `orderId`, `subjectType`, `subjectId`, `agentVersion`, `categoryIds`, `ratingBreakdown`, `comment?`, `deliveryOutcome` | order completed, buyer owner, no duplicate rating, subject and category match order supply | `ReputationEventCreated`, `ReputationPublished?` | `ORDER_NOT_COMPLETED`, `DUPLICATE_RATING`, `ACTOR_FORBIDDEN` | `ReputationDto` |
-| `permission.approve` | `grantId`, `toolAllowlist`, `expiresAt`, `approvalReason` | operator/system, MVP resource scope only | `PermissionApproved` | `TOKEN_SCOPE_FORBIDDEN`, `VALIDATION_FAILED`, `STATE_CONFLICT` | `GrantDto` |
+| `permission.approve` | `grantId`, `toolAllowlist`, `expiresAt`, `approvalReason` | operator/system, current starting-lane resource scope only | `PermissionApproved` | `TOKEN_SCOPE_FORBIDDEN`, `VALIDATION_FAILED`, `STATE_CONFLICT` | `GrantDto` |
 | `permission.revoke` | `grantId`, `revocationReason` | operator, active grant | `PermissionRevoked` | `ACTOR_FORBIDDEN`, `STATE_CONFLICT` | `GrantDto` |
 | `evidence.export` | `orderId`, `evidenceRefs`, `exportReason`, `redactionMode` | buyer owner or operator, refs visible, export limit available | `EvidenceExportRequested`, `EvidenceExported` | `EVIDENCE_NOT_VISIBLE`, `RATE_LIMITED` | `EvidenceExportDto` |
 | `evidence.delete` | `evidenceId`, `deletionReason`, `retentionOverride?` | operator/system, retention policy allows delete | `EvidenceDeletionRequested`, `EvidenceDeleted` | `TOKEN_SCOPE_FORBIDDEN`, `STATE_CONFLICT` | `EvidenceDeletionDto` |
@@ -730,14 +730,14 @@ Token scope alone is never enough to authorize a command.
 
 ### 7.3 Runtime tool allowlist
 
-MVP allowed runtime tools:
+Current starting-lane allowed runtime tools:
 
 - read public URL.
 - read buyer-uploaded order artifact.
 - write generated artifact.
 - write evidence metadata.
 
-MVP denied tools:
+Current starting-lane denied tools:
 
 - account login.
 - content publishing.

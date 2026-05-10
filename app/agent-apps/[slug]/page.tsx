@@ -17,7 +17,10 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
   return (
     <AppShell shell={model.shell} currentPath="/agent-apps">
       <div className="aa-grid aa-grid-2">
-        <SectionCard title={model.app.name} subtitle={`${model.app.legalEntity} / Agent App detail`}>
+        <SectionCard
+          title={`Agent App Passport: ${model.app.name}`}
+          subtitle={`${model.app.legalEntity} / AaaS delivery explanation, runtime evidence, acceptance proof, exit path, and owner responsibility.`}
+        >
           <div>
             <Chip>agent_app</Chip>
             <Chip tone="trust">AaaS delivery unit</Chip>

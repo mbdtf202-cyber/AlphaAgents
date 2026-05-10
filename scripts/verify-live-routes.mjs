@@ -1,51 +1,8 @@
 import { spawn } from "node:child_process";
+import { readdirSync, statSync } from "node:fs";
 import { createServer } from "node:net";
+import { join, relative, sep } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-
-const primaryRoutes = [
-  "/",
-  "/catalog",
-  "/agents",
-  "/agent-apps",
-  "/custom-agent",
-  "/buyer-org-setup",
-  "/quick-order",
-  "/rfps",
-  "/workbench",
-  "/provider-proof",
-  "/order-workspace",
-  "/orders",
-  "/projects",
-  "/evidence-room",
-  "/reputation",
-  "/program-ops",
-  "/catalog-admin",
-  "/risk-finance"
-];
-
-const aliasRoutes = [
-  "/agent-catalog",
-  "/rfp",
-  "/order",
-  "/project",
-  "/project-workspace",
-  "/orders-and-projects",
-  "/orders-acceptance",
-  "/provider-proof-directory",
-  "/providers",
-  "/proof",
-  "/evidence",
-  "/evidence-room-index",
-  "/apps",
-  "/agent-app",
-  "/quick-order-rfp",
-  "/program",
-  "/programs",
-  "/admin",
-  "/risk",
-  "/finance",
-  "/risk-finance-console"
-];
 
 const dynamicSampleRoutes = [
   "/agents/mira-competitor-intel-agent",
@@ -56,11 +13,59 @@ const dynamicSampleRoutes = [
   "/agent-apps/launch-review-copilot"
 ];
 
-const routes = [...primaryRoutes, ...aliasRoutes, ...dynamicSampleRoutes];
 const externalBaseUrl = process.env.ALPHAAGENTS_LIVE_BASE_URL;
 
 function fail(message) {
   throw new Error(`[live-routes] ${message}`);
+}
+
+function discoverPageFiles(dir = join(process.cwd(), "app")) {
+  const files = [];
+  for (const entry of readdirSync(dir)) {
+    const fullPath = join(dir, entry);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) {
+      files.push(...discoverPageFiles(fullPath));
+    } else if (entry === "page.tsx") {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function routeFromPageFile(file) {
+  const appRoot = join(process.cwd(), "app");
+  const relativeDir = relative(appRoot, file).split(sep).slice(0, -1);
+  if (relativeDir.length === 0) return "/";
+  if (relativeDir.some((segment) => segment.startsWith("[") && segment.endsWith("]"))) {
+    return null;
+  }
+  return `/${relativeDir.join("/")}`;
+}
+
+function discoverStaticPageRoutes() {
+  return discoverPageFiles()
+    .map(routeFromPageFile)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeInternalHref(href) {
+  const normalized = href.replaceAll("&amp;", "&").trim();
+  if (!normalized.startsWith("/") || normalized.startsWith("//")) return null;
+  if (normalized.startsWith("/_next/") || normalized.startsWith("/api/")) return null;
+  const withoutHash = normalized.split("#")[0];
+  if (!withoutHash) return null;
+  return withoutHash;
+}
+
+function collectLinkedRoutes(route, body) {
+  const links = [];
+  for (const match of body.matchAll(/\shref="([^"]+)"/g)) {
+    const linkedRoute = normalizeInternalHref(match[1]);
+    if (linkedRoute) links.push({ from: route, route: linkedRoute });
+  }
+  return links;
 }
 
 async function reservePort() {
@@ -143,33 +148,64 @@ async function stopServer(child) {
   }
 }
 
-async function scanRoutes(baseUrl) {
-  const failures = [];
-  for (const route of routes) {
-    let response;
-    let body;
-    try {
-      response = await fetch(`${baseUrl}${route}`, { redirect: "manual" });
-      body = await response.text();
-    } catch (error) {
-      failures.push(`${route} request failed: ${error.message}`);
-      continue;
-    }
+async function fetchRoute(baseUrl, route) {
+  let response;
+  let body;
+  try {
+    response = await fetch(`${baseUrl}${route}`, { redirect: "manual" });
+    body = await response.text();
+  } catch (error) {
+    return {
+      failures: [`${route} request failed: ${error.message}`],
+      links: []
+    };
+  }
 
-    if (response.status < 200 || response.status >= 400) {
-      failures.push(`${route} returned ${response.status}`);
+  const failures = [];
+  if (response.status < 200 || response.status >= 400) {
+    failures.push(`${route} returned ${response.status}`);
+  }
+  if (response.status >= 200 && response.status < 400 && !body.includes("aa-shell")) {
+    failures.push(`${route} did not render the AlphaAgents application shell`);
+  }
+
+  return {
+    failures,
+    links: collectLinkedRoutes(route, body)
+  };
+}
+
+async function scanRoutes(baseUrl, initialRoutes) {
+  const visited = new Set();
+  const queue = [...initialRoutes];
+  const failures = [];
+  const discoveredLinks = new Map();
+
+  while (queue.length) {
+    const route = queue.shift();
+    if (!route || visited.has(route)) continue;
+    visited.add(route);
+
+    const result = await fetchRoute(baseUrl, route);
+    failures.push(...result.failures);
+
+    for (const link of result.links) {
+      if (!discoveredLinks.has(link.route)) discoveredLinks.set(link.route, link.from);
+      if (!visited.has(link.route)) queue.push(link.route);
     }
   }
-  return failures;
+
+  return { failures, scannedRoutes: visited, discoveredLinks };
 }
 
 let server = null;
 const baseUrl = externalBaseUrl ?? (server = await startServer()).baseUrl;
+const routes = [...new Set([...discoverStaticPageRoutes(), ...dynamicSampleRoutes])];
 
 try {
-  const failures = await scanRoutes(baseUrl);
+  const { failures, scannedRoutes } = await scanRoutes(baseUrl, routes);
   if (failures.length) fail(failures.join("\n"));
-  console.log(`live route verification passed (${routes.length} routes at ${baseUrl})`);
+  console.log(`live route verification passed (${scannedRoutes.size} routes at ${baseUrl})`);
 } finally {
   if (server) await stopServer(server.child);
 }

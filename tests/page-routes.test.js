@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
@@ -66,6 +66,46 @@ function pageFileForRoute(route) {
   return path.join(appDir, route.slice(1), "page.tsx");
 }
 
+function discoverPageFiles(dir = appDir) {
+  const files = [];
+  for (const entry of readdirSync(dir)) {
+    const fullPath = path.join(dir, entry);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) {
+      files.push(...discoverPageFiles(fullPath));
+    } else if (entry === "page.tsx") {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function routeFromPageFile(file) {
+  const relativeDir = path.relative(appDir, file).split(path.sep).slice(0, -1);
+  if (relativeDir.length === 0) return "/";
+  if (relativeDir.some((segment) => segment.startsWith("[") && segment.endsWith("]"))) {
+    return null;
+  }
+  return `/${relativeDir.join("/")}`;
+}
+
+test("live-route gate discovers every static Next.js page file and rendered internal links", () => {
+  const source = readFileSync(path.join("scripts", "verify-live-routes.mjs"), "utf8");
+  assert.match(source, /function discoverPageFiles/, "live route gate must discover app/**/page.tsx");
+  assert.match(source, /function collectLinkedRoutes/, "live route gate must crawl rendered internal links");
+  assert.match(source, /aa-shell/, "live route gate must verify the AlphaAgents shell rendered");
+});
+
+test("all static page files are represented by concrete route URLs", () => {
+  const discoveredRoutes = discoverPageFiles()
+    .map(routeFromPageFile)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+  const requiredRoutes = [...requiredPageRoutes, ...aliasRoutes].sort((a, b) => a.localeCompare(b));
+
+  assert.deepEqual(discoveredRoutes, requiredRoutes);
+});
+
 test("acceptance page ecosystem has concrete Next.js page files", () => {
   for (const route of requiredPageRoutes) {
     assert.equal(existsSync(pageFileForRoute(route)), true, `${route} is missing`);
@@ -84,6 +124,7 @@ test("buyer-facing route aliases render real pages instead of redirect-only plac
   assert.match(aliasSurfaceSource, /<SectionCard/, "shared alias surface does not expose section UI");
   assert.match(aliasSurfaceSource, /<DataTable/, "shared alias surface does not expose route-specific data tables");
   assert.match(aliasSurfaceSource, /<CliApiEventsPanel/, "shared alias surface does not expose CLI/API/event evidence");
+  assert.match(aliasSurfaceSource, /canonicalPath/, "shared alias surface must expose canonical route recovery");
 
   for (const route of aliasRoutes) {
     const source = readFileSync(pageFileForRoute(route), "utf8");

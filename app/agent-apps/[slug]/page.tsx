@@ -106,6 +106,8 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
               { metric: "Active installs", value: String(model.activeInstallCount) },
               { metric: "Latest install status", value: model.latestInstall?.installStatus ?? "none" },
               { metric: "Usage proof runs", value: String(model.runtimeUsageRuns.length) },
+              { metric: "Latest usage acceptance", value: model.latestUsageRun?.acceptanceStatus ?? "none" },
+              { metric: "Latest usage reputation", value: model.latestUsageRun?.reputationStatus ?? "none" },
               { metric: "Exit mechanism count", value: String(model.app.exitMechanisms.length) }
             ]}
           />
@@ -122,6 +124,35 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
               rows={model.runtimeInstalls}
             />
           )}
+          {model.runtimeUsageRuns.length > 0 ? (
+            <DataTable
+              columns={[
+                { key: "id", label: "Usage run" },
+                { key: "executionRunId", label: "ExecutionRun" },
+                { key: "deliveryPackageId", label: "DeliveryPackage" },
+                { key: "acceptanceReviewId", label: "AcceptanceReview" },
+                { key: "financeEvidenceRefs", label: "Finance evidence" },
+                { key: "reputationStatus", label: "Reputation" }
+              ]}
+              rows={model.runtimeUsageRuns.map(
+                (run: {
+                  id: string;
+                  executionRunId?: string;
+                  deliveryPackageId?: string;
+                  acceptanceReviewId?: string;
+                  financeEvidenceRefs?: string[];
+                  reputationStatus?: string;
+                }) => ({
+                  id: run.id,
+                  executionRunId: run.executionRunId ?? "none",
+                  deliveryPackageId: run.deliveryPackageId ?? "none",
+                  acceptanceReviewId: run.acceptanceReviewId ?? "none",
+                  financeEvidenceRefs: run.financeEvidenceRefs?.join(", ") ?? "none",
+                  reputationStatus: run.reputationStatus ?? "none"
+                })
+              )}
+            />
+          ) : null}
         </SectionCard>
         <SectionCard title="Related listings" subtitle="Agent App uses the same listing and transaction surfaces as any other supply type.">
           {model.relatedListings.length === 0 ? (

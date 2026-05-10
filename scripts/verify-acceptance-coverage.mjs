@@ -468,6 +468,10 @@ const checks = {
     for (const command of ["rfp publish", "proposal submit", "proposal accept", "escrow fund", "run start", "delivery submit", "acceptance accept", "dispute open", "rating submit"]) {
       assertIncludes(uiSource, command, "UI command parity");
     }
+    const parityTest = read("tests/ui-api-cli-parity.test.js");
+    for (const token of ["getOrdersIndexModel", "runCli([\"runtime\", \"snapshot\"]", "RfpPublished", "ProposalSubmitted", "EscrowFunded", "RunStarted", "DeliverySubmitted", "AcceptanceAccepted", "DisputeOpened", "ReputationPublished"]) {
+      assertIncludes(parityTest, token, "UI/API/CLI executable parity test");
+    }
   },
   "cli-api-ui"() {
     for (const order of sampleOrders) {
@@ -478,6 +482,9 @@ const checks = {
       assert(exists(file), `${file} missing for CLI/API/UI alignment`);
     }
     assertIncludes(read("components/alphaagents/blocks.tsx"), "CLI / API / Events", "shared A-19 panel");
+    assertIncludes(read("lib/alphaagents/commands.js"), "executeRuntimeCommand", "CLI command helper must call runtime engine");
+    assertIncludes(read("tests/control-plane.test.js"), "every contract command is executable with a valid sample payload", "control-plane executable command coverage");
+    assertIncludes(read("tests/ui-api-cli-parity.test.js"), "orderFromUi.orderStatus, orderFromCli.orderStatus", "runtime UI/API/CLI state parity");
   },
   "negative-tests"() {
     const tests = read("tests/runtime-engine.test.js");

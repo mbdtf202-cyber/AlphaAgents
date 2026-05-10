@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { buildSamplePayload, createDemoEnvelope } from "../lib/alphaagents/commands.js";
+import { buildSamplePayload, createDemoEnvelope, runCommand } from "../lib/alphaagents/commands.js";
 import { runQuery } from "../lib/alphaagents/queries.js";
 import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
 import { getRuntimeSnapshot } from "../lib/alphaagents/runtime-queries.js";
@@ -158,7 +158,7 @@ const actorRoleMap = {
 const contractCommand = commandMap[command];
 if (contractCommand) {
   const actorRole = actorRoleMap[contractCommand] ?? "buyer";
-  const result = executeRuntimeCommand(
+  const result = runCommand(
     contractCommand,
     {
       ...createDemoEnvelope(actorRole, buildSamplePayload(contractCommand)),

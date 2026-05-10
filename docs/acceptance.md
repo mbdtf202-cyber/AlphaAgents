@@ -272,5 +272,5 @@
 - [x] 高风险权限有授权、preview、审计和撤销路径。证据：`app/risk-finance/page.tsx`、`tests/runtime-view-models.test.js`、`tests/runtime-engine.test.js`。
 - [x] 执行、交付、QA、验收、争议、财务和声誉闭环可回放。证据：`tests/runtime-engine.test.js` golden path、`tests/ui-api-cli-parity.test.js`、`scripts/verify-evidence-package.mjs`。
 - [x] Evidence package 可打开、可校验、可导出。证据：`evidence-packages/AA-SANDBOX-*`、`scripts/verify-evidence-package.mjs`、`app/evidence-room/page.tsx`。
-- [x] Sandbox evidence 不被伪装成真实商业验证。证据：`docs/market-validation-pack.md`、`scripts/verify-business-readiness.mjs`、`scripts/verify-goal-completion.mjs`。
+- [x] Sandbox evidence 不被伪装成真实商业验证。证据：`docs/operations.md`、`scripts/verify-business-readiness.mjs`、`scripts/verify-goal-completion.mjs`。
 - [x] 验证脚本全部通过。证据：`pnpm verify` 运行 `scripts/verify-all.mjs`，并包含 `scripts/verify-goal-completion.mjs`。

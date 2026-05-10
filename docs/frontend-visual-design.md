@@ -19,8 +19,6 @@ AlphaAgents 的界面不是普通官网、聊天产品或单一订单工具，�
 - 视觉母版：[design/visual-masters/alphaagents-visual-master.html](../design/visual-masters/alphaagents-visual-master.html)。
 - 状态 fixtures：[design/visual-fixtures/orders.json](../design/visual-fixtures/orders.json)。
 - 品牌符号：[design/brand/ledger-passport-mark.svg](../design/brand/ledger-passport-mark.svg)。
-- 响应式规则：[breakpoints-and-layout.md](./breakpoints-and-layout.md)。
-- 表格降级规则：[table-column-priority.md](./table-column-priority.md)。
 
 视觉门槛由 `node scripts/verify-visual-system.mjs` 校验。文档中的色值、断点、状态示例若与 JSON 或视觉母版冲突，以可校验工件为准。
 
@@ -714,6 +712,16 @@ alphaagents agent-category update \
 
 ## 14. 响应式
 
+### 14.1 断点合同
+
+| Viewport | Container | Sidebar | Right rail | Grid | Primary behavior |
+| --- | ---: | --- | --- | --- | --- |
+| 390 | 100% - 32px | bottom nav | drawer | 4 columns | cards, accordions, bottom action sheet |
+| 768 | 100% - 32px | collapsed rail | drawer | 8 columns | filter drawer, compact tables |
+| 1024 | 100% - 48px | 72px rail | trust bar | 12 columns | priority tables, sticky summaries |
+| 1280 | 100% - 48px | 240px | collapsible | 12 columns | full workbench without right rail if needed |
+| 1440 | 100% - 48px | 240px | 320px | 12 columns | full sidebar, content, right rail |
+
 桌面端：
 
 - 1440px 以上使用侧边栏 + 主内容 + 右侧辅助栏。
@@ -735,6 +743,64 @@ alphaagents agent-category update \
 - 订单验收页优先显示状态、交付物、验收按钮、资金/权益和权限。
 - CLI 命令默认折叠，点击后全屏查看和复制。
 - 所有点击目标不小于 44px。
+- Standard packages must stay in the first viewport at 390, 1024, and 1440.
+- No horizontal page scroll is allowed.
+- CLI/events are collapsed except when `CLI mismatch` is present.
+- `OrderEscrowPanel` is right sticky on desktop, top sticky on tablet, and bottom sheet on mobile.
+- `SkuPlanSelector` minimum card width is 260px on tablet and 280px on desktop; mobile uses horizontal snap.
+- Any table with more than 5 columns switches to priority columns at 1024 and cards below 768.
+
+### 14.2 表格列优先级
+
+Active Orders:
+
+| Column | Desktop | Tablet | Mobile | Hide rule |
+| --- | --- | --- | --- | --- |
+| orderId | visible | visible | visible | never hide |
+| buyer | visible | hidden | in detail row | hide first |
+| packageTier | visible | hidden | badge | collapse to badge |
+| orderStatus | visible | visible | visible | never hide |
+| ledgerStatus | visible | hidden | in detail row | hide after buyer |
+| amount | visible | visible | visible | never hide |
+| SLA | visible | hidden | detail row | hide on tablet |
+| nextAction | visible | visible | visible | never hide |
+
+Agent Market:
+
+| Column | Desktop | Tablet | Mobile | Hide rule |
+| --- | --- | --- | --- | --- |
+| agent/service | visible | visible | visible | never hide |
+| category | visible | hidden | tag | collapse to tag |
+| startPrice | visible | visible | visible | never hide |
+| deliveryHours | visible | visible | visible | never hide |
+| qaPassRate | visible | visible | visible | never hide |
+| disputeRate | visible | hidden | detail row | hide on tablet |
+| capacity | visible | visible | visible | never hide |
+| risk | visible | badge | badge | never hide |
+| CTA | visible | visible | visible | never hide |
+
+EvidenceTimeline:
+
+| Column | Desktop | Tablet | Mobile | Hide rule |
+| --- | --- | --- | --- | --- |
+| eventTime | visible | visible | visible | never hide |
+| eventName | visible | visible | visible | never hide |
+| actor | visible | hidden | detail row | hide on tablet |
+| evidenceRef | visible | visible | visible | never hide |
+| hash | visible | hidden | detail row | hide on tablet |
+| visibility | visible | hidden | badge | collapse to badge |
+| qaStatus | visible | visible | visible | never hide |
+
+Review List:
+
+| Column | Desktop | Tablet | Mobile | Hide rule |
+| --- | --- | --- | --- | --- |
+| rating | visible | visible | visible | never hide |
+| orderContext | visible | visible | visible | never hide |
+| agentVersion | visible | hidden | detail row | hide on tablet |
+| deliveryOutcome | visible | visible | visible | never hide |
+| disputeOutcome | visible when present | visible when present | visible when present | never hide if present |
+| evidenceRefs | visible | hidden | detail row | hide on tablet |
 
 ## 15. 可访问性
 

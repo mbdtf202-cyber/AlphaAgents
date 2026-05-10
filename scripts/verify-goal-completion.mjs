@@ -36,7 +36,7 @@ const readme = read("README.md");
 const contract = json("contracts/alphaagents.contract.json");
 const docsIndex = read("docs/README.md");
 
-for (const token of ["Documentation Index", "Authority Order", "Canonical Documents", "commercial-starting-lane.md"]) {
+for (const token of ["Documentation Index", "Authority Order", "Canonical Documents", "operations.md"]) {
   assertIncludes(docsIndex, token, "docs/README.md");
 }
 assertIncludes(readme, "./docs/README.md", "README documentation entry");

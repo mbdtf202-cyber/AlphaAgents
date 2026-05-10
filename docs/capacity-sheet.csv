@@ -1,4 +1,0 @@
-supplierId,role,category,weeklyCapacity,qaPassTarget,backupFor,status
-seller_harbor_primary,primary seller,US beauty competitor intelligence,3 Standard orders,91%,seller_research_backup,approved
-seller_research_backup,backup researcher,US beauty competitor intelligence,4 Trial orders,85%,seller_harbor_primary,standby
-seller_claim_review,specialist reviewer,claim and evidence QA,2 Pro orders,93%,seller_harbor_primary,approved

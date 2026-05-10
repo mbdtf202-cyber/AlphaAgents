@@ -53,6 +53,7 @@ The current source of truth is documentation-first. Start from the document inde
 - [Acceptance](./docs/acceptance.md)
 - [Frontend Visual Design](./docs/frontend-visual-design.md)
 - [Engineering Contract](./docs/engineering-contract.md)
+- [Commercial Operations](./docs/operations.md)
 - [Machine-readable Contract](./contracts/alphaagents.contract.json)
 - [Design Tokens](./design/alphaagents-design-tokens.json)
 - [Visual Master](./design/visual-masters/alphaagents-visual-master.html)

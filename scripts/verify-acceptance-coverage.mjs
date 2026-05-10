@@ -100,7 +100,7 @@ const evidenceById = {
   "B-08": ["cli-api-ui"],
   "B-09": ["evidence-package"],
   "B-10": ["unit-economics"],
-  "B-11": ["procurement-pack"],
+  "B-11": ["operations-procurement"],
   "B-12": ["evidence-status"],
   "B-13": ["buyer-org"],
   "B-14": ["evidence-status"],
@@ -209,7 +209,7 @@ const evidenceById = {
   "G-02": ["categories"],
   "G-03": ["catalog-control-plane"],
   "G-04": ["evidence-status"],
-  "G-05": ["procurement-pack"],
+  "G-05": ["operations-procurement"],
   "G-06": ["business-gate"],
   "G-07": ["aaas"]
 };
@@ -271,7 +271,7 @@ const checks = {
     assert(agentApps.length > 0, "missing Agent App passport");
   },
   "transaction-modes"() {
-    const combined = `${readme}\n${product}\n${read("docs/procurement-pack.md")}\n${read("lib/alphaagents/catalog.js")}`;
+    const combined = `${readme}\n${product}\n${read("docs/operations.md")}\n${read("lib/alphaagents/catalog.js")}`;
     for (const token of ["per_order", "subscription", "order_credit", "收益分成", "私有部署"]) {
       assertIncludes(combined, token, "transaction mode evidence");
     }
@@ -415,16 +415,16 @@ const checks = {
       }
     }
   },
-  "procurement-pack"() {
-    const procurement = read("docs/procurement-pack.md");
+  "operations-procurement"() {
+    const procurement = read("docs/operations.md");
     for (const token of ["PoC", "enterprise", "custom", "subscription", "order-credit", "高风险权限"]) {
-      assertIncludes(procurement, token, "procurement pack");
+      assertIncludes(procurement, token, "operations procurement section");
     }
   },
   "evidence-status"() {
-    const market = read("docs/market-validation-pack.md");
+    const market = read("docs/operations.md");
     for (const status of contract.evidenceStatuses) {
-      assertIncludes(market, status, "market validation pack");
+      assertIncludes(market, status, "operations evidence section");
     }
     for (const order of sampleOrders) {
       assert(order.snapshot.ui.orderDto.evidenceStatus !== "validated", `${order.packageId} must not claim validated`);
@@ -611,7 +611,7 @@ const checks = {
   "business-gate"() {
     const gate = read("scripts/verify-business-readiness.mjs");
     for (const token of ["sandbox_verified", "Validated evidence gap", "Default Trial gate", "conditional release"]) {
-      assertIncludes(gate + read("docs/market-validation-pack.md") + read("docs/procurement-pack.md") + readme, token, "business readiness gate");
+      assertIncludes((gate + read("docs/operations.md") + readme).toLowerCase(), token.toLowerCase(), "business readiness gate");
     }
   },
   "transaction-pages"() {

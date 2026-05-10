@@ -42,12 +42,12 @@ export function BuyerOrgSetupForm({ initialProfile }: { initialProfile: BuyerPro
   async function submit() {
     setBusy(true);
     try {
-      const response = await fetch("/api/commands", {
+      const response = await fetch("/api/ui-runtime-command", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           commandName: "buyer-org.setup",
-          actorRole: "buyer",
+          expectedVersion: initialProfile.version,
           payload: {
             buyerOrgId: initialProfile.id,
             requesterUserId: form.requesterUserId,

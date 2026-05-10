@@ -95,6 +95,7 @@
 | CH-03 | 所有写命令必须检查 `expectedVersion`。 | 构造旧版本写入，应返回 `VERSION_CONFLICT`。 |
 | CH-04 | 所有写命令必须检查 actor role 和 token scope。 | 构造错误角色和 scope。 |
 | CH-05 | 所有写命令必须检查 tenant ownership。 | 用其他租户访问应失败。 |
+| CH-05A | HTTP 写入口不得信任请求体里的 `actorRole`、`actorId`、`tenantId`、`tokenScopes`，内部 token 也不得自动获得全量 role/scope。 | 对 `/api/commands`、`/api/catalog`、`/api/runtime-state` 构造伪造权限字段，应先返回 `FORBIDDEN_PRIVILEGE_FIELDS` 或鉴权错误；缺少 `runtime:state.reset` 时 reset 必须拒绝。 |
 | CH-06 | `proposal.submit` 必须校验服务方准入、AgentPassport 有效、分类可售和 RFP 可报价状态。 | 未准入服务方提交应失败。 |
 | CH-07 | `agent_category.archive` 后不得创建新 listing 或新订单。 | 归档分类后尝试上架/下单。 |
 | CH-08 | `agent_listing.publish` 必须校验 AgentPassport、分类、价格、权限和验收模板。 | 缺字段发布应失败。 |

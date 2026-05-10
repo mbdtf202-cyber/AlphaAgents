@@ -10,6 +10,29 @@ on:
 jobs:
   docs-and-positioning:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: alphaagents
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 55433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d alphaagents"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -17,27 +40,57 @@ jobs:
         with:
           node-version: 22
 
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start local object-storage TCP stub
+        run: |
+          python3 -m http.server 9002 --bind 127.0.0.1 >/tmp/alphaagents-object-storage.log 2>&1 &
+          sleep 2
+
+      - name: Configure local verification env
+        run: |
+          cat > .env.local <<'ENV'
+          ALPHAAGENTS_ENV=ci
+          ALPHAAGENTS_APP_URL=http://localhost:13100
+          ALPHAAGENTS_API_URL=http://localhost:13100/api
+          DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55433/alphaagents
+          REDIS_URL=redis://127.0.0.1:6379
+          OBJECT_STORAGE_ENDPOINT=http://127.0.0.1:9002
+          OBJECT_STORAGE_BUCKET=alphaagents-evidence
+          OBJECT_STORAGE_ACCESS_KEY_ID=minio
+          OBJECT_STORAGE_SECRET_ACCESS_KEY=minio123
+          POSTMARK_SERVER_TOKEN=local-dev-postmark-token
+          SENTRY_DSN=https://public@example.ingest.sentry.io/1
+          ALPHAAGENTS_AUTH_SECRET=ci-auth-secret-with-enough-length
+          ALPHAAGENTS_INTERNAL_API_TOKEN=ci-internal-api-token
+          ALPHAAGENTS_INTERNAL_API_ACTOR_ROLES=buyer,operator
+          ALPHAAGENTS_INTERNAL_API_SCOPES=buyer:orders.write,runtime:state.reset
+          ALPHAAGENTS_INTERNAL_TENANT_ID=org_demo_001
+          ALPHAAGENTS_ENABLE_TEST_MAILER=true
+          ALPHAAGENTS_ENABLE_DEMO_WRITE_API=false
+          ENV
+
       - name: Required documents exist
         run: |
           test -s README.md
+          test -s docs/README.md
           test -s docs/product-design.md
           test -s docs/acceptance.md
           test -s docs/frontend-visual-design.md
-          test -s docs/mvp-strategy-operating-model.md
-          test -s docs/procurement-pack.md
           test -s docs/engineering-contract.md
-          test -s docs/market-validation-pack.md
-          test -s docs/poc-war-room-runbook.md
-          test -s docs/buyer-seller-order-pack.md
-          test -s docs/evidence-room-index.md
-          test -s docs/breakpoints-and-layout.md
-          test -s docs/table-column-priority.md
+          test -s docs/operations.md
           test -s contracts/alphaagents.contract.json
           test -s scripts/verify-all.mjs
           test -s scripts/verify-contract.mjs
           test -s scripts/verify-evidence-package.mjs
           test -s scripts/verify-visual-system.mjs
           test -s scripts/verify-business-readiness.mjs
+          test -s scripts/verify-production-smoke.mjs
+          test -s scripts/verify-external-deps.mjs
           test -s design/alphaagents-design-tokens.json
           test -s design/brand/ledger-passport-mark.svg
           test -s design/visual-fixtures/orders.json
@@ -55,12 +108,14 @@ jobs:
           grep -F "Agent 原生" docs/acceptance.md
           grep -F "CLI 必须对齐一切" docs/acceptance.md
           grep -F "Trial / Standard / Pro" docs/frontend-visual-design.md
-          grep -F "PoC SOW" docs/procurement-pack.md
           grep -F "CommandEnvelope" docs/engineering-contract.md
-          grep -F "30 个目标账户清单" docs/market-validation-pack.md
-          grep -F "D-7 到 D+30 总控表" docs/poc-war-room-runbook.md
-          grep -F "完整填好的 Standard 首单样例" docs/buyer-seller-order-pack.md
+          grep -F "Commercial Starting Lane" docs/operations.md
+          grep -F "Validated Evidence Gap" docs/operations.md
           node scripts/verify-all.mjs
+          pnpm test
+          pnpm typecheck
+          pnpm build
+          pnpm audit --audit-level moderate
 
       - name: Old product direction is not active
         run: |
@@ -83,4 +138,3 @@ jobs:
       - name: Old generated artifacts are absent
         run: |
           test ! -e .old-runtime-artifacts
-          test ! -e .next

@@ -6,6 +6,8 @@ const scripts = [
   "scripts/verify-visual-system.mjs",
   "scripts/verify-frontend-implementation.mjs",
   "scripts/verify-live-routes.mjs",
+  "scripts/verify-production-smoke.mjs",
+  "scripts/verify-external-deps.mjs",
   "scripts/verify-business-readiness.mjs",
   "scripts/verify-acceptance-coverage.mjs",
   "scripts/verify-a19-frontend-coverage.mjs",

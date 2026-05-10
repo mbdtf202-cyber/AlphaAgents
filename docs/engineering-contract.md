@@ -716,6 +716,8 @@ Tenant is resolved in this order:
 
 Request `tenantId` in body is advisory only; server must compare it with resolved tenant. Mismatch returns `TENANT_FORBIDDEN` and writes `UnauthorizedAccessAttempted`.
 
+Public HTTP write surfaces are stricter: `/api/commands`, `/api/catalog` POST, and destructive `/api/runtime-state` DELETE must not accept `actorRole`, `actorId`, `tenantId`, or `tokenScopes` from the request body. These fields are resolved server-side from a scoped `ALPHAAGENTS_INTERNAL_API_TOKEN` principal or, in non-production only, explicit `ALPHAAGENTS_ENABLE_DEMO_WRITE_API=true`. The internal principal must declare `ALPHAAGENTS_INTERNAL_API_ACTOR_ROLES` and `ALPHAAGENTS_INTERNAL_API_SCOPES`; missing declarations fall back to buyer-only `buyer:orders.write`, never all scopes. If privilege fields appear in the body, the route returns `FORBIDDEN_PRIVILEGE_FIELDS` before command dispatch. If no internal token or explicit demo mode is configured, mutating HTTP routes fail closed with `API_TOKEN_NOT_CONFIGURED`. Runtime state reset additionally requires internal token mode, operator role, and `runtime:state.reset`; demo mode is not sufficient for reset.
+
 ### 7.2 Token scope to command mapping
 
 Every command checks:

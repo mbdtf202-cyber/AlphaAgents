@@ -50,7 +50,7 @@ const expectedIds = [
   "C-01", "C-02", "C-03", "C-04", "C-05", "C-06", "C-07", "C-08",
   "B-01", "B-02", "B-03", "B-04", "B-05", "B-06", "B-07", "B-08", "B-09", "B-10", "B-11", "B-12", "B-13", "B-14", "B-15",
   "A-01", "A-02", "A-03", "A-04", "A-05", "A-06", "A-07", "A-08", "A-09", "A-10", "A-11", "A-12", "A-13", "A-14", "A-15", "A-16", "A-17", "A-18", "A-19",
-  "CH-01", "CH-02", "CH-03", "CH-04", "CH-05", "CH-06", "CH-07", "CH-08", "CH-09", "CH-10", "CH-11", "CH-12", "CH-13", "CH-14",
+  "CH-01", "CH-02", "CH-03", "CH-04", "CH-05", "CH-05A", "CH-06", "CH-07", "CH-08", "CH-09", "CH-10", "CH-11", "CH-12", "CH-13", "CH-14",
   "UI-01", "UI-02", "UI-03", "UI-04", "UI-04A", "UI-05", "UI-06", "UI-07", "UI-08", "UI-09", "UI-10", "UI-11", "UI-12", "UI-13", "UI-14", "UI-15", "UI-16", "UI-17", "UI-18", "UI-19", "UI-20", "UI-21", "UI-22", "UI-23", "UI-24", "UI-24A", "UI-25", "UI-26", "UI-27", "UI-28",
   "D-01", "D-02", "D-03", "D-04", "D-05", "D-06", "D-07", "D-08", "D-09", "D-10", "D-11", "D-12", "D-13", "D-14", "D-15",
   "T-01", "T-02", "T-03", "T-04", "T-05",
@@ -129,6 +129,7 @@ const evidenceById = {
   "CH-03": ["negative-tests"],
   "CH-04": ["negative-tests"],
   "CH-05": ["command-contract"],
+  "CH-05A": ["http-auth"],
   "CH-06": ["negative-tests"],
   "CH-07": ["negative-tests"],
   "CH-08": ["negative-tests"],
@@ -441,6 +442,41 @@ const checks = {
     assert(exists("app/api/catalog/route.ts"), "catalog API missing");
     assert(exists("app/api/evidence/route.ts"), "evidence API missing");
     assert(exists("scripts/alphaagents.mjs"), "CLI missing");
+  },
+  "http-auth"() {
+    const authSource = source([
+      "lib/alphaagents/api-auth.js",
+      "app/api/commands/route.ts",
+      "app/api/catalog/route.ts",
+      "app/api/runtime-state/route.ts",
+      "app/api/ui-runtime-command/route.ts",
+      "app/api/ui-runtime-reset/route.ts",
+      "tests/api-auth.test.js"
+    ]);
+    for (const token of [
+      "hasForbiddenPrivilegeFields",
+      "requireRuntimeApiAuth",
+      "FORBIDDEN_PRIVILEGE_FIELDS",
+      "API_TOKEN_NOT_CONFIGURED",
+      "AUTH_REQUIRED",
+      "DEMO_WRITE_API_DISABLED",
+      "ALPHAAGENTS_ENABLE_DEMO_WRITE_API",
+      "ALPHAAGENTS_INTERNAL_API_TOKEN",
+      "ALPHAAGENTS_INTERNAL_API_ACTOR_ROLES",
+      "ALPHAAGENTS_INTERNAL_API_SCOPES",
+      "runtime:state.reset",
+      "hasScope",
+      "canResetRuntimeState",
+      "server-derived envelope cannot elevate beyond principal roles or scopes",
+      "demo auth cannot satisfy internal-only reset guard",
+      "runtime API rejects caller-controlled privilege fields before command dispatch",
+      "buildAuthorizedCommandEnvelope"
+    ]) {
+      assertIncludes(authSource, token, "HTTP write auth evidence");
+    }
+    for (const field of ["actorRole", "actorId", "tenantId", "tokenScopes"]) {
+      assertIncludes(authSource, field, "forbidden privilege field coverage");
+    }
   },
   "agent-passport"() {
     for (const agent of agents) {

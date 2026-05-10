@@ -13,21 +13,45 @@ jobs:
         with:
           node-version: 22
 
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure strict release verification env
+        run: |
+          cat > .env.local <<'ENV'
+          ALPHAAGENTS_ENV=release
+          ALPHAAGENTS_APP_URL=${{ secrets.ALPHAAGENTS_APP_URL }}
+          ALPHAAGENTS_API_URL=${{ secrets.ALPHAAGENTS_API_URL }}
+          DATABASE_URL=${{ secrets.ALPHAAGENTS_DATABASE_URL }}
+          REDIS_URL=${{ secrets.ALPHAAGENTS_REDIS_URL }}
+          OBJECT_STORAGE_ENDPOINT=${{ secrets.ALPHAAGENTS_OBJECT_STORAGE_ENDPOINT }}
+          OBJECT_STORAGE_BUCKET=${{ secrets.ALPHAAGENTS_OBJECT_STORAGE_BUCKET }}
+          OBJECT_STORAGE_ACCESS_KEY_ID=${{ secrets.ALPHAAGENTS_OBJECT_STORAGE_ACCESS_KEY_ID }}
+          OBJECT_STORAGE_SECRET_ACCESS_KEY=${{ secrets.ALPHAAGENTS_OBJECT_STORAGE_SECRET_ACCESS_KEY }}
+          POSTMARK_SERVER_TOKEN=${{ secrets.ALPHAAGENTS_POSTMARK_SERVER_TOKEN }}
+          SENTRY_DSN=${{ secrets.ALPHAAGENTS_SENTRY_DSN }}
+          ALPHAAGENTS_AUTH_SECRET=${{ secrets.ALPHAAGENTS_AUTH_SECRET }}
+          ALPHAAGENTS_INTERNAL_API_TOKEN=${{ secrets.ALPHAAGENTS_INTERNAL_API_TOKEN }}
+          ALPHAAGENTS_INTERNAL_API_ACTOR_ROLES=${{ vars.ALPHAAGENTS_INTERNAL_API_ACTOR_ROLES }}
+          ALPHAAGENTS_INTERNAL_API_SCOPES=${{ vars.ALPHAAGENTS_INTERNAL_API_SCOPES }}
+          ALPHAAGENTS_INTERNAL_TENANT_ID=${{ vars.ALPHAAGENTS_INTERNAL_TENANT_ID }}
+          ALPHAAGENTS_VERIFY_EXTERNAL_DEPS_STRICT=true
+          ALPHAAGENTS_ENABLE_TEST_MAILER=false
+          ALPHAAGENTS_ENABLE_DEMO_WRITE_API=false
+          ENV
+
       - name: Documentation baseline
         run: |
           test -s README.md
+          test -s docs/README.md
           test -s docs/product-design.md
           test -s docs/acceptance.md
           test -s docs/frontend-visual-design.md
-          test -s docs/mvp-strategy-operating-model.md
-          test -s docs/procurement-pack.md
           test -s docs/engineering-contract.md
-          test -s docs/market-validation-pack.md
-          test -s docs/poc-war-room-runbook.md
-          test -s docs/buyer-seller-order-pack.md
-          test -s docs/evidence-room-index.md
-          test -s docs/breakpoints-and-layout.md
-          test -s docs/table-column-priority.md
+          test -s docs/operations.md
           test -s contracts/alphaagents.contract.json
           test -s design/alphaagents-design-tokens.json
           test -s design/visual-masters/alphaagents-visual-master.html
@@ -41,12 +65,15 @@ jobs:
           grep -F "alphaagents rfp publish" README.md
           grep -F "alphaagents rating submit" README.md
           grep -F "Trial / Standard / Pro" docs/frontend-visual-design.md
-          grep -F "PoC SOW" docs/procurement-pack.md
           grep -F "CommandEnvelope" docs/engineering-contract.md
-          grep -F "30 个目标账户清单" docs/market-validation-pack.md
-          grep -F "D-7 到 D+30 总控表" docs/poc-war-room-runbook.md
-          grep -F "完整填好的 Standard 首单样例" docs/buyer-seller-order-pack.md
+          grep -F "Commercial Starting Lane" docs/operations.md
+          grep -F "Validated Evidence Gap" docs/operations.md
           node scripts/verify-all.mjs
+          ALPHAAGENTS_VERIFY_EXTERNAL_DEPS_STRICT=true pnpm verify:deps
+          pnpm test
+          pnpm typecheck
+          pnpm build
+          pnpm audit --audit-level moderate
 
       - name: Block old release path
         run: |

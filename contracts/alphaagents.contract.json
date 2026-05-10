@@ -165,6 +165,7 @@
     "operator:acceptance.write",
     "operator:permissions.write",
     "operator:runs.write",
+    "runtime:state.reset",
     "finance:ledger.write",
     "evidence:read",
     "evidence:export",

@@ -14,12 +14,19 @@
     "test": "node --test tests/**/*.test.js",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify-all.mjs",
+    "verify:deps": "node scripts/verify-external-deps.mjs",
+    "verify:prod": "node scripts/verify-production-smoke.mjs",
     "cli": "node ./scripts/alphaagents.mjs"
   },
   "dependencies": {
-    "next": "16.1.7",
+    "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.10"
+    }
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

@@ -106,7 +106,7 @@ export function RuntimeCommandConsole({
   async function resetRuntime() {
     setBusy(true);
     try {
-      const response = await fetch("/api/runtime-state", { method: "DELETE" });
+      const response = await fetch("/api/ui-runtime-reset", { method: "POST" });
       setLastResult(await response.json());
       await refreshSnapshot();
     } finally {
@@ -120,7 +120,6 @@ export function RuntimeCommandConsole({
     try {
       const result = await postCommand({
         commandName: definition.commandName,
-        actorRole: definition.actorRole,
         expectedVersion: definition.expectedVersion?.(snapshot),
         payload: definition.payload(snapshot)
       });
@@ -140,7 +139,6 @@ export function RuntimeCommandConsole({
       for (const step of definition.steps) {
         const result = await postCommand({
           commandName: step.commandName,
-          actorRole: step.actorRole,
           expectedVersion: step.expectedVersion?.(currentSnapshot),
           payload: step.payload(currentSnapshot)
         });
@@ -233,7 +231,7 @@ export function RuntimeCommandConsole({
     <div className="aa-card aa-card-trust">
       <div className="aa-card-head">
         <h2>Runtime Command Console / Runtime Control Plane</h2>
-        <p>Shared mutable state via `/api/commands` and `/api/runtime-state`, not fixture replay.</p>
+        <p>Shared mutable state via guarded runtime APIs; browser demo writes use explicit non-production UI routes, not internal tokens.</p>
       </div>
       <div className="aa-button-row">
         <button className="aa-button" type="button" onClick={() => void resetRuntime()} disabled={busy}>
@@ -368,11 +366,10 @@ export function RuntimeCommandConsole({
 
   async function postCommand(input: {
     commandName: string;
-    actorRole: "buyer" | "seller" | "operator";
     expectedVersion?: number;
     payload: Record<string, unknown>;
   }) {
-    const response = await fetch("/api/commands", {
+    const response = await fetch("/api/ui-runtime-command", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input)

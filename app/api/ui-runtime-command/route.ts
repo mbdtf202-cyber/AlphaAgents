@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { buildAuthorizedCommandEnvelope, hasForbiddenPrivilegeFields, requireRuntimeApiAuth } from "../../../lib/alphaagents/api-auth";
+import { buildAuthorizedCommandEnvelope, hasForbiddenPrivilegeFields, isDemoWriteApiEnabled, requireRuntimeApiAuth } from "../../../lib/alphaagents/api-auth";
 import { executeRuntimeCommand } from "../../../lib/alphaagents/runtime-engine";
 import { resolveStateFile } from "../../../lib/alphaagents/runtime-state";
 
 export async function POST(request: Request) {
+  if (!isDemoWriteApiEnabled()) {
+    return NextResponse.json(
+      { ok: false, errorCode: "DEMO_WRITE_API_DISABLED", message: "UI runtime writes require explicit non-production demo write mode." },
+      { status: 403 }
+    );
+  }
+
   const body = await request.json();
   const forbiddenFields = hasForbiddenPrivilegeFields(body);
   if (forbiddenFields.length > 0) {
@@ -18,7 +25,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const auth = requireRuntimeApiAuth(request);
+  const auth = requireRuntimeApiAuth(request, { allowDemo: true });
   if (auth.error) {
     const { error } = auth;
     return NextResponse.json({ ok: false, errorCode: error.errorCode, message: error.message }, { status: error.status });

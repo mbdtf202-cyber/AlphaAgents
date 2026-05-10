@@ -497,6 +497,9 @@ const checks = {
     for (const token of ["delivery.qa_reject blocks buyer acceptance until QA passes", "delivery.qa_reject", "DeliveryQaRejected", "acceptance.accept"]) {
       assertIncludes(tests, token, "negative runtime QA rejection tests");
     }
+    for (const token of ["permission approval allows scoped tools then revoke blocks runtime execution", "RuntimeToolDenied", "PermissionRevoked", "blockedRun.errorCode"]) {
+      assertIncludes(tests, token, "runtime high-risk permission positive and revoke tests");
+    }
     for (const token of ["archived category blocks proposal acceptance from creating new orders", "validateProposalCategoriesSellable"]) {
       assertIncludes(tests + read("lib/alphaagents/runtime-engine.js"), token, "negative runtime archived category tests");
     }

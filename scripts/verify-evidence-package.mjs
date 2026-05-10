@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { executeRuntimeCommand } from "../lib/alphaagents/runtime-engine.js";
 import { createTempStateFile, loadRuntimeState, resetRuntimeState } from "../lib/alphaagents/runtime-state.js";
+import { getOrdersIndexModel } from "../lib/alphaagents/view-models.js";
 
 const root = process.cwd();
 const contract = JSON.parse(fs.readFileSync(path.join(root, "contracts", "alphaagents.contract.json"), "utf8"));
@@ -370,5 +371,26 @@ assert(JSON.stringify(runtimeExport.dto.snapshot.ui.orderDto) === JSON.stringify
 assert(JSON.stringify(runtimeExport.dto.snapshot.api.orderDto) === JSON.stringify(runtimeExport.dto.snapshot.cli.orderDto), "runtime export API/CLI snapshots must match");
 assert(runtimeExport.dto.sections.financeLedger.ledgerStatus === "released", "runtime export finance ledger must reflect release");
 assert(runtimeExport.dto.sections.reputationEvent.sourceOrderId === runtimeOrder.dto.id, "runtime export reputation event must bind source order");
+
+const cliSnapshot = spawnSync(process.execPath, ["scripts/alphaagents.mjs", "runtime", "snapshot", "--json"], {
+  cwd: root,
+  encoding: "utf8",
+  env: {
+    ...process.env,
+    ALPHAAGENTS_STATE_FILE: runtimeStateFile
+  }
+});
+assert(cliSnapshot.status === 0, `CLI runtime snapshot failed: ${cliSnapshot.stderr}`);
+const cliReadback = JSON.parse(cliSnapshot.stdout);
+const cliOrder = cliReadback.orders.find((order) => order.id === runtimeOrder.dto.id);
+const uiReadback = getOrdersIndexModel({ stateFile: runtimeStateFile }).runtimeOrders.find((order) => order.id === runtimeOrder.dto.id);
+const apiReadback = loadRuntimeState(runtimeStateFile).orders.find((order) => order.id === runtimeOrder.dto.id);
+assert(cliOrder, "runtime export order must be readable through CLI snapshot");
+assert(uiReadback, "runtime export order must be readable through UI view model");
+assert(apiReadback, "runtime export order must be readable through API/runtime state");
+assert(cliOrder.orderStatus === runtimeExport.dto.snapshot.cli.orderDto.orderStatus, "CLI readback orderStatus must match exported CLI snapshot");
+assert(uiReadback.orderStatus === runtimeExport.dto.snapshot.ui.orderDto.orderStatus, "UI readback orderStatus must match exported UI snapshot");
+assert(apiReadback.orderStatus === runtimeExport.dto.snapshot.api.orderDto.orderStatus, "API readback orderStatus must match exported API snapshot");
+assert(cliReadback.events.some((event) => event.eventName === "EvidenceExported"), "CLI readback must include EvidenceExported event");
 
 console.log("evidence package verification passed");

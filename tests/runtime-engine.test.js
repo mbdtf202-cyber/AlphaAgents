@@ -1067,6 +1067,139 @@ test("permission approval rejects denied high-risk tools", () => {
 
   assert.equal(denied.ok, false);
   assert.equal(denied.errorCode, "PERMISSION_DENIED");
+  assert.ok(loadRuntimeState(stateFile).eventLog.some((entry) => entry.eventName === "RuntimeToolDenied"));
+});
+
+test("permission approval allows scoped tools then revoke blocks runtime execution", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+  readyBuyerOrg(stateFile);
+
+  const draft = executeRuntimeCommand(
+    "rfp.create",
+    runtimeEnvelope(
+      "buyer",
+      {
+        sku: "cross_border_competitor_topic_pack",
+        packageTier: "trial",
+        category: "US TikTok Shop sensitive-skin skincare",
+        market: "US",
+        channels: ["tiktok_shop_public"],
+        language: "zh-CN analysis with English source labels",
+        budgetAmountMinor: 198000,
+        currency: "CNY",
+        deliverableFormat: ["pdf", "csv"]
+      },
+      { expectedVersion: 0 }
+    ),
+    { stateFile }
+  );
+
+  const published = executeRuntimeCommand(
+    "rfp.publish",
+    runtimeEnvelope("buyer", {
+      rfpId: draft.dto.id,
+      acceptanceTemplateId: "acceptance_template_trial_v1",
+      competitorsOrDiscoveryRule: "Use 5 named competitors",
+      prohibitedSources: ["production_account_login", "paid_account", "private_group", "ad_account", "fund_movement"],
+      deadlineAt: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+
+  const proposal = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope(
+      "seller",
+      {
+        rfpId: draft.dto.id,
+        sellerId: "seller_harbor_growth_sandbox",
+        agentId: "agent_mira_competitor_intel_sandbox",
+        priceAmountMinor: 198000,
+        deliveryHours: 48,
+        includedScope: ["5 competitors", "15 topic ideas"],
+        evidenceStandard: "Every key claim maps to evidence",
+        responsibleOwner: "project-owner@harbor-growth.example",
+        capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+      },
+      { expectedVersion: published.newVersion }
+    ),
+    { stateFile }
+  );
+
+  const order = executeRuntimeCommand(
+    "proposal.accept",
+    runtimeEnvelope("buyer", {
+      proposalId: proposal.dto.id,
+      termsSnapshot: "trial_v1_terms"
+    }),
+    { stateFile }
+  );
+
+  const funded = executeRuntimeCommand(
+    "escrow.fund",
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: order.dto.id,
+        paymentRef: "sandbox_payment_ref_001",
+        receivedAt: "2026-05-08T20:00:00+08:00",
+        receivedBy: "user_finance_sandbox_001"
+      },
+      { expectedVersion: order.newVersion }
+    ),
+    { stateFile }
+  );
+
+  const grant = loadRuntimeState(stateFile).grants[0];
+  const approved = executeRuntimeCommand(
+    "permission.approve",
+    runtimeEnvelope("operator", {
+      grantId: grant.id,
+      toolAllowlist: ["read_public_url", "write_generated_artifact"],
+      expiresAt: "2026-05-10T18:00:00+08:00",
+      approvalReason: "buyer-safe preview approved"
+    }),
+    { stateFile }
+  );
+  assert.equal(approved.ok, true);
+  assert.equal(approved.dto.grantStatus, "approved");
+  assert.deepEqual(approved.dto.toolAllowlist, ["read_public_url", "write_generated_artifact"]);
+
+  const revoked = executeRuntimeCommand(
+    "permission.revoke",
+    runtimeEnvelope(
+      "operator",
+      {
+        grantId: grant.id,
+        revocationReason: "buyer_cancelled_scope"
+      },
+      { expectedVersion: approved.newVersion }
+    ),
+    { stateFile }
+  );
+  assert.equal(revoked.ok, true);
+  assert.equal(revoked.dto.grantStatus, "revoked");
+
+  const blockedRun = executeRuntimeCommand(
+    "run.start",
+    runtimeEnvelope(
+      "seller",
+      {
+        orderId: order.dto.id,
+        permissionGrantIds: [grant.id]
+      },
+      { expectedVersion: funded.newVersion }
+    ),
+    { stateFile }
+  );
+
+  const finalState = loadRuntimeState(stateFile);
+  assert.equal(blockedRun.ok, false);
+  assert.equal(blockedRun.errorCode, "PERMISSION_DENIED");
+  assert.equal(finalState.runs.length, 0);
+  assert.ok(finalState.eventLog.some((entry) => entry.eventName === "PermissionApproved"));
+  assert.ok(finalState.eventLog.some((entry) => entry.eventName === "PermissionRevoked"));
 });
 
 test("delivery.qa_reject blocks buyer acceptance until QA passes", () => {

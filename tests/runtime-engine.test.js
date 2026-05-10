@@ -863,6 +863,118 @@ test("proposal.submit rejects sellers below admission score 80", () => {
   assert.equal(blocked.errorCode, "SELLER_NOT_APPROVED");
 });
 
+test("proposal.submit rejects missing inactive or mismatched AgentPassport references", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.rfps.push({
+    id: "rfp_agent_passport_block_001",
+    tenantId: "org_demo_001",
+    buyerOrgId: "org_demo_001",
+    rfpStatus: "published",
+    category: "social_media_operations",
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const missingPassport = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: "rfp_agent_passport_block_001",
+      sellerId: "seller_harbor_growth_sandbox",
+      agentId: "agent_missing_passport",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "missing-passport@example.com",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(missingPassport.ok, false);
+  assert.equal(missingPassport.errorCode, "VALIDATION_FAILED");
+
+  const wrongSeller = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: "rfp_agent_passport_block_001",
+      sellerId: "seller_cora_evidence_ops",
+      agentId: "agent_mira_competitor_intel_sandbox",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "wrong-seller@example.com",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(wrongSeller.ok, false);
+  assert.equal(wrongSeller.errorCode, "VALIDATION_FAILED");
+
+  const suspendedState = loadRuntimeState(stateFile);
+  const passport = suspendedState.agentPassports.find((entry) => entry.id === "agent_mira_competitor_intel_sandbox");
+  passport.passportStatus = "suspended";
+  saveRuntimeState(suspendedState, stateFile);
+
+  const suspendedPassport = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: "rfp_agent_passport_block_001",
+      sellerId: "seller_harbor_growth_sandbox",
+      agentId: "agent_mira_competitor_intel_sandbox",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "suspended-passport@example.com",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+  assert.equal(suspendedPassport.ok, false);
+  assert.equal(suspendedPassport.errorCode, "VALIDATION_FAILED");
+  assert.equal(loadRuntimeState(stateFile).proposals.length, 0);
+});
+
+test("proposal.submit rejects AgentPassport category mismatch with RFP", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.rfps.push({
+    id: "rfp_agent_category_mismatch_001",
+    tenantId: "org_demo_001",
+    buyerOrgId: "org_demo_001",
+    rfpStatus: "published",
+    category: "finance",
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "proposal.submit",
+    runtimeEnvelope("seller", {
+      rfpId: "rfp_agent_category_mismatch_001",
+      sellerId: "seller_harbor_growth_sandbox",
+      agentId: "agent_mira_competitor_intel_sandbox",
+      priceAmountMinor: 198000,
+      deliveryHours: 48,
+      includedScope: ["5 competitors"],
+      evidenceStandard: "Every key claim maps to evidence",
+      responsibleOwner: "category-mismatch@example.com",
+      capacityReservedUntil: "2026-05-10T18:00:00+08:00"
+    }),
+    { stateFile }
+  );
+
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "VALIDATION_FAILED");
+  assert.equal(loadRuntimeState(stateFile).proposals.length, 0);
+});
+
 test("permission approval rejects denied high-risk tools", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);

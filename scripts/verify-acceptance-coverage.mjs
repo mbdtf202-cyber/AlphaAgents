@@ -493,6 +493,9 @@ const checks = {
     for (const token of ["archived category blocks proposal acceptance from creating new orders", "validateProposalCategoriesSellable"]) {
       assertIncludes(tests + read("lib/alphaagents/runtime-engine.js"), token, "negative runtime archived category tests");
     }
+    for (const token of ["proposal.submit rejects missing inactive or mismatched AgentPassport references", "proposal.submit rejects AgentPassport category mismatch with RFP", "validateProposalAgentReadiness"]) {
+      assertIncludes(tests + read("lib/alphaagents/runtime-engine.js"), token, "negative runtime proposal AgentPassport tests");
+    }
   },
   "cli-output"() {
     assertIncludes(read("tests/cli-output.test.js"), "--json", "CLI output tests");

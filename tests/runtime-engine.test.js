@@ -574,6 +574,60 @@ test("write commands reject stale expectedVersion before mutating shared state",
   assert.ok(state.eventLog.some((entry) => entry.eventName === "OptimisticLockRejected"));
 });
 
+test("write commands reject cross-tenant aggregate ownership before mutating shared state", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.orders.push({
+    id: "order_cross_tenant_001",
+    tenantId: "org_demo_001",
+    rfpId: "rfp_cross_tenant_001",
+    proposalId: "proposal_cross_tenant_001",
+    buyerOrgId: "org_demo_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    orderStatus: "created",
+    ledgerStatus: "not_funded",
+    acceptanceStatus: "not_ready",
+    amountMinor: 198000,
+    currency: "CNY",
+    contractingEntity: "NorthStar Beauty LLC",
+    collectionEntity: "AlphaAgents Platform Ops LLC",
+    invoiceIssuer: "AlphaAgents Platform Ops LLC",
+    refundRemitter: "AlphaAgents Platform Ops LLC",
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "escrow.fund",
+    runtimeEnvelope(
+      "buyer",
+      {
+        orderId: "order_cross_tenant_001",
+        paymentRef: "sandbox_payment_cross_tenant",
+        receivedAt: "2026-05-08T20:00:00+08:00",
+        receivedBy: "user_finance_sandbox_001"
+      },
+      {
+        tenantId: "org_other_001",
+        expectedVersion: 1
+      }
+    ),
+    { stateFile }
+  );
+
+  const finalState = loadRuntimeState(stateFile);
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "TENANT_FORBIDDEN");
+  assert.equal(finalState.orders[0].orderStatus, "created");
+  assert.equal(finalState.orders[0].ledgerStatus, "not_funded");
+  assert.equal(finalState.orders[0].version, 1);
+  assert.equal(finalState.grants.length, 0);
+  assert.ok(finalState.eventLog.some((entry) => entry.eventName === "UnauthorizedAccessAttempted"));
+});
+
 test("rating.submit rejects seller self-rating attempts", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);

@@ -480,8 +480,11 @@ const checks = {
   },
   "negative-tests"() {
     const tests = read("tests/runtime-engine.test.js");
-    for (const token of ["VERSION_CONFLICT", "ACTOR_FORBIDDEN", "SELLER_NOT_APPROVED", "STATE_CONFLICT", "PERMISSION_DENIED", "BUYER_NOT_PROCUREMENT_READY", "SCOPE_EXPANSION_REQUIRED"]) {
+    for (const token of ["VERSION_CONFLICT", "ACTOR_FORBIDDEN", "TENANT_FORBIDDEN", "SELLER_NOT_APPROVED", "STATE_CONFLICT", "PERMISSION_DENIED", "BUYER_NOT_PROCUREMENT_READY", "SCOPE_EXPANSION_REQUIRED"]) {
       assertIncludes(tests, token, "negative runtime tests");
+    }
+    for (const token of ["write commands reject cross-tenant aggregate ownership", "UnauthorizedAccessAttempted"]) {
+      assertIncludes(tests, token, "negative runtime tenant ownership tests");
     }
     for (const token of ["delivery.qa_reject blocks buyer acceptance until QA passes", "delivery.qa_reject", "DeliveryQaRejected", "acceptance.accept"]) {
       assertIncludes(tests, token, "negative runtime QA rejection tests");

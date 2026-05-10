@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { getAgentAppDetailModel, getAgentDetailModel } from "../lib/alphaagents/view-models.js";
+
 const appDir = path.resolve("app");
 
 const requiredPageRoutes = [
@@ -52,7 +54,11 @@ const aliasRoutes = [
 
 const dynamicSampleRoutes = [
   "/agents/mira-competitor-intel-agent",
-  "/agent-apps/harbor-growth-workbench-app"
+  "/agents/mira-competitor-intel",
+  "/agents/mira-trial-quick-order",
+  "/agent-apps/harbor-growth-workbench-app",
+  "/agent-apps/harbor-growth-workbench",
+  "/agent-apps/launch-review-copilot"
 ];
 
 function pageFileForRoute(route) {
@@ -95,5 +101,16 @@ function dynamicPageFileForRoute(route) {
 test("known dynamic agent and agent-app detail routes have concrete page handlers", () => {
   for (const route of dynamicSampleRoutes) {
     assert.equal(existsSync(dynamicPageFileForRoute(route)), true, `${route} dynamic detail handler is missing`);
+  }
+});
+
+test("known dynamic agent and agent-app detail routes resolve real detail models", () => {
+  for (const route of dynamicSampleRoutes) {
+    const slug = route.split("/").at(-1);
+    const model = route.startsWith("/agents/")
+      ? getAgentDetailModel(slug)
+      : getAgentAppDetailModel(slug);
+
+    assert.ok(model, `${route} resolves to 404 because its detail model is missing`);
   }
 });

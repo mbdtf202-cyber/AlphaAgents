@@ -129,6 +129,21 @@ test("agent app index links to AgentAppPassport detail slugs instead of listing 
   assert.ok(getAgentAppDetailModel(app.detailSlug));
 });
 
+test("detail models resolve passport, listing, and common buyer-facing aliases", () => {
+  assert.equal(getAgentDetailModel("mira-competitor-intel-agent").agent.id, "agent_mira_competitor_intel_sandbox");
+  assert.equal(getAgentDetailModel("mira-competitor-intel").agent.id, "agent_mira_competitor_intel_sandbox");
+  assert.equal(getAgentDetailModel("mira-trial-quick-order").agent.id, "agent_mira_competitor_intel_sandbox");
+
+  const appByPassportSlug = getAgentAppDetailModel("harbor-growth-workbench-app");
+  const appByListingSlug = getAgentAppDetailModel("harbor-growth-workbench");
+  const appByCommonAlias = getAgentAppDetailModel("launch-review-copilot");
+
+  assert.equal(appByPassportSlug.app.id, "agent_app_harbor_growth_workbench");
+  assert.equal(appByListingSlug.app.id, "agent_app_harbor_growth_workbench");
+  assert.equal(appByCommonAlias.app.id, "agent_app_harbor_growth_workbench");
+  assert.equal(appByPassportSlug.ownerAgent.id, "agent_mira_competitor_intel_sandbox");
+});
+
 test("detail and reputation models expose order-version-category rating provenance", () => {
   const agent = getAgentDetailModel("mira-competitor-intel-agent");
   const reputation = getReputationModel();

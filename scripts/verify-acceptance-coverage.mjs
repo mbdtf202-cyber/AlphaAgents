@@ -347,6 +347,7 @@ const checks = {
   "category-history"() {
     const runtimeTest = read("tests/runtime-engine.test.js");
     assertIncludes(runtimeTest, "category rename preserves historical order and reputation category snapshots", "runtime tests");
+    assertIncludes(runtimeTest, "category update rejects categoryId rename or reuse attempts", "runtime tests");
     assertIncludes(read("lib/alphaagents/runtime-engine.js"), "categorySnapshot", "runtime engine");
     assertIncludes(read("lib/alphaagents/runtime-engine.js"), "history", "runtime engine");
   },
@@ -488,6 +489,9 @@ const checks = {
     }
     for (const token of ["delivery.qa_reject blocks buyer acceptance until QA passes", "delivery.qa_reject", "DeliveryQaRejected", "acceptance.accept"]) {
       assertIncludes(tests, token, "negative runtime QA rejection tests");
+    }
+    for (const token of ["archived category blocks proposal acceptance from creating new orders", "validateProposalCategoriesSellable"]) {
+      assertIncludes(tests + read("lib/alphaagents/runtime-engine.js"), token, "negative runtime archived category tests");
     }
   },
   "cli-output"() {

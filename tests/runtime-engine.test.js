@@ -716,6 +716,82 @@ test("archived category blocks listing publish", () => {
   assert.equal(blocked.errorCode, "STATE_CONFLICT");
 });
 
+test("archived category blocks proposal acceptance from creating new orders", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+  readyBuyerOrg(stateFile);
+
+  const state = loadRuntimeState(stateFile);
+  state.rfps.push({
+    id: "rfp_archived_accept_block_001",
+    tenantId: "org_demo_001",
+    buyerOrgId: "org_demo_001",
+    rfpStatus: "quoting",
+    category: "社媒运营与内容增长",
+    version: 1
+  });
+  state.proposals.push({
+    id: "proposal_archived_accept_block_001",
+    tenantId: "org_demo_001",
+    proposalStatus: "submitted",
+    rfpId: "rfp_archived_accept_block_001",
+    sellerId: "seller_harbor_growth_sandbox",
+    agentId: "agent_mira_competitor_intel_sandbox",
+    priceAmountMinor: 198000,
+    currency: "CNY",
+    includedScope: ["5 competitors", "15 topic ideas"],
+    version: 1
+  });
+  saveRuntimeState(state, stateFile);
+
+  const archived = executeRuntimeCommand(
+    "agent-category archive",
+    runtimeEnvelope("operator", {
+      categoryId: "social_media_operations",
+      archiveReason: "buyer safety hold"
+    }),
+    { stateFile }
+  );
+  assert.equal(archived.ok, true);
+
+  const blocked = executeRuntimeCommand(
+    "proposal.accept",
+    runtimeEnvelope("buyer", {
+      proposalId: "proposal_archived_accept_block_001",
+      termsSnapshot: "trial_v1_terms"
+    }),
+    { stateFile }
+  );
+
+  const finalState = loadRuntimeState(stateFile);
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "STATE_CONFLICT");
+  assert.equal(finalState.orders.length, 0);
+  assert.equal(finalState.proposals[0].proposalStatus, "submitted");
+});
+
+test("category update rejects categoryId rename or reuse attempts", () => {
+  const stateFile = createTempStateFile();
+  resetRuntimeState(stateFile);
+
+  const blocked = executeRuntimeCommand(
+    "agent-category update",
+    runtimeEnvelope("operator", {
+      categoryId: "social_media_operations",
+      patch: {
+        categoryId: "social_media_growth_reused"
+      }
+    }),
+    { stateFile }
+  );
+
+  const state = loadRuntimeState(stateFile);
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.errorCode, "STATE_CONFLICT");
+  assert.ok(state.categories.some((category) => category.categoryId === "social_media_operations"));
+  assert.equal(state.categories.some((category) => category.categoryId === "social_media_growth_reused"), false);
+});
+
 test("proposal.submit rejects sellers below admission score 80", () => {
   const stateFile = createTempStateFile();
   resetRuntimeState(stateFile);

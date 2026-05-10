@@ -6,6 +6,8 @@ import { getCatalogModel } from "../../lib/alphaagents/view-models";
 import Link from "next/link";
 
 type CatalogListingRow = {
+  agentName?: string;
+  title?: string;
   startingPriceMinor: number;
   deliveryHours: number;
   [key: string]: React.ReactNode;
@@ -74,7 +76,7 @@ export default async function CatalogPage({ searchParams }: { searchParams?: Pro
         <SectionCard title="Listings" subtitle={`Filtered result count: ${model.listingCount}. Category, supply, risk, billing, price, SLA, rating, and capacity filters are server-backed.`}>
           <DataTable
             columns={[
-              { key: "title", label: "Agent / App" },
+              { key: "agentOffer", label: "Agent / App" },
               { key: "supplyType", label: "Supply" },
               { key: "sellerLegalEntity", label: "Seller" },
               { key: "proofStatus", label: "Proof" },
@@ -85,6 +87,7 @@ export default async function CatalogPage({ searchParams }: { searchParams?: Pro
             ]}
             rows={model.listings.map((listing: CatalogListingRow) => ({
               ...listing,
+              agentOffer: `${listing.agentName ?? listing.title} / ${listing.title}`,
               startingPriceMinor: `¥${(listing.startingPriceMinor / 100).toLocaleString("en-US")}`,
               deliveryHours: `${listing.deliveryHours}h`
             }))}

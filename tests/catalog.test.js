@@ -49,7 +49,9 @@ test("catalog filters cover category, tags, supply, risk, billing, price, SLA, r
   const listings = getAgentListings();
 
   assert.ok(filterCatalogListings(listings, { categoryId: "custom_agent_app" }).every((listing) => listing.categoryIds.includes("custom_agent_app")));
-  assert.ok(filterCatalogListings(listings, { tag: "evidence_package" }).every((listing) => listing.tags.includes("evidence_package")));
+  const evidenceListings = filterCatalogListings(listings, { tag: "evidence_package" });
+  assert.ok(evidenceListings.length > 0);
+  assert.ok(evidenceListings.every((listing) => listing.tags.includes("evidence_package")));
   assert.ok(filterCatalogListings(listings, { supplyType: "agent_app" }).every((listing) => listing.supplyType === "agent_app"));
   assert.ok(filterCatalogListings(listings, { riskLevel: "medium_high" }).every((listing) => listing.riskLevel === "medium_high"));
   assert.ok(filterCatalogListings(listings, { billingMode: "subscription" }).every((listing) => listing.billingMode === "subscription"));
@@ -62,6 +64,11 @@ test("catalog filters cover category, tags, supply, risk, billing, price, SLA, r
   assert.equal(model.listingCount, 1);
   assert.equal(model.listings[0].supplyType, "agent_app");
   assert.ok(model.filters.tags.includes("evidence_package"));
+
+  const tagModel = getCatalogModel({ tag: "evidence_package" });
+  assert.ok(tagModel.listingCount > 0);
+  assert.ok(tagModel.listings.every((listing) => listing.tags.includes("evidence_package")));
+  assert.ok(tagModel.listings.some((listing) => listing.agentName === "Mira Competitor Intel Agent"));
 });
 
 test("every listing binds categories, pricing, proof, and capacity", () => {

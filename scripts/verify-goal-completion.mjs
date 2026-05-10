@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { agentApps, agents, categories, listings, sampleOrders } from "../lib/alphaagents/data.js";
+import { getCatalogModel } from "../lib/alphaagents/view-models.js";
 
 const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
@@ -183,6 +184,13 @@ const catalogSource = `${read("app/catalog/page.tsx")}\n${read("lib/alphaagents/
 for (const filterToken of ["categoryId", "tags", "supplyType", "riskLevel", "billingMode", "maxPriceMinor", "maxDeliveryHours", "minRating", "minCapacity"]) {
   assertIncludes(catalogSource, filterToken, "catalog filter implementation");
 }
+assertIncludes(catalogSource, "agentOffer", "catalog visible Agent/App identity");
+const evidenceTagModel = getCatalogModel({ tag: "evidence_package" });
+assert(evidenceTagModel.listingCount > 0, "catalog evidence_package tag must return visible listings");
+assert(
+  evidenceTagModel.listings.some((listing) => listing.agentName === "Mira Competitor Intel Agent"),
+  "catalog evidence_package tag must expose the underlying Agent identity"
+);
 
 const buyerSource = `${read("app/buyer-org-setup/page.tsx")}\n${read("components/alphaagents/buyer-org-setup-form.tsx")}`;
 for (const token of [
@@ -207,6 +215,8 @@ const riskSource = `${read("app/risk-finance/page.tsx")}\n${read("lib/alphaagent
 for (const token of ["Explicit authorization", "Action preview", "Audit event", "Revoke path", "permission revoke", "finance evidence"]) {
   assertIncludes(riskSource, token, "risk and finance evidence");
 }
+
+assertIncludes(read("components/alphaagents/runtime-command-console.tsx"), "Runtime Command Console", "runtime command console visible heading");
 
 const runtimeSource = `${read("lib/alphaagents/runtime-engine.js")}\n${read("tests/runtime-engine.test.js")}\n${read("tests/ui-api-cli-parity.test.js")}`;
 for (const token of [

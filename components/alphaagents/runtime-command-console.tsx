@@ -232,7 +232,7 @@ export function RuntimeCommandConsole({
   return (
     <div className="aa-card aa-card-trust">
       <div className="aa-card-head">
-        <h2>Runtime Control Plane</h2>
+        <h2>Runtime Command Console / Runtime Control Plane</h2>
         <p>Shared mutable state via `/api/commands` and `/api/runtime-state`, not fixture replay.</p>
       </div>
       <div className="aa-button-row">

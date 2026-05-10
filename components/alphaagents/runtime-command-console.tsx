@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type RuntimeSnapshot = {
   categories: Array<{ categoryId: string; categoryStatus: string; version: number }>;
@@ -52,6 +52,14 @@ type WorkflowDefinition = {
   }>;
 };
 
+type PendingConfirmation = {
+  title: string;
+  body: string;
+  dangerBody: string | null;
+  dangerConfirmed: boolean;
+  commandNames: string[];
+};
+
 export function RuntimeCommandConsole({
   mode,
   initialSnapshot = null
@@ -62,6 +70,10 @@ export function RuntimeCommandConsole({
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(initialSnapshot);
   const [busy, setBusy] = useState(false);
   const [lastResult, setLastResult] = useState<CommandResult | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
+  const pendingActionRef = useRef<(() => Promise<void>) | null>(null);
+  const confirmationTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const confirmationPrimaryRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     void refreshSnapshot();
@@ -69,6 +81,21 @@ export function RuntimeCommandConsole({
 
   const commandDefs = useMemo(() => createCommandDefinitions(mode), [mode]);
   const workflowDefs = useMemo(() => createWorkflowDefinitions(mode), [mode]);
+
+  useEffect(() => {
+    if (!pendingConfirmation) return;
+
+    confirmationPrimaryRef.current?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        cancelConfirmation();
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [pendingConfirmation]);
 
   async function refreshSnapshot() {
     const response = await fetch("/api/runtime-state", { cache: "no-store" });
@@ -132,6 +159,74 @@ export function RuntimeCommandConsole({
     }
   }
 
+  function requestCommandConfirmation(definition: CommandDefinition, trigger: HTMLButtonElement) {
+    requestConfirmation({
+      trigger,
+      title: `Confirm ${definition.label}`,
+      body: `${definition.commandName} will mutate shared runtime state and write an auditable command result.`,
+      commandNames: [definition.commandName],
+      execute: () => runCommand(definition)
+    });
+  }
+
+  function requestWorkflowConfirmation(definition: WorkflowDefinition, trigger: HTMLButtonElement) {
+    requestConfirmation({
+      trigger,
+      title: `Confirm ${definition.label}`,
+      body: `${definition.label} will execute ${definition.steps.length} ordered command handlers against shared runtime state.`,
+      commandNames: definition.steps.map((step) => step.commandName),
+      execute: () => runWorkflow(definition)
+    });
+  }
+
+  function requestConfirmation({
+    trigger,
+    title,
+    body,
+    commandNames,
+    execute
+  }: {
+    trigger: HTMLButtonElement;
+    title: string;
+    body: string;
+    commandNames: string[];
+    execute: () => Promise<void>;
+  }) {
+    confirmationTriggerRef.current = trigger;
+    pendingActionRef.current = execute;
+    setPendingConfirmation({
+      title,
+      body,
+      commandNames,
+      dangerBody: describeDangerousCommands(commandNames),
+      dangerConfirmed: false
+    });
+  }
+
+  function acknowledgeDanger() {
+    setPendingConfirmation((current) => current ? { ...current, dangerConfirmed: true } : current);
+  }
+
+  function cancelConfirmation() {
+    setPendingConfirmation(null);
+    pendingActionRef.current = null;
+    confirmationTriggerRef.current?.focus();
+  }
+
+  async function confirmPendingAction() {
+    const action = pendingActionRef.current;
+    if (!action || !pendingConfirmation) return;
+    if (pendingConfirmation.dangerBody && !pendingConfirmation.dangerConfirmed) return;
+
+    setPendingConfirmation(null);
+    pendingActionRef.current = null;
+    try {
+      await action();
+    } finally {
+      confirmationTriggerRef.current?.focus();
+    }
+  }
+
   const latest = getLatestHandles(snapshot);
 
   return (
@@ -172,7 +267,7 @@ export function RuntimeCommandConsole({
               className="aa-button"
               type="button"
               disabled={busy || !enabled}
-              onClick={() => void runWorkflow(definition)}
+              onClick={(event) => requestWorkflowConfirmation(definition, event.currentTarget)}
             >
               {definition.label}
             </button>
@@ -188,7 +283,7 @@ export function RuntimeCommandConsole({
               className="aa-button"
               type="button"
               disabled={busy || !enabled}
-              onClick={() => void runCommand(definition)}
+              onClick={(event) => requestCommandConfirmation(definition, event.currentTarget)}
             >
               {definition.label}
             </button>
@@ -221,6 +316,48 @@ export function RuntimeCommandConsole({
       <pre className={`aa-command${lastResult?.ok === false ? " is-mismatch" : ""}`} style={{ marginTop: 12 }}>
         {JSON.stringify(lastResult ?? snapshot?.events.slice(-3) ?? { status: "loading" }, null, 2)}
       </pre>
+      {pendingConfirmation ? (
+        <div className="aa-confirmation-backdrop" role="presentation">
+          <section
+            className="aa-confirmation-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="runtime-confirmation-title"
+            aria-describedby="runtime-confirmation-body"
+          >
+            <div className="aa-card-head">
+              <h2 id="runtime-confirmation-title">{pendingConfirmation.title}</h2>
+              <p id="runtime-confirmation-body">{pendingConfirmation.body}</p>
+            </div>
+            <div className="aa-meta" style={{ marginTop: 10 }}>
+              Commands: {pendingConfirmation.commandNames.join(", ")}
+            </div>
+            {pendingConfirmation.dangerBody ? (
+              <div className="aa-confirmation-danger" role="alert">
+                <strong>Danger confirmation required.</strong>
+                <p>{pendingConfirmation.dangerBody}</p>
+                <button className="aa-button aa-button-danger" type="button" onClick={acknowledgeDanger}>
+                  I understand the risk
+                </button>
+              </div>
+            ) : null}
+            <div className="aa-button-row" style={{ marginTop: 14 }}>
+              <button
+                ref={confirmationPrimaryRef}
+                className="aa-button"
+                type="button"
+                disabled={Boolean(pendingConfirmation.dangerBody && !pendingConfirmation.dangerConfirmed)}
+                onClick={() => void confirmPendingAction()}
+              >
+                Confirm and run
+              </button>
+              <button className="aa-button aa-button-secondary" type="button" onClick={cancelConfirmation}>
+                Cancel
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -242,6 +379,27 @@ export function RuntimeCommandConsole({
     });
     return (await response.json()) as CommandResult;
   }
+}
+
+const dangerousCommands = new Map([
+  ["agent-category archive", "Archiving a category blocks new listings and purchases until restored."],
+  ["agent-passport suspend", "Suspending an AgentPassport can remove a provider from active supply."],
+  ["agent-listing archive", "Archiving a listing removes the offer from buyer purchase paths."],
+  ["permission.approve", "Approving permission grants runtime tool access inside the order boundary."],
+  ["permission.revoke", "Revoking permission can stop active execution or App usage."],
+  ["escrow.partial-release", "Partial release changes buyer refund and seller payout state."],
+  ["escrow.refund", "Refund changes the finance ledger and dispute outcome."],
+  ["escrow.release", "Release changes finance state after acceptance."],
+  ["agent-app.exit", "Exiting an Agent App changes subscription or usage access."],
+  ["custom-project.create-change-order", "Change orders can alter project scope and delivery obligations."]
+]);
+
+function describeDangerousCommands(commandNames: string[]) {
+  const warnings = commandNames
+    .map((commandName) => dangerousCommands.get(commandName))
+    .filter((warning): warning is string => Boolean(warning));
+
+  return warnings.length > 0 ? warnings.join(" ") : null;
 }
 
 function createCommandDefinitions(mode: Mode): CommandDefinition[] {

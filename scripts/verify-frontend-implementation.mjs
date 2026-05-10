@@ -82,5 +82,24 @@ assert(!buyerForm.includes("placeholder="), "buyer org form must not rely on pla
 const runtimeConsole = read("components/alphaagents/runtime-command-console.tsx");
 assertIncludes(runtimeConsole, "disabled={busy", "runtime command console must disable async buttons");
 assertIncludes(runtimeConsole, "lastResult", "runtime command console must persist command result on page");
+for (const token of [
+  "role=\"dialog\"",
+  "aria-modal=\"true\"",
+  "aria-labelledby=\"runtime-confirmation-title\"",
+  "Escape",
+  "confirmationTriggerRef.current?.focus()",
+  "dangerousCommands",
+  "Danger confirmation required.",
+  "I understand the risk",
+  "Confirm and run",
+  "requestCommandConfirmation",
+  "requestWorkflowConfirmation"
+]) {
+  assertIncludes(runtimeConsole, token, "runtime command confirmation");
+}
+
+for (const token of [".aa-confirmation-backdrop", ".aa-confirmation-dialog", ".aa-confirmation-danger", ".aa-button-danger"]) {
+  assertIncludes(css, token, "global CSS confirmation styles");
+}
 
 console.log("frontend implementation verification passed");

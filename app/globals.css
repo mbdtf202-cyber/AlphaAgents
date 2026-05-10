@@ -408,10 +408,47 @@ a {
   border: 1px solid var(--aa-line);
 }
 
+.aa-button-danger {
+  background: var(--aa-danger);
+}
+
 .aa-meta {
   color: var(--aa-muted);
   font-size: 13px;
   line-height: 1.7;
+}
+
+.aa-confirmation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 24, 39, 0.42);
+}
+
+.aa-confirmation-dialog {
+  width: min(560px, 100%);
+  border: 1px solid var(--aa-line);
+  border-radius: 18px;
+  background: var(--aa-surface);
+  padding: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+}
+
+.aa-confirmation-danger {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #fda29b;
+  border-radius: 14px;
+  background: #fef3f2;
+  color: var(--aa-danger);
+}
+
+.aa-confirmation-danger p {
+  margin: 8px 0 12px;
+  color: var(--aa-text);
 }
 
 .aa-skeleton {

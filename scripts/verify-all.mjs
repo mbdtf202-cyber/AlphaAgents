@@ -8,7 +8,8 @@ const scripts = [
   "scripts/verify-live-routes.mjs",
   "scripts/verify-business-readiness.mjs",
   "scripts/verify-acceptance-coverage.mjs",
-  "scripts/verify-a19-frontend-coverage.mjs"
+  "scripts/verify-a19-frontend-coverage.mjs",
+  "scripts/verify-goal-completion.mjs"
 ];
 
 for (const script of scripts) {

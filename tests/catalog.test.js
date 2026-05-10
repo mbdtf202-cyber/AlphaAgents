@@ -45,10 +45,11 @@ test("default registry contains all first-level categories", () => {
   }
 });
 
-test("catalog filters cover category, supply, risk, billing, price, SLA, rating, and capacity", () => {
+test("catalog filters cover category, tags, supply, risk, billing, price, SLA, rating, and capacity", () => {
   const listings = getAgentListings();
 
   assert.ok(filterCatalogListings(listings, { categoryId: "custom_agent_app" }).every((listing) => listing.categoryIds.includes("custom_agent_app")));
+  assert.ok(filterCatalogListings(listings, { tag: "evidence_package" }).every((listing) => listing.tags.includes("evidence_package")));
   assert.ok(filterCatalogListings(listings, { supplyType: "agent_app" }).every((listing) => listing.supplyType === "agent_app"));
   assert.ok(filterCatalogListings(listings, { riskLevel: "medium_high" }).every((listing) => listing.riskLevel === "medium_high"));
   assert.ok(filterCatalogListings(listings, { billingMode: "subscription" }).every((listing) => listing.billingMode === "subscription"));
@@ -60,6 +61,7 @@ test("catalog filters cover category, supply, risk, billing, price, SLA, rating,
   const model = getCatalogModel({ supplyType: "agent_app" });
   assert.equal(model.listingCount, 1);
   assert.equal(model.listings[0].supplyType, "agent_app");
+  assert.ok(model.filters.tags.includes("evidence_package"));
 });
 
 test("every listing binds categories, pricing, proof, and capacity", () => {

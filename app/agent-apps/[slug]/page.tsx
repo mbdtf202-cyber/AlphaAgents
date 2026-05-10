@@ -99,7 +99,7 @@ export default async function AgentAppDetailPage({ params }: { params: Promise<{
           />
           <CommandPreview command={"alphaagents evidence show --json\nalphaagents rating submit --json"} />
         </SectionCard>
-        <SectionCard title="Install, usage, and exit proof" subtitle="Agent App subscription still emits live install, usage evidence, and exit records.">
+        <SectionCard title="Install, usage, exit, and reputation proof" subtitle="Agent App subscription still emits live install, usage evidence, exit records, and reputation proof.">
           <DataTable
             columns={[
               { key: "metric", label: "Metric" },

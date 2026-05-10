@@ -4,14 +4,24 @@ import { createServer } from "node:net";
 import { join, relative, sep } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
-const dynamicSampleRoutes = [
-  "/agents/mira-competitor-intel-agent",
+import { agentApps, agents, listings } from "../lib/alphaagents/data.js";
+
+const dynamicAliasRoutes = [
   "/agents/mira-competitor-intel",
-  "/agents/mira-trial-quick-order",
-  "/agent-apps/harbor-growth-workbench-app",
-  "/agent-apps/harbor-growth-workbench",
   "/agent-apps/launch-review-copilot"
 ];
+
+function discoverDynamicSampleRoutes() {
+  const agentRoutes = agents.map((agent) => `/agents/${agent.slug}`);
+  const appRoutes = agentApps.map((agentApp) => `/agent-apps/${agentApp.slug}`);
+  const listingRoutes = listings.map((listing) =>
+    listing.supplyType === "agent_app" ? `/agent-apps/${listing.slug}` : `/agents/${listing.slug}`
+  );
+
+  return [...new Set([...agentRoutes, ...appRoutes, ...listingRoutes, ...dynamicAliasRoutes])].sort((a, b) =>
+    a.localeCompare(b)
+  );
+}
 
 const externalBaseUrl = process.env.ALPHAAGENTS_LIVE_BASE_URL;
 
@@ -200,7 +210,7 @@ async function scanRoutes(baseUrl, initialRoutes) {
 
 let server = null;
 const baseUrl = externalBaseUrl ?? (server = await startServer()).baseUrl;
-const routes = [...new Set([...discoverStaticPageRoutes(), ...dynamicSampleRoutes])];
+const routes = [...new Set([...discoverStaticPageRoutes(), ...discoverDynamicSampleRoutes()])];
 
 try {
   const { failures, scannedRoutes } = await scanRoutes(baseUrl, routes);

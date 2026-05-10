@@ -17,6 +17,7 @@ export default async function CatalogPage({ searchParams }: { searchParams?: Pro
   const filterLinks = [
     { label: "All listings", href: "/catalog" },
     { label: "Social ops", href: "/catalog?categoryId=social_media_operations" },
+    { label: "Evidence tag", href: "/catalog?tag=evidence_package" },
     { label: "Agent Apps", href: "/catalog?supplyType=agent_app" },
     { label: "Subscription", href: "/catalog?billingMode=subscription" },
     { label: "Medium-high risk", href: "/catalog?riskLevel=medium_high" },
@@ -40,6 +41,11 @@ export default async function CatalogPage({ searchParams }: { searchParams?: Pro
               <Chip key={category.categoryId} tone={category.riskLevel === "regulated" ? "warning" : "default"}>
                 {category.name["zh-CN"]}
               </Chip>
+            ))}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            {model.filters.tags.slice(0, 12).map((tag: string) => (
+              <Chip key={tag}>{tag}</Chip>
             ))}
           </div>
           <div className="aa-button-row" style={{ marginTop: 12 }}>

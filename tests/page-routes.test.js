@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { agentApps, agents, listings } from "../lib/alphaagents/data.js";
 import { getAgentAppDetailModel, getAgentDetailModel } from "../lib/alphaagents/view-models.js";
 
 const appDir = path.resolve("app");
@@ -52,13 +53,16 @@ const aliasRoutes = [
   "/risk-finance-console"
 ];
 
-const dynamicSampleRoutes = [
-  "/agents/mira-competitor-intel-agent",
+const dynamicAliasRoutes = [
   "/agents/mira-competitor-intel",
-  "/agents/mira-trial-quick-order",
-  "/agent-apps/harbor-growth-workbench-app",
-  "/agent-apps/harbor-growth-workbench",
   "/agent-apps/launch-review-copilot"
+];
+
+const dynamicSampleRoutes = [
+  ...agents.map((agent) => `/agents/${agent.slug}`),
+  ...agentApps.map((agentApp) => `/agent-apps/${agentApp.slug}`),
+  ...listings.map((listing) => (listing.supplyType === "agent_app" ? `/agent-apps/${listing.slug}` : `/agents/${listing.slug}`)),
+  ...dynamicAliasRoutes
 ];
 
 function pageFileForRoute(route) {
@@ -92,6 +96,7 @@ function routeFromPageFile(file) {
 test("live-route gate discovers every static Next.js page file and rendered internal links", () => {
   const source = readFileSync(path.join("scripts", "verify-live-routes.mjs"), "utf8");
   assert.match(source, /function discoverPageFiles/, "live route gate must discover app/**/page.tsx");
+  assert.match(source, /function discoverDynamicSampleRoutes/, "live route gate must derive dynamic detail routes from registry data");
   assert.match(source, /function collectLinkedRoutes/, "live route gate must crawl rendered internal links");
   assert.match(source, /aa-shell/, "live route gate must verify the AlphaAgents shell rendered");
 });

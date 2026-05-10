@@ -260,17 +260,17 @@
 
 ## 15. 最终验收 Checklist
 
-- [ ] README 明确展示完整平台定位。
-- [ ] 产品和首屏明确说明 Agent as a Service 对标传统 SaaS，但交付对象是 Agent 执行结果和证据责任链。
-- [ ] `product-design.md` 列出所有默认一级分类和 CRUD 规则。
-- [ ] 定制 Agent、Agent 原生 App、Agent Squad 都纳入 Agent 统一身份。
-- [ ] Agent App 没有退化成传统 SaaS 安装包，仍有权限、运行证据、验收/使用证明、退出和声誉回写。
-- [ ] 机器契约包含 catalog、passport、listing 命令和查询。
-- [ ] Agent Catalog 支持分类、标签、供给形态、风险、计费和评分筛选。
-- [ ] Buyer org setup 覆盖角色、付款、发票、授权链和风险边界。
-- [ ] Quick Order、RFP、订阅、定制项目、order-credit 至少有契约表达。
-- [ ] 高风险权限有授权、preview、审计和撤销路径。
-- [ ] 执行、交付、QA、验收、争议、财务和声誉闭环可回放。
-- [ ] Evidence package 可打开、可校验、可导出。
-- [ ] Sandbox evidence 不被伪装成真实商业验证。
-- [ ] 验证脚本全部通过。
+- [x] README 明确展示完整平台定位。证据：`README.md`、`scripts/verify-acceptance-coverage.mjs` 的 `positioning` 检查。
+- [x] 产品和首屏明确说明 Agent as a Service 对标传统 SaaS，但交付对象是 Agent 执行结果和证据责任链。证据：`docs/product-design.md`、`docs/frontend-visual-design.md`、`app/page.tsx`、`scripts/verify-goal-completion.mjs`。
+- [x] `product-design.md` 列出所有默认一级分类和 CRUD 规则。证据：`docs/product-design.md`、`lib/alphaagents/data.js`、`contracts/alphaagents.contract.json`。
+- [x] 定制 Agent、Agent 原生 App、Agent Squad 都纳入 Agent 统一身份。证据：`AgentPassport`、`AgentAppPassport`、`AgentListing`、`AgentCategory` 契约和 `agent_app` / `squad` / `custom_agent` 供给数据。
+- [x] Agent App 没有退化成传统 SaaS 安装包，仍有权限、运行证据、验收/使用证明、退出和声誉回写。证据：`app/agent-apps/[slug]/page.tsx`、`agent-app.install`、`agent-app.record-usage`、`agent-app.exit`、`tests/runtime-view-models.test.js`。
+- [x] 机器契约包含 catalog、passport、listing 命令和查询。证据：`contracts/alphaagents.contract.json`、`scripts/verify-contract.mjs`。
+- [x] Agent Catalog 支持分类、标签、供给形态、风险、计费和评分筛选。证据：`app/catalog/page.tsx`、`lib/alphaagents/view-models.js`、`tests/catalog.test.js`。
+- [x] Buyer org setup 覆盖角色、付款、发票、授权链和风险边界。证据：`app/buyer-org-setup/page.tsx`、`components/alphaagents/buyer-org-setup-form.tsx`、`buyer-org.setup`。
+- [x] Quick Order、RFP、订阅、定制项目、order-credit 至少有契约表达。证据：`app/quick-order/page.tsx`、`app/rfps/page.tsx`、`app/custom-agent/page.tsx`、`app/program-ops/page.tsx`、`contracts/alphaagents.contract.json`。
+- [x] 高风险权限有授权、preview、审计和撤销路径。证据：`app/risk-finance/page.tsx`、`tests/runtime-view-models.test.js`、`tests/runtime-engine.test.js`。
+- [x] 执行、交付、QA、验收、争议、财务和声誉闭环可回放。证据：`tests/runtime-engine.test.js` golden path、`tests/ui-api-cli-parity.test.js`、`scripts/verify-evidence-package.mjs`。
+- [x] Evidence package 可打开、可校验、可导出。证据：`evidence-packages/AA-SANDBOX-*`、`scripts/verify-evidence-package.mjs`、`app/evidence-room/page.tsx`。
+- [x] Sandbox evidence 不被伪装成真实商业验证。证据：`docs/market-validation-pack.md`、`scripts/verify-business-readiness.mjs`、`scripts/verify-goal-completion.mjs`。
+- [x] 验证脚本全部通过。证据：`pnpm verify` 运行 `scripts/verify-all.mjs`，并包含 `scripts/verify-goal-completion.mjs`。
